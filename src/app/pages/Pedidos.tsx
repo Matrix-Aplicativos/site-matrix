@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import Table from "../components/Table";
 import styles from "./Pedidos.module.css";
 
 const PedidosPage: React.FC = () => {
@@ -43,32 +42,11 @@ const PedidosPage: React.FC = () => {
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
-  const columns = [
-    { key: "codPedido", label: "Código do Pedido" },
-    { key: "dataPedido", label: "Data" },
-    {
-      key: "valorTotal",
-      label: "Valor Total",
-      render: (item: any) =>
-        item.valorTotal !== undefined && !isNaN(item.valorTotal)
-          ? `R$ ${item.valorTotal.toFixed(2)}`
-          : "N/A",
-    },
-    { key: "status", label: "Status" },
-    { key: "observacao", label: "Observação" },
-    {
-      key: "actions",
-      render: (item: any) => (
-        <button
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-          onClick={() => alert(`Exibindo detalhes do pedido ${item.codPedido}`)}
-        >
-          ▼
-        </button>
-      ),
-    },
-  ];
+  const toggleExpandRow = (index: number) => {
+    setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  };
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -85,7 +63,66 @@ const PedidosPage: React.FC = () => {
     <div className={styles.container}>
       <h1 className={styles.title}>PEDIDOS</h1>
       <SearchBar placeholder="Qual pedido deseja buscar?" onSearch={handleSearch} />
-      <Table columns={columns} data={filteredData} />
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Código do Pedido</th>
+              <th>Data</th>
+              <th>Valor Total</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((row, rowIndex) => (
+              <React.Fragment key={rowIndex}>
+                <tr>
+                  <td>{row.codPedido}</td>
+                  <td>{row.dataPedido}</td>
+                  <td>R$ {row.valorTotal.toFixed(2)}</td>
+                  <td>{row.status}</td>
+                  <td>
+                    <button
+                      onClick={() => toggleExpandRow(rowIndex)}
+                      style={{ background: "none", border: "none", cursor: "pointer" }}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
+                </tr>
+                {expandedRow === rowIndex && (
+                  <tr className={styles.expandedRow}>
+                    <td colSpan={5}>
+                      <div className={styles.additionalInfo}>
+                        <div>
+                          <p><strong>Cliente:</strong> {row.codCliente}</p>
+                          <p><strong>Status:</strong> {row.status}</p>
+                          <p><strong>Observação:</strong> {row.observacao}</p>
+                          <p><strong>Data do Pedido:</strong> {row.dataPedido}</p>
+                        </div>
+                        <div>
+                          <p><strong>Itens do Pedido:</strong></p>
+                          <ul>
+                            {row.itens.map((item, index) => (
+                              <li key={index}>
+                                <strong>{item.descricao}</strong> - Quantidade: {item.quantidade}, Preço Unitário: R$ {item.precoUnit.toFixed(2)}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p><strong>Valor Total:</strong> R$ {row.valorTotal.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

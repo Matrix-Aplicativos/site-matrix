@@ -1,12 +1,18 @@
 import React, { useState } from "react";
+import { FaFilter } from "react-icons/fa";
 import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
   placeholder?: string;
   onSearch: (query: string) => void;
+  onFilterClick?: () => void; 
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ placeholder = "Buscar...", onSearch }) => {
+const SearchBar: React.FC<SearchBarProps> = ({
+  placeholder = "Buscar...",
+  onSearch,
+  onFilterClick,
+}) => {
   const [query, setQuery] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,9 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ placeholder = "Buscar...", onSear
         onChange={handleInputChange}
         className={styles.input}
       />
-      <button onClick={handleSearch} className={styles.button}>
-        Buscar
-      </button>
+      <FaFilter className={styles.icon} onClick={onFilterClick} />
     </div>
   );
 };

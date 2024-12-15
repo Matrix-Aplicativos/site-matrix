@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import Table from "../components/Table";
 import styles from "./Clientes.module.css";
 
 const ClientesPage: React.FC = () => {
@@ -46,26 +45,11 @@ const ClientesPage: React.FC = () => {
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
-  const columns = [
-    { key: "codEmpresa", label: "Código" },
-    { key: "razaoSocial", label: "Razão Social" },
-    { key: "nomeFantasia", label: "Nome Fantasia" },
-    { key: "cnpjcpf", label: "CNPJ/CPF" },
-    { key: "fone1", label: "Telefone" },
-    { key: "email", label: "Email" },
-    { key: "endereco", label: "Endereço" },
-    { key: "status", label: "Status" },
-    { key: "territorio", label: "Território" },
-    {
-      key: "actions",
-      render: () => (
-        <button style={{ background: "none", border: "none", cursor: "pointer" }}>
-          ▼
-        </button>
-      ),
-    },
-  ];
+  const toggleExpandRow = (index: number) => {
+    setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  };
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -82,7 +66,65 @@ const ClientesPage: React.FC = () => {
     <div className={styles.container}>
       <h1 className={styles.title}>CLIENTES</h1>
       <SearchBar placeholder="Qual cliente deseja buscar?" onSearch={handleSearch} />
-      <Table columns={columns} data={filteredData} />
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Razão Social</th>
+              <th>Nome Fantasia</th>
+              <th>CNPJ/CPF</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((row, rowIndex) => (
+              <React.Fragment key={rowIndex}>
+                <tr>
+                  <td>{row.codEmpresa}</td>
+                  <td>{row.razaoSocial}</td>
+                  <td>{row.nomeFantasia}</td>
+                  <td>{row.cnpjcpf}</td>
+                  <td>
+                    <button
+                      onClick={() => toggleExpandRow(rowIndex)}
+                      style={{ background: "none", border: "none", cursor: "pointer" }}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
+                </tr>
+                {expandedRow === rowIndex && (
+                  <tr className={styles.expandedRow}>
+                    <td colSpan={5}>
+                      <div className={styles.additionalInfo}>
+                        <div>
+                          <p><strong>Razão Social:</strong> {row.razaoSocial}</p>
+                          <p><strong>Nome Fantasia:</strong> {row.nomeFantasia}</p>
+                          <p><strong>CNPJ/CPF:</strong> {row.cnpjcpf}</p>
+                          <p><strong>Telefone:</strong> {row.fone1}</p>
+                        </div>
+                        <div>
+                          <p><strong>Email:</strong> {row.email}</p>
+                          <p><strong>Endereço:</strong> {row.endereco}</p>
+                          <p><strong>Complemento:</strong> {row.complemento || "Nenhum"}</p>
+                          <p><strong>CEP:</strong> {row.cep || "Não informado"}</p>
+                        </div>
+                        <div>
+                          <p><strong>Município (IBGE):</strong> {row.codIbgeMunicipio}</p>
+                          <p><strong>Status:</strong> {row.status}</p>
+                          <p><strong>Território:</strong> {row.territorio}</p>
+                          <p><strong>Data de Criação:</strong> 01/01/2024</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
