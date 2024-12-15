@@ -2,6 +2,7 @@
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  height: 100vh; 
 }
 
 .title {
@@ -15,6 +16,7 @@
 
 .tableContainer {
   margin-top: 20px;
+  position: relative;
 }
 
 .table {
@@ -63,3 +65,70 @@
   font-size: 14px;
   color: #333;
 }
+
+.filterExpansion {
+  display: flex;
+  flex-direction: column;
+  width: 45%; 
+  max-width: 800px; 
+  background: #f9f9f9;
+  padding: 10px; 
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+  box-sizing: border-box;
+  gap: 15px; 
+}
+
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; 
+}
+
+.filterSection label {
+  font-size: 13px;
+  font-weight: 500; 
+  margin-bottom: 3px; 
+  color: #333;
+}
+
+.filterSection select {
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.filterSection input {
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.filterSection .smallSelectGroup select {
+  flex: 1;
+}
+
+.dateRange {
+  display: flex;
+  gap: 10px; 
+}
+
+.dateRange input {
+  flex: 1;
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+

@@ -43,9 +43,14 @@ const PedidosPage: React.FC = () => {
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  };
+
+  const toggleFilterExpansion = () => {
+    setIsFilterExpanded((prev) => !prev);
   };
 
   const handleSearch = (searchQuery: string) => {
@@ -62,7 +67,40 @@ const PedidosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>PEDIDOS</h1>
-      <SearchBar placeholder="Qual pedido deseja buscar?" onSearch={handleSearch} />
+      <SearchBar
+        placeholder="Qual produto deseja buscar?"
+        onSearch={handleSearch}
+        onFilterClick={toggleFilterExpansion}
+      />
+      {isFilterExpanded && (
+        <div className={styles.filterExpansion}>
+          {/* Primeira parte */}
+          <div className={styles.filterSection}>
+            <label>Buscar por:</label>
+            <input type="number" placeholder="Código do Pedido" />
+          </div>
+
+          {/* Segunda parte */}
+          <div className={styles.filterSection}>
+            <label>Filtrar por:</label>
+            <select placeholder="Status">
+              <option value="">Status</option>
+            </select>
+            <select placeholder="Cliente">
+              <option value="">Cliente</option>
+            </select>
+          </div>
+
+          {/* Terceira parte */}
+          <div className={styles.filterSection}>
+            <label>Período que deseja ver os pedidos:</label>
+            <div className={styles.dateRange}>
+              <input type="date" placeholder="Início" />
+              <input type="date" placeholder="Fim" />
+            </div>
+          </div>
+        </div>
+      )}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -71,7 +109,7 @@ const PedidosPage: React.FC = () => {
               <th>Data</th>
               <th>Valor Total</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -85,7 +123,11 @@ const PedidosPage: React.FC = () => {
                   <td>
                     <button
                       onClick={() => toggleExpandRow(rowIndex)}
-                      style={{ background: "none", border: "none", cursor: "pointer" }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
                     >
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
@@ -96,23 +138,38 @@ const PedidosPage: React.FC = () => {
                     <td colSpan={5}>
                       <div className={styles.additionalInfo}>
                         <div>
-                          <p><strong>Cliente:</strong> {row.codCliente}</p>
-                          <p><strong>Status:</strong> {row.status}</p>
-                          <p><strong>Observação:</strong> {row.observacao}</p>
-                          <p><strong>Data do Pedido:</strong> {row.dataPedido}</p>
+                          <p>
+                            <strong>Cliente:</strong> {row.codCliente}
+                          </p>
+                          <p>
+                            <strong>Status:</strong> {row.status}
+                          </p>
+                          <p>
+                            <strong>Observação:</strong> {row.observacao}
+                          </p>
+                          <p>
+                            <strong>Data do Pedido:</strong> {row.dataPedido}
+                          </p>
                         </div>
                         <div>
-                          <p><strong>Itens do Pedido:</strong></p>
+                          <p>
+                            <strong>Itens do Pedido:</strong>
+                          </p>
                           <ul>
                             {row.itens.map((item, index) => (
                               <li key={index}>
-                                <strong>{item.descricao}</strong> - Quantidade: {item.quantidade}, Preço Unitário: R$ {item.precoUnit.toFixed(2)}
+                                <strong>{item.descricao}</strong> - Quantidade:{" "}
+                                {item.quantidade}, Preço Unitário: R${" "}
+                                {item.precoUnit.toFixed(2)}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
-                          <p><strong>Valor Total:</strong> R$ {row.valorTotal.toFixed(2)}</p>
+                          <p>
+                            <strong>Valor Total:</strong> R${" "}
+                            {row.valorTotal.toFixed(2)}
+                          </p>
                         </div>
                       </div>
                     </td>

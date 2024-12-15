@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import ModalFilter from "../components/ModalFilter";
 import styles from "./Produtos.module.css";
 
 const ProdutosPage: React.FC = () => {
@@ -29,31 +28,27 @@ const ProdutosPage: React.FC = () => {
       stock: 5000,
       unit: "ML",
     },
-    {
-      description: "Produto 4",
-      brand: "Marca D",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
-    {
-      description: "Produto 5",
-      brand: "Marca E",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
   ];
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  };
+
+  const toggleFilterExpansion = () => {
+    setIsFilterExpanded((prev) => !prev);
+  };
+
+  const handleSearch = (searchQuery: string) => {
+    const filtered = data.filter((item) =>
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredData(filtered);
+    setQuery(searchQuery);
   };
 
   const columns = [
@@ -65,7 +60,6 @@ const ProdutosPage: React.FC = () => {
     { key: "unit", label: "Unidade" },
     {
       key: "actions",
-      label: "",
       render: (_value: any, _row: any, rowIndex: number) => (
         <button
           style={{ background: "none", border: "none", cursor: "pointer" }}
@@ -77,41 +71,54 @@ const ProdutosPage: React.FC = () => {
     },
   ];
 
-  const handleSearch = (searchQuery: string) => {
-    const filtered = data.filter((item) =>
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredData(filtered);
-    setQuery(searchQuery);
-  };
-
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-  };
-
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>PRODUTOS</h1>
       <SearchBar
         placeholder="Qual produto deseja buscar?"
         onSearch={handleSearch}
-        onFilterClick={toggleModal}
+        onFilterClick={toggleFilterExpansion}
       />
-      {isModalOpen && (
-        <ModalFilter
-          searchPlaceholder="Descrição / Marca / Código"
-          filterOptions={{
-            department: [{ label: "Eletrônicos", value: "electronics" }],
-            family: [{ label: "Celulares", value: "phones" }],
-            group: [{ label: "Smartphones", value: "smartphones" }],
-            subgroup: [{ label: "Android", value: "android" }],
-          }}
-          datePlaceholders={{
-            start: "Data Início Promoção",
-            end: "Data Fim Promoção",
-          }}
-          onClose={toggleModal}
-        />
+      {isFilterExpanded && (
+        <div className={styles.filterExpansion}>
+          {/* Primeira parte */}
+          <div className={styles.filterSection}>
+            <label>Buscar por:</label>
+            <select>
+              <option value="Marca">Marca</option>
+              <option value="Descricao">Descrição</option>
+              <option value="Codigo">Código</option>
+            </select>
+          </div>
+
+          {/* Segunda parte */}
+          <div className={styles.filterSection}>
+            <label>Filtrar por:</label>
+            <select placeholder="Departamento">
+              <option value="">Departamento</option>
+            </select>
+            <select placeholder="Família">
+              <option value="">Família</option>
+            </select>
+            <div className={styles.smallSelectGroup}>
+              <select placeholder="Grupo">
+                <option value="">Grupo</option>
+              </select>
+              <select placeholder="Subgrupo">
+                <option value="">Subgrupo</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Terceira parte */}
+          <div className={styles.filterSection}>
+            <label>Período da Promoção:</label>
+            <div className={styles.dateRange}>
+              <input type="date" placeholder="Início" />
+              <input type="date" placeholder="Fim" />
+            </div>
+          </div>
+        </div>
       )}
       <div className={styles.tableContainer}>
         <table className={styles.table}>

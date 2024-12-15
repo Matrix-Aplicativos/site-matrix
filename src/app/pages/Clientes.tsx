@@ -46,10 +46,16 @@ const ClientesPage: React.FC = () => {
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
   };
+
+  const toggleFilterExpansion = () => {
+    setIsFilterExpanded((prev) => !prev);
+  };
+
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -65,7 +71,34 @@ const ClientesPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>CLIENTES</h1>
-      <SearchBar placeholder="Qual cliente deseja buscar?" onSearch={handleSearch} />
+      <SearchBar
+        placeholder="Qual produto deseja buscar?"
+        onSearch={handleSearch}
+        onFilterClick={toggleFilterExpansion}
+      />
+      {isFilterExpanded && (
+        <div className={styles.filterExpansion}>
+          {/* Primeira parte */}
+          <div className={styles.filterSection}>
+            <label>Buscar por:</label>
+            <select>
+              <option value="Marca">Razão Social</option>
+              <option value="Descricao">CPF/CNPJ</option>
+              <option value="Codigo">Código</option>
+            </select>
+          </div>
+
+          {/* Segunda parte */}
+          <div className={styles.filterSection}>
+            <label>Filtrar por:</label>
+            <select placeholder="Status">
+              <option value="">Status</option>
+            </select>
+            <input type="number" placeholder="Município (IBGE)" />
+            <input type="number" placeholder="Território" />
+          </div>
+        </div>
+      )}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -74,7 +107,7 @@ const ClientesPage: React.FC = () => {
               <th>Razão Social</th>
               <th>Nome Fantasia</th>
               <th>CNPJ/CPF</th>
-              <th>Ações</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -88,7 +121,11 @@ const ClientesPage: React.FC = () => {
                   <td>
                     <button
                       onClick={() => toggleExpandRow(rowIndex)}
-                      style={{ background: "none", border: "none", cursor: "pointer" }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
                     >
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
@@ -99,22 +136,48 @@ const ClientesPage: React.FC = () => {
                     <td colSpan={5}>
                       <div className={styles.additionalInfo}>
                         <div>
-                          <p><strong>Razão Social:</strong> {row.razaoSocial}</p>
-                          <p><strong>Nome Fantasia:</strong> {row.nomeFantasia}</p>
-                          <p><strong>CNPJ/CPF:</strong> {row.cnpjcpf}</p>
-                          <p><strong>Telefone:</strong> {row.fone1}</p>
+                          <p>
+                            <strong>Razão Social:</strong> {row.razaoSocial}
+                          </p>
+                          <p>
+                            <strong>Nome Fantasia:</strong> {row.nomeFantasia}
+                          </p>
+                          <p>
+                            <strong>CNPJ/CPF:</strong> {row.cnpjcpf}
+                          </p>
+                          <p>
+                            <strong>Telefone:</strong> {row.fone1}
+                          </p>
                         </div>
                         <div>
-                          <p><strong>Email:</strong> {row.email}</p>
-                          <p><strong>Endereço:</strong> {row.endereco}</p>
-                          <p><strong>Complemento:</strong> {row.complemento || "Nenhum"}</p>
-                          <p><strong>CEP:</strong> {row.cep || "Não informado"}</p>
+                          <p>
+                            <strong>Email:</strong> {row.email}
+                          </p>
+                          <p>
+                            <strong>Endereço:</strong> {row.endereco}
+                          </p>
+                          <p>
+                            <strong>Complemento:</strong>{" "}
+                            {row.complemento || "Nenhum"}
+                          </p>
+                          <p>
+                            <strong>CEP:</strong> {row.cep || "Não informado"}
+                          </p>
                         </div>
                         <div>
-                          <p><strong>Município (IBGE):</strong> {row.codIbgeMunicipio}</p>
-                          <p><strong>Status:</strong> {row.status}</p>
-                          <p><strong>Território:</strong> {row.territorio}</p>
-                          <p><strong>Data de Criação:</strong> 01/01/2024</p>
+                          <p>
+                            <strong>Município (IBGE):</strong>{" "}
+                            {row.codIbgeMunicipio}
+                          </p>
+                          <p>
+                            <strong>Status:</strong> {row.status}
+                          </p>
+                          <p>
+                            <strong>Território:</strong> {row.territorio}
+                          </p>
+                          <p>
+                            <strong>Data de Criação:</strong> 01/01/2024
+                          </p>
                         </div>
                       </div>
                     </td>

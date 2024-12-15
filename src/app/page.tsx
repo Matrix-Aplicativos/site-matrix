@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from '@/app/components/Sidebar';

@@ -5,7 +5,7 @@ import styles from "./SearchBar.module.css";
 interface SearchBarProps {
   placeholder?: string;
   onSearch: (query: string) => void;
-  onFilterClick?: () => void; 
+  onFilterClick?: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -32,7 +32,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
         onChange={handleInputChange}
         className={styles.input}
       />
-      <FaFilter className={styles.icon} onClick={onFilterClick} />
+      <FaFilter
+        className={styles.icon}
+        onClick={onFilterClick} // Aciona a expansão do filtro
+      />
     </div>
   );
 };
