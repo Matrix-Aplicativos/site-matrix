@@ -177,9 +177,6 @@ const UsuariosPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <div className={styles.newUserBox}>
-        <NewUser /> 
-      </div>
     </div>
   );
 };

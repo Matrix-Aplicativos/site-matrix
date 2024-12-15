@@ -24,7 +24,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.searchBarContainer}>
       <input
         type="text"
         placeholder={placeholder}
@@ -36,6 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         className={styles.icon}
         onClick={onFilterClick} // Aciona a expansão do filtro
       />
+      
     </div>
   );
 };

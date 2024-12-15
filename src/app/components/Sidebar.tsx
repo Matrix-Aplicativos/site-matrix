@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom'; 
 import './Sidebar.css';
-import { FaClipboardList, FaUsers, FaBox, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaClipboardList, FaUsers, FaUser, FaBox, FaSignOutAlt, FaHome, FaAddressCard } from 'react-icons/fa';
 
 export default function Sidebar() {
   const navigate = useNavigate(); 
@@ -17,6 +17,12 @@ export default function Sidebar() {
           <span>Nome do Usuário</span>
         </li>
         <li>
+        <li>
+          <Link to="/" className="menu-item">
+            <FaHome />
+            Home
+          </Link>
+        </li>
           <Link to="/pedidos" className="menu-item">
             <FaClipboardList />
             Pedidos
@@ -36,15 +42,15 @@ export default function Sidebar() {
         </li>
         <li>
           <Link to="/usuarios" className="menu-item">
-            <FaUsers />
+            <FaUser />
             Usuários
           </Link>
         </li>
       </ul>
       <div className="bottom-section">
-        <Link to="/configuracoes" className="menu-item">
-          <FaCog />
-          Configurações
+        <Link to="/adm" className="menu-item">
+          <FaAddressCard />
+          Adm
         </Link>
         <button className="menu-item logout" onClick={handleLogout}>
           <FaSignOutAlt className="logout-icon" />
