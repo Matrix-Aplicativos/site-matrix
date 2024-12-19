@@ -7,18 +7,20 @@ import ClientesPage from '@/app/pages/Clientes';
 import ProdutosPage from '@/app/pages/Produtos';
 import UsuariosPage from '@/app/pages/Usuarios';
 import LoginPage from '@/app/pages/Login';
-import AdmPage from '@/app/pages/Administrativo';
+import HomePage from '@/app/pages/Home';
+import AdmPage from './pages/Administrativo';
 
 function AppContent() {
-  const location = useLocation(); 
+  const location = useLocation();
 
   const showSidebar = location.pathname !== '/login';
 
   return (
     <div style={{ display: 'flex' }}>
-      {showSidebar && <Sidebar />} 
+      {showSidebar && <Sidebar />}
       <div style={{ marginLeft: showSidebar ? '250px' : '0', padding: '20px', width: '100%' }}>
         <Routes>
+          <Route path="/" element={<HomePage />} />
           <Route path="/pedidos" element={<PedidosPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/produtos" element={<ProdutosPage />} />
