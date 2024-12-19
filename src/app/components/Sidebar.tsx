@@ -40,12 +40,6 @@ export default function Sidebar() {
             Produtos
           </Link>
         </li>
-        <li>
-          <Link to="/usuarios" className="menu-item">
-            <FaUser />
-            Usuários
-          </Link>
-        </li>
       </ul>
       <div className="bottom-section">
         <Link to="/adm" className="menu-item">
