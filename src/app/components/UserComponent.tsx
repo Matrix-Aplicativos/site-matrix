@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import styles from "./UserComponent.module.css";
 import NewUser from "../components/NewUser";
+import { useNavigate } from "react-router-dom";
 
 const UserComponent: React.FC = () => {
+  const navigate = useNavigate();
   const data = [
     {
       nome: "João Silva",
@@ -211,22 +213,28 @@ const UserComponent: React.FC = () => {
               </div>
               <div className={styles.modalColumn}>
                 <label>
-                  Login:
+                  Código do Cargo:
                   <input
                     type="text"
-                    value={currentUser.login}
+                    value={currentUser.codCargo}
                     onChange={(e) =>
-                      setCurrentUser({ ...currentUser, login: e.target.value })
+                      setCurrentUser({
+                        ...currentUser,
+                        codCargo: e.target.value,
+                      })
                     }
                   />
                 </label>
                 <label>
-                  Senha:
+                  CPF:
                   <input
-                    type="password"
-                    value={currentUser.senha}
+                    type="text"
+                    value={currentUser.cnpjcpf}
                     onChange={(e) =>
-                      setCurrentUser({ ...currentUser, senha: e.target.value })
+                      setCurrentUser({
+                        ...currentUser,
+                        cnpjcpf: e.target.value,
+                      })
                     }
                   />
                 </label>
@@ -236,6 +244,12 @@ const UserComponent: React.FC = () => {
               <button onClick={handleSaveChanges}>Salvar</button>
               <button onClick={closeEditModal}>Cancelar</button>
             </div>
+            <button
+                onClick={() => navigate("/redefinir-senha")}
+                className={styles.resetPasswordButton} 
+              >
+                Redefinir Senha
+              </button>
           </div>
         </div>
       )}

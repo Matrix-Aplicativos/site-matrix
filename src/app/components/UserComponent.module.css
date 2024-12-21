@@ -192,6 +192,7 @@
   background-color: #28a745;
   color: white;
   transition: background-color 0.3s ease;
+  width: 120px;
 }
 
 .modalActions button:first-child:hover {
@@ -202,6 +203,7 @@
   background-color: #f44336;
   color: white;
   transition: background-color 0.3s ease;
+  width: 120px;
 }
 
 .modalActions button:last-child:hover {
@@ -225,4 +227,15 @@
 
 .editButton:hover {
   color: #005bb5;
+}
+
+.resetPasswordButton{
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #005bb5;
+  color: #f3f3f3;
 }

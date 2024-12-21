@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from '@/app/components/Sidebar';
@@ -8,11 +8,12 @@ import ProdutosPage from '@/app/pages/Produtos';
 import LoginPage from '@/app/pages/Login';
 import HomePage from '@/app/pages/Home';
 import AdmPage from './pages/Administrativo';
+import RedefinirSenhaPage from './pages/RedefinirSenha';
 
 function AppContent() {
   const location = useLocation();
 
-  const showSidebar = location.pathname !== '/login';
+  const showSidebar = !['/login', '/redefinir-senha'].includes(location.pathname);
 
   return (
     <div style={{ display: 'flex' }}>
@@ -25,6 +26,7 @@ function AppContent() {
           <Route path="/produtos" element={<ProdutosPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/adm" element={<AdmPage />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
         </Routes>
       </div>
     </div>

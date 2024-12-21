@@ -38,6 +38,108 @@ const PedidosPage: React.FC = () => {
         { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
       ],
     },
+    {
+      codPedido: 101,
+      codCliente: 1,
+      valorTotal: 199.9,
+      status: "Concluído",
+      observacao: "Pedido entregue com sucesso",
+      dataPedido: "2024-12-12",
+      itens: [
+        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
+        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
+      ],
+    },
+    {
+      codPedido: 102,
+      codCliente: 2,
+      valorTotal: 89.9,
+      status: "Pendente",
+      observacao: "Aguardando pagamento",
+      dataPedido: "2024-12-10",
+      itens: [
+        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
+      ],
+    },
+    {
+      codPedido: 103,
+      codCliente: 3,
+      valorTotal: 129.9,
+      status: "Cancelado",
+      observacao: "Cliente desistiu da compra",
+      dataPedido: "2024-12-11",
+      itens: [
+        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
+      ],
+    },
+    {
+      codPedido: 101,
+      codCliente: 1,
+      valorTotal: 199.9,
+      status: "Concluído",
+      observacao: "Pedido entregue com sucesso",
+      dataPedido: "2024-12-12",
+      itens: [
+        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
+        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
+      ],
+    },
+    {
+      codPedido: 102,
+      codCliente: 2,
+      valorTotal: 89.9,
+      status: "Pendente",
+      observacao: "Aguardando pagamento",
+      dataPedido: "2024-12-10",
+      itens: [
+        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
+      ],
+    },
+    {
+      codPedido: 103,
+      codCliente: 3,
+      valorTotal: 129.9,
+      status: "Cancelado",
+      observacao: "Cliente desistiu da compra",
+      dataPedido: "2024-12-11",
+      itens: [
+        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
+      ],
+    },
+    {
+      codPedido: 101,
+      codCliente: 1,
+      valorTotal: 199.9,
+      status: "Concluído",
+      observacao: "Pedido entregue com sucesso",
+      dataPedido: "2024-12-12",
+      itens: [
+        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
+        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
+      ],
+    },
+    {
+      codPedido: 102,
+      codCliente: 2,
+      valorTotal: 89.9,
+      status: "Pendente",
+      observacao: "Aguardando pagamento",
+      dataPedido: "2024-12-10",
+      itens: [
+        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
+      ],
+    },
+    {
+      codPedido: 103,
+      codCliente: 3,
+      valorTotal: 129.9,
+      status: "Cancelado",
+      observacao: "Cliente desistiu da compra",
+      dataPedido: "2024-12-11",
+      itens: [
+        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
+      ],
+    },
   ];
 
   const [query, setQuery] = useState("");
