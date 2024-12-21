@@ -37,9 +37,29 @@ const UserComponent: React.FC = () => {
   const [filteredData, setFilteredData] = useState(data);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  };
+
+  const openEditModal = (user: any) => {
+    setCurrentUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setCurrentUser(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleSaveChanges = () => {
+    const updatedData = filteredData.map((user) =>
+      user.login === currentUser.login ? currentUser : user
+    );
+    setFilteredData(updatedData);
+    closeEditModal();
   };
 
   return (
@@ -82,6 +102,12 @@ const UserComponent: React.FC = () => {
                     <tr className={styles.expandedRow}>
                       <td colSpan={5}>
                         <div className={styles.additionalInfo}>
+                          <button
+                            className={styles.editButton}
+                            onClick={() => openEditModal(row)}
+                          >
+                            ✏️
+                          </button>
                           <div>
                             <p>
                               <strong>Nome:</strong> {row.nome}
@@ -135,6 +161,7 @@ const UserComponent: React.FC = () => {
           </table>
         </div>
       </div>
+
       <div className={styles.rightSection}>
         <h3 className={styles.situationHeader}>SITUAÇÃO</h3>
         <div className={styles.situationItem}>
@@ -152,10 +179,63 @@ const UserComponent: React.FC = () => {
           Novo Usuário
         </button>
       </div>
-      {isModalOpen && (
+
+      {isModalOpen && <NewUser closeModal={() => setIsModalOpen(false)} />}
+
+      {isEditModalOpen && currentUser && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <NewUser closeModal={() => setIsModalOpen(false)} />{" "}
+            <h3 className={styles.modalTitle}>Editar Usuário</h3>
+            <div className={styles.modalForm}>
+              <div className={styles.modalColumn}>
+                <label>
+                  Nome:
+                  <input
+                    type="text"
+                    value={currentUser.nome}
+                    onChange={(e) =>
+                      setCurrentUser({ ...currentUser, nome: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Email:
+                  <input
+                    type="email"
+                    value={currentUser.email}
+                    onChange={(e) =>
+                      setCurrentUser({ ...currentUser, email: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
+              <div className={styles.modalColumn}>
+                <label>
+                  Login:
+                  <input
+                    type="text"
+                    value={currentUser.login}
+                    onChange={(e) =>
+                      setCurrentUser({ ...currentUser, login: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Senha:
+                  <input
+                    type="password"
+                    value={currentUser.senha}
+                    onChange={(e) =>
+                      setCurrentUser({ ...currentUser, senha: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button onClick={handleSaveChanges}>Salvar</button>
+              <button onClick={closeEditModal}>Cancelar</button>
+            </div>
           </div>
         </div>
       )}
