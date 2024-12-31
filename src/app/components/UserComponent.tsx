@@ -132,8 +132,7 @@ const UserComponent: React.FC = () => {
                               <strong>Código do Cargo:</strong> {row.codCargo}
                             </p>
                             <p>
-                              <strong>Empresas:</strong>{" "}
-                              {row.codEmpresas.join(", ") || "Nenhuma"}
+                              <strong>Empresas:</strong> {row.codEmpresas.join(", ") || "Nenhuma"}
                             </p>
                             <p>
                               <strong>Data de Criação:</strong> 01/01/2024
@@ -187,7 +186,15 @@ const UserComponent: React.FC = () => {
       {isEditModalOpen && currentUser && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Editar Usuário</h3>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Editar Usuário</h3>
+              <button
+                className={styles.closeButton}
+                onClick={closeEditModal}
+              >
+                X
+              </button>
+            </div>
             <div className={styles.modalForm}>
               <div className={styles.modalColumn}>
                 <label>
@@ -242,14 +249,13 @@ const UserComponent: React.FC = () => {
             </div>
             <div className={styles.modalActions}>
               <button onClick={handleSaveChanges}>Salvar</button>
-              <button onClick={closeEditModal}>Cancelar</button>
-            </div>
-            <button
+              <button
                 onClick={() => navigate("/redefinir-senha")}
-                className={styles.resetPasswordButton} 
+                className={styles.resetPasswordButton}
               >
                 Redefinir Senha
               </button>
+            </div>
           </div>
         </div>
       )}
