@@ -1,151 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import styles from "./Pedidos.module.css";
+import useGetPedidos from "../hooks/useGetPedidos"; // Hook personalizado
 
-const PedidosPage: React.FC = () => {
-  const data = [
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-  ];
-
+const PedidosPage: React.FC<{ codEmpresa: number }> = ({ codEmpresa }) => {
+  const { pedidos, isLoading, error } = useGetPedidos(codEmpresa); // Hook para buscar os pedidos
   const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState(data);
+  const [filteredData, setFilteredData] = useState(pedidos || []);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  useEffect(() => {
+    if (pedidos) {
+      setFilteredData(pedidos);
+    }
+  }, [pedidos]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -158,13 +27,21 @@ const PedidosPage: React.FC = () => {
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     const lowerQuery = searchQuery.toLowerCase();
-    const filtered = data.filter((item) =>
+    const filtered = pedidos.filter((item) =>
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(lowerQuery)
       )
     );
     setFilteredData(filtered);
   };
+
+  if (isLoading) {
+    return <p>Carregando pedidos...</p>;
+  }
+
+  if (error) {
+    return <p>Ocorreu um erro ao carregar os pedidos: {error.message}</p>;
+  }
 
   return (
     <div className={styles.container}>
