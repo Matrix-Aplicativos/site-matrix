@@ -1,12 +1,33 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "./axiosInstance"; 
+import axiosInstance from "./axiosInstance";
+
+interface Municipio {
+  codMunicipio: string;
+  uf: string;
+  nome: string;
+  dataCadastro: string;
+  dataUltimaAlteracao: string;
+}
 
 interface Cliente {
+  codEmpresa: number;
   codCliente: number;
-  nome: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  cnpjcpf: string;
+  fone1: string;
+  fone2: string | null;
   email: string;
-  telefone: string;
+  municipio: Municipio;
+  bairro: string;
   endereco: string;
+  complemento: string | null;
+  cep: string;
+  limiteCredito: number;
+  status: string | null;
+  territorio: number;
+  vendedorResponsavel: string | null;
+  areceber: any[]; 
 }
 
 interface UseGetClientesHook {
@@ -24,8 +45,8 @@ const useGetClientes = (codEmpresa: number): UseGetClientesHook => {
     const fetchClientes = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`/clientes/${codEmpresa}`);
-        setClientes(response.data);
+        const response = await axiosInstance.get(`/cliente/${codEmpresa}`);
+        setClientes(response.data); 
         setError(null);
       } catch (err) {
         setError(

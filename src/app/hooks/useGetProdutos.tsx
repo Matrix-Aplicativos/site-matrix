@@ -4,9 +4,24 @@ import axiosInstance from "./axiosInstance";
 interface Produto {
   codItem: number;
   nome: string;
-  descricao: string;
-  preco: number;
-  estoque: number;
+  descricaoItem: string;
+  descricaoMarca: string;
+  codBarra: string;
+  codReferencia: string;
+  codFabricante: string;
+  grupo: string;
+  subGrupo: string;
+  familia: string;
+  departamento: string;
+  unidade: string;
+  precoVenda: number;
+  precoRevenda: number;
+  precoPromocao: number;
+  dataInicioPromocao: string;
+  dataFimPromocao: string;
+  saldoDisponivel: number;
+  porcentagemDescontoMax: number;
+  imagens: any[]; 
 }
 
 interface UseGetProdutosHook {

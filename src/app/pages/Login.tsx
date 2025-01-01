@@ -1,10 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom'; 
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; 
 import Image from 'next/image';
-import Logo from '@/app/img/Logo.png'; 
+import Logo from '@/app/img/Logo.png';
 import './Login.css';
+import useLogin from '../hooks/useLogin'; 
 
 export default function LoginPage() {
+  const { loginUsuario, loading, error } = useLogin();
+  const [login, setLogin] = useState('');
+  const [senha, setSenha] = useState('');
+  const navigate = useNavigate(); 
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const tokenObtido = await loginUsuario({ login, senha });
+
+    if (tokenObtido) {
+      console.log("Login bem-sucedido! Token:", tokenObtido);
+      navigate('/'); 
+    }
+  };
+
   return (
     <div className="container">
       <div className="content">
@@ -13,19 +29,34 @@ export default function LoginPage() {
         </div>
 
         <h5 className="heading">Área do Cliente</h5>
-        <form className="login-form">
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="input-field">
-            <input id="login" type="text" className="validate" placeholder="Digite seu login" />
+            <input
+              id="login"
+              type="text"
+              className="validate"
+              placeholder="Digite seu login"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+            />
             <label htmlFor="login">Login</label>
           </div>
           <div className="input-field">
-            <input id="senha" type="password" className="validate" placeholder="Digite sua senha" />
+            <input
+              id="senha"
+              type="password"
+              className="validate"
+              placeholder="Digite sua senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
             <label htmlFor="senha">Senha</label>
           </div>
-          <button type="submit" className="login-button">
-            ENTRAR
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Entrando...' : 'ENTRAR'}
           </button>
         </form>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
       </div>
 
       <footer className="footer">
