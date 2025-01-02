@@ -1,5 +1,7 @@
+'use client'; 
+
 import React from 'react';
-import { Link } from 'react-router-dom'; 
+import Link from 'next/link';
 import Image from 'next/image';
 import Logo from '@/app/img/Logo.png'; 
 import './RedefinirSenha.css';
@@ -44,7 +46,7 @@ export default function RedefinirSenhaPage() {
       </div>
 
       <footer className="password-reset-footer">
-        <Link to="/" className="password-reset-back-button">
+        <Link href="/" className="password-reset-back-button">
           Voltar ao site
         </Link>
         <p>© 2024 Todos direitos reservados</p>

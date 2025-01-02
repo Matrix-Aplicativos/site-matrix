@@ -1,12 +1,12 @@
-/* globals.css */
+
 html, body {
     height: 100%;
     margin: 0;
-    overflow: hidden; /* Evitar scroll global */
+    overflow: hidden; 
   }
   
   body {
     font-family: Arial, sans-serif;
-    overflow-y: auto; /* Habilitar scroll vertical no body */
+    overflow-y: auto; 
   }
   

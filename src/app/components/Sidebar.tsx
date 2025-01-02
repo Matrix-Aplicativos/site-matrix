@@ -1,13 +1,16 @@
+'use client'; 
+
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { useRouter } from 'next/navigation'; 
 import './Sidebar.css';
-import { FaClipboardList, FaUsers, FaUser, FaBox, FaSignOutAlt, FaHome, FaAddressCard } from 'react-icons/fa';
+import { FaClipboardList, FaUsers, FaBox, FaSignOutAlt, FaHome, FaAddressCard } from 'react-icons/fa';
+import Link from 'next/link';
 
 export default function Sidebar() {
-  const navigate = useNavigate(); 
+  const router = useRouter(); 
 
   const handleLogout = () => {
-    navigate('/login'); 
+    router.push('/Login'); 
   };
 
   return (
@@ -17,32 +20,32 @@ export default function Sidebar() {
           <span>Nome do Usuário</span>
         </li>
         <li>
-        <li>
-          <Link to="/" className="menu-item">
+          <Link href="/" className="menu-item">
             <FaHome />
             Home
           </Link>
         </li>
-          <Link to="/pedidos" className="menu-item">
+        <li>
+          <Link href="/Pedidos" className="menu-item">
             <FaClipboardList />
             Pedidos
           </Link>
         </li>
         <li>
-          <Link to="/clientes" className="menu-item">
+          <Link href="/Clientes" className="menu-item">
             <FaUsers />
             Clientes
           </Link>
         </li>
         <li>
-          <Link to="/produtos" className="menu-item">
+          <Link href="/Produtos" className="menu-item">
             <FaBox />
             Produtos
           </Link>
         </li>
       </ul>
       <div className="bottom-section">
-        <Link to="/adm" className="menu-item">
+        <Link href="/Administrativo" className="menu-item">
           <FaAddressCard />
           Adm
         </Link>

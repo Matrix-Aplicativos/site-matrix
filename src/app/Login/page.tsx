@@ -1,15 +1,18 @@
+'use client'; 
+
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { useRouter } from 'next/navigation'; 
 import Image from 'next/image';
 import Logo from '@/app/img/Logo.png';
 import './Login.css';
-import useLogin from '../hooks/useLogin'; 
+import useLogin from '../hooks/useLogin';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const { loginUsuario, loading, error } = useLogin();
   const [login, setLogin] = useState('');
   const [senha, setSenha] = useState('');
-  const navigate = useNavigate(); 
+  const router = useRouter(); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +20,7 @@ export default function LoginPage() {
 
     if (tokenObtido) {
       console.log("Login bem-sucedido! Token:", tokenObtido);
-      navigate('/'); 
+      router.push('/'); // Substitua o navigate('/'); 
     }
   };
 
@@ -60,7 +63,7 @@ export default function LoginPage() {
       </div>
 
       <footer className="footer">
-        <Link to="/" className="back-button">
+        <Link href="/" className="back-button">
           Voltar ao site
         </Link>
         <p>© 2024 Todos direitos reservados</p>

@@ -1,10 +1,12 @@
+"use client"; 
+
 import React, { useState } from "react";
+import { useRouter } from 'next/navigation';
 import styles from "./UserComponent.module.css";
 import NewUser from "../components/NewUser";
-import { useNavigate } from "react-router-dom";
 
 const UserComponent: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();  
   const data = [
     {
       nome: "João Silva",
@@ -62,6 +64,10 @@ const UserComponent: React.FC = () => {
     );
     setFilteredData(updatedData);
     closeEditModal();
+  };
+
+  const handlePasswordReset = () => {
+    router.push("/RedefinirSenha");  
   };
 
   return (
@@ -250,7 +256,7 @@ const UserComponent: React.FC = () => {
             <div className={styles.modalActions}>
               <button onClick={handleSaveChanges}>Salvar</button>
               <button
-                onClick={() => navigate("/redefinir-senha")}
+                onClick={handlePasswordReset}
                 className={styles.resetPasswordButton}
               >
                 Redefinir Senha
