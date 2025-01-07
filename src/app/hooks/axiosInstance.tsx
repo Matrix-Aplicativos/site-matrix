@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { getCookie,setCookie } from 'cookies-next';
-
+import { deleteCookie, getCookie,setCookie } from 'cookies-next';
 let isRefreshing = false;
 let failedQueue: { resolve: Function; reject: Function }[] = [];
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -81,6 +80,7 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstance(originalRequest);
       } catch (err) {
+        deleteCookie("refreshToken");
         processQueue(err, null);
         return Promise.reject(err);
       } finally {
