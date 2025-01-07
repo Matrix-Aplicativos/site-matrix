@@ -1,0 +1,27 @@
+services:
+  app:
+    image: api-forca-de-vendas-app:latest
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/forcadevendasdatabase
+      DB_USERNAME: matrixdbadmin
+      DB_PASSWORD: P1zXKIHM1b0UbbpzTJuOw98XpIhKwj8h
+      API_TOKEN_SECRET: QaNZ29wVu6em2AZa1qO8n7li
+      EMAIL_PASSWORD: hgwfbcravfxmqagq
+      EMAIL_USERNAME: juancssemiro@gmail.com
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      API_DOCS_PATH: /docs
+      API_DOCS_URL: /v3/api-docs
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: forcadevendasdatabase
+      POSTGRES_USER: matrixdbadmin
+      POSTGRES_PASSWORD: P1zXKIHM1b0UbbpzTJuOw98XpIhKwj8h
+    ports:
+      - "5432:5432"

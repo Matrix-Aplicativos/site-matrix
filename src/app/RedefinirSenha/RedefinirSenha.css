@@ -1,0 +1,143 @@
+body {
+    margin: 0;
+    overflow: hidden;
+  }
+  
+  .password-reset-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #ffffff;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .password-reset-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: -40px;
+  }
+  
+  .password-reset-logo {
+    margin-bottom: 20px;
+  }
+  
+  .password-reset-heading {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333333;
+    margin-bottom: 10px;
+    margin-top: -2px;
+  }
+  
+  .password-reset-instructions {
+    font-size: 14px;
+    color: #555555;
+    margin-bottom: 15px;
+  }
+  
+  .token-input-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+  
+  .token-input-box {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    text-align: center;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  
+  .token-input-box:focus {
+    border-color: #1565c0;
+  }
+  
+  .password-reset-form {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .password-reset-input-field {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  
+  .password-reset-input-field input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-bottom: 2px solid #ccc;
+    outline: none;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    margin-bottom: 10px;
+    color: #AAAAAA;
+  }
+  
+  .password-reset-input-field input:focus {
+    border-bottom: 2px solid #1565c0;
+  }
+  
+  .password-reset-input-field label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 12px;
+    color: #AAAAAA;
+  }
+  
+  .password-reset-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1565c0;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    padding: 12px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 400px;
+    text-transform: uppercase;
+    transition: background-color 0.3s;
+    margin-bottom: 70px;
+  }
+  
+  .password-reset-button:hover {
+    background-color: #0d47a1;
+  }
+  
+  .password-reset-footer {
+    width: 98%;
+    height: 60px;
+    background-color: #1565c0;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    font-size: 14px;
+  }
+  
+  .password-reset-back-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  

@@ -1,0 +1,68 @@
+.title {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 5px;
+  font-size: 30px;
+  font-weight: bold;
+  color: #333;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.border {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.tablesWithStats {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;}
+
+.statWithTable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+  flex: 1;
+  gap: 10px;
+  
+}
+
+.stat {
+  text-align: left;
+  font-family: Arial, sans-serif;
+  margin-bottom: 5px;
+  margin-left: 25px; 
+  margin-top: 10px;
+}
+
+
+.number {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.comparison {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.positive {
+  color: green;
+  margin-right: 5px;
+}
+
+.negative {
+  color: red;
+  margin-right: 5px;
+}
+
+.tables > * {
+  flex: 1;
+}

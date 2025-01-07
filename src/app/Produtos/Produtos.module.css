@@ -1,0 +1,179 @@
+.container {
+  padding: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh; 
+}
+
+.title {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  font-size: 30px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tableContainer {
+  margin-top: 20px;
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.table {
+  width: 100%;
+  border-radius: 12px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px;
+}
+
+.table tr{
+  transition: all .3s;
+}
+
+.table th {
+  background-color: white;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+.table tr:nth-child(even) {
+  background-color: #dfecff;
+}
+
+.table tr:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+.additionalInfo {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  background: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.additionalInfo div {
+  display: flex;
+  flex-direction: column;
+}
+
+.additionalInfo p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.filterExpansion {
+  display: flex;
+  flex-direction: column;
+  width: 42.5%;
+  max-width: 800px; 
+  background: #f9f9f9;
+  padding: 10px; 
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+  box-sizing: border-box;
+  gap: 15px; 
+}
+
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; 
+}
+
+.filterSection label {
+  font-size: 13px;
+  font-weight: 500; 
+  margin-bottom: 3px; 
+  color: #333;
+}
+
+.filterSection select {
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.filterSection input {
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.filterSection .smallSelectGroup {
+  display: flex;
+  gap: 8px; 
+}
+
+.filterSection .smallSelectGroup select {
+  flex: 1;
+}
+
+.dateRange {
+  display: flex;
+  gap: 10px; 
+}
+
+.dateRange input {
+  flex: 1;
+  padding: 6px; 
+  font-size: 13px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.paginationContainer{
+  position: fixed;
+  display: flex;
+  justify-content: left;
+  margin-top: 12px;
+  align-items: center;
+  gap: 8px;
+  bottom: 32px;
+}
+
+.paginationContainer button{
+  border: 0;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: .2s;
+  font-size: 24px;
+  display: flex;
+  height: 36px;
+  align-items: center;
+}
+
+.paginationContainer button:hover{
+  background-color: #1769E3;
+  color: #fff;
+}
+
+.paginationContainer p{
+  font-size: 24px;
+  color: #333;
+  line-height: 0px;
+  user-select: none;
+}
