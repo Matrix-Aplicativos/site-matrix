@@ -1,8 +1,11 @@
 "use client";
 
 import Sidebar from './components/Sidebar';
+import {Roboto} from 'next/font/google';
 import './globals.css';
 import { usePathname } from 'next/navigation';
+
+const roboto = Roboto({weight: "300",subsets:['latin']})
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,11 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body style={{ display: 'flex' }}>
+      <body style={{ display: 'flex' }} className={roboto.className}>
         {!hideSidebar && <Sidebar />}
         <main
           style={{
-            marginLeft: hideSidebar ? '0' : '250px',
+            marginLeft: hideSidebar ? '0' : '260px',
             padding: '20px',
             width: '100%',
           }}

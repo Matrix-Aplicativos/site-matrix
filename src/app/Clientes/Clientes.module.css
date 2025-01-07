@@ -17,31 +17,40 @@
 .tableContainer {
   margin-top: 20px;
   position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: 12px;
 }
 
 .table th,
 .table td {
-  border: 1px solid #ddd;
   text-align: left;
-  padding: 8px;
+  padding: 10px;
+
+}
+
+.table tr{
+  transition: all .3s;
 }
 
 .table th {
-  background-color: #f4f4f4;
+  background-color: white;
   font-weight: bold;
+  border-bottom: 1px solid #ddd;
+
 }
 
 .table tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #dfecff;
 }
 
 .table tr:hover {
-  background-color: #f1f1f1;
+  background-color: #eee;
   cursor: pointer;
 }
 

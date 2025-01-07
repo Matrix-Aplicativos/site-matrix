@@ -8,6 +8,7 @@ import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
+import { formatPreco } from "../utils/functions/formatPreco";
 
 const ProdutosPage: React.FC = () => {
   const [paginaAtual,setPaginaAtual] = useState(1);
@@ -124,7 +125,7 @@ const ProdutosPage: React.FC = () => {
                   <td>{row.descricaoItem}</td>
                   <td>{row.descricaoMarca}</td>
                   <td>{row.codItem}</td>
-                  <td>{row.precoVenda}</td>
+                  <td>{formatPreco(row.precoVenda)}</td>
                   <td>{row.saldoDisponivel}</td>
                   <td>{row.unidade}</td>
                   <td>
@@ -174,13 +175,13 @@ const ProdutosPage: React.FC = () => {
                         </div>
                         <div>
                           <p>
-                            <strong>Preço Venda:</strong> {row.precoVenda}
+                            <strong>Preço Venda:</strong> {formatPreco(row.precoVenda)}
                           </p>
                           <p>
-                            <strong>Preço Revenda:</strong> {row.precoRevenda}
+                            <strong>Preço Revenda:</strong> {formatPreco(row.precoRevenda)}
                           </p>
                           <p>
-                            <strong>Preço Promoção:</strong> {row.precoPromocao}
+                            <strong>Preço Promoção:</strong> {formatPreco(row.precoPromocao)}
                           </p>
                           <p>
                             <strong>Desconto Máx (%):</strong> {row.porcentagemDescontoMax}%
@@ -188,10 +189,10 @@ const ProdutosPage: React.FC = () => {
                         </div>
                         <div>
                           <p>
-                            <strong>Início Promoção:</strong> {row.dataInicioPromocao}
+                            <strong>Início Promoção:</strong> {new Date(row.dataInicioPromocao).toLocaleDateString("pt-BR")}
                           </p>
                           <p>
-                            <strong>Fim Promoção:</strong> {row.dataFimPromocao}
+                            <strong>Fim Promoção:</strong> {new Date(row.dataFimPromocao).toLocaleDateString("pt-BR")}
                           </p>
                           <p>
                             <strong>Saldo Disponível:</strong> {row.saldoDisponivel}{" "}

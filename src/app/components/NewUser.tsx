@@ -100,14 +100,14 @@ export default function NewUser({ closeModal} : {closeModal : ()=>void}) {
             />
           </div>
           <div className={styles.inputGroup}>
-          <label>
-                  Tipo de Usuário:
+            <label htmlFor="cargo" className={styles.label}>
+                  <p>Tipo de Usuário:</p>
                   <select value={formData.codCargo} onChange={(e) => {setFormData({ ...formData, codCargo: Number(e.target.value) })}}>
                     <option value="3">Representante</option>
                     <option value="4">Loja</option>
                   </select>
-                </label>
-                </div>
+              </label>
+            </div>
           <button type="submit" className={styles.button}>
             Criar Usuário
           </button>

@@ -4,9 +4,9 @@
   gap: 20px;
   width: 99%;
   margin: 0 auto;
-  font-family: Arial, sans-serif;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
+  padding: 8px;
 }
 
 .leftSection {
@@ -14,7 +14,7 @@
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 12px;
 }
 
 .title {
@@ -26,31 +26,44 @@
 
 .tableContainer {
   overflow-x: auto;
-  margin-top: 10px;
+  margin-top: 20px;
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  border-radius: 12px;
 }
 
 .table th,
 .table td {
   text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
+  padding: 10px;
+}
+
+.table tr{
+  transition: all .3s;
 }
 
 .table th {
-  background-color: #f3f3f3;
-  color: #555;
+  background-color: white;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
 }
 
-.table tbody tr:hover {
-  background-color: #f9f9f9;
-  transition: background-color 0.2s;
+.table tr td{
+  border-bottom: 1px solid #ddd;
 }
+
+.table tr:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+
 
 .rightSection {
   flex: 2.5;
@@ -93,7 +106,7 @@
   display: block;
   width: 100%;
   padding: 12px 20px;
-  background-color: #0073e6;
+  background-color: #1769E3;
   color: white;
   text-align: center;
   font-size: 16px;
@@ -122,10 +135,10 @@
 }
 
 .modalContent {
-  width: 50%;
-  max-width: 600px;
+  width: 100%;
+  max-width: 700px;
   background-color: #ffffff;
-  padding: 20px;
+  padding: 12px 20px;
   border-radius: 12px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -143,7 +156,7 @@
   color: black;
   background-color: none;
   background: none;
-  font-size: 18px;
+  font-size: 24px;
   cursor: pointer;
 }
 
@@ -160,7 +173,7 @@
 .modalForm {
   display: flex;
   flex-direction: row;
-  gap: 20px;
+  gap: 12px;
   justify-content: space-between;
   margin-bottom: 15px;
 }
@@ -169,23 +182,32 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 1;
+  flex: 1
 }
 
 .modalColumn label {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
-  color: #555;
+  color: #333;
 }
 
 .modalColumn input {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+
+.modalColumn select{
+  border: 1px solid #ddd;
+  padding: 4px;
+  outline: none;
+  border-radius: 6px;
+  width: 100%;
 }
 
 .modalActions {
@@ -249,6 +271,30 @@
   color: #005bb5;
 }
 
+.deviceEditModal{
+  border-left: 1px solid #ddd;
+  height: 100%;
+  width: 90%;
+  padding: 0 16px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.deviceEditModal h3{
+  color: #333;
+  width: 100%;
+  max-width: 220px;
+}
+
+
+
+.deviceEditModal div .nomeDispositivo{
+  font-size: 16px;
+  font-weight: bold;
+}
+
+
 .resetPasswordButton {
   padding: 10px 20px;
   border: none;
@@ -258,4 +304,37 @@
   font-weight: bold;
   background-color: #005bb5;
   color: #f3f3f3;
+}
+
+.paginationContainer{
+  display: flex;
+  justify-content: left;
+  margin-top: 12px;
+  align-items: center;
+  gap: 4px;
+}
+
+.paginationContainer button{
+  border: 0;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: .2s;
+  font-size: 20px;
+  display: flex;
+  height: 24px;
+  align-items: center;
+}
+
+.paginationContainer button:hover{
+  background-color: #1769E3;
+  color: #fff;
+}
+
+.paginationContainer p{
+  font-size: 20px;
+  color: #333;
+  line-height: 0px;
+  user-select: none;
 }

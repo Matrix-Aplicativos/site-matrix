@@ -1,6 +1,6 @@
 import styles from './RankingTable.module.css';
 
-export default function RankingTable({ title, data }) {
+export default function RankingTable({ title, data } : {title : string, data: any[]}) {
   return (
     <div className={styles.tableContainer}>
       <h2 className={styles.tableTitle}>{title}</h2>

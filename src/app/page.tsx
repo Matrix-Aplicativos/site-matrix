@@ -30,7 +30,7 @@ export default function HomePage() {
         <div className={styles.tablesWithStats}>
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>500</span>
+              <span className={styles.number}>500 </span>
               <span>Pedidos Feitos esse mês</span>
               <span className={styles.comparison}>
                 <span className={styles.positive}>▲ 10%</span> em relação a
@@ -41,7 +41,7 @@ export default function HomePage() {
           </div>
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>1000</span>
+              <span className={styles.number}>1000 </span>
               <span>Clientes Atendidos</span>
               <span className={styles.comparison}>
                 <span className={styles.negative}>▼ 12%</span> em relação a

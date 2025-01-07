@@ -8,6 +8,7 @@ import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { formatPreco } from "../utils/functions/formatPreco";
 
 const PedidosPage: React.FC = () => {
   const [paginaAtual,setPaginaAtual] = useState(1);
@@ -92,7 +93,7 @@ const PedidosPage: React.FC = () => {
                 <tr>
                   <td>{row.codPedido}</td>
                   <td>{ new Date(row.dataCadastro).toLocaleDateString("pt-BR")}</td>
-                  <td>R$ {row.valorTotal.toFixed(2)}</td>
+                  <td>{formatPreco(row.valorTotal)}</td>
                   <td>{row.status === "1" ? "Recebido" : row.status === "2" ? "Transmitido" : "Cancelado"}</td>
                   <td>
                     <button
@@ -130,16 +131,16 @@ const PedidosPage: React.FC = () => {
                             {row.itens.map((item, index) => (
                               <li key={index}>
                                 <strong>{item.id.codItem}</strong> - Quantidade:{" "}
-                                {item.qtdItem}, Preço Unitário: R${" "}
-                                {item.precoUnitario.toFixed(2)}
+                                {item.qtdItem}, Preço Unitário: {" "}
+                                {formatPreco(item.precoUnitario)}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
                           <p>
-                            <strong>Valor Total:</strong> R${" "}
-                            {row.valorTotal.toFixed(2)}
+                            <strong>Valor Total:</strong> {" "}
+                            {formatPreco(row.valorTotal)}
                           </p>
                         </div>
                       </div>

@@ -1,18 +1,19 @@
 'use client'; 
 
 import React from 'react';
-import { useRouter } from 'next/navigation'; 
+import { usePathname, useRouter } from 'next/navigation'; 
 import { deleteCookie,getCookie } from 'cookies-next';
 import './Sidebar.css';
-import { FaClipboardList, FaUsers, FaBox, FaSignOutAlt, FaHome, FaAddressCard } from 'react-icons/fa';
 import Link from 'next/link';
 import useGetLoggedUser from '../hooks/useGetLoggedUser';
 import { getUserFromToken } from '../utils/functions/getUserFromToken';
+import { FiBox, FiClipboard, FiHome, FiLogOut, FiPackage, FiSettings, FiUser } from 'react-icons/fi';
 
 export default function Sidebar() {
   const router = useRouter();
   const token = getCookie('token');
   const {usuario} = useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  const pathname = usePathname();
 
   const handleLogout = () => {
     router.push('/Login'); 
@@ -29,36 +30,36 @@ export default function Sidebar() {
         </li>
         <li>
           <Link href="/" className="menu-item">
-            <FaHome />
+            <FiHome size={24} />
             Home
           </Link>
         </li>
         <li>
           <Link href="/Pedidos" className="menu-item">
-            <FaClipboardList />
+            <FiClipboard size={24} />
             Pedidos
           </Link>
         </li>
         <li>
           <Link href="/Clientes" className="menu-item">
-            <FaUsers />
+            <FiUser size={24} />
             Clientes
           </Link>
         </li>
         <li>
           <Link href="/Produtos" className="menu-item">
-            <FaBox />
+            <FiPackage size={24} />
             Produtos
           </Link>
         </li>
       </ul>
       <div className="bottom-section">
         <Link href="/Administrativo" className="menu-item">
-          <FaAddressCard />
-          Adm
+          <FiSettings size={24}/>
+          Administrativo
         </Link>
         <button className="menu-item logout" onClick={handleLogout}>
-          <FaSignOutAlt className="logout-icon" />
+          <FiLogOut size={24} className="logout-icon" />
           <span className="logout-text">Sair</span>
         </button>
       </div>

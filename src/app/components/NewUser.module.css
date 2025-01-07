@@ -63,10 +63,18 @@
   gap: 5px;
 }
 
+.inputGroup select {
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  outline: none;
+  border-radius: 6px;
+  width: 100%;
+}
+
 .label {
-  font-size: 0.9rem;
-  color: #555;
-  font-weight: 500;
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
 }
 
 .input {

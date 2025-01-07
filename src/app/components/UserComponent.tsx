@@ -10,6 +10,8 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import useGetUsuarios from "../hooks/useGetUsuarios";
 import { Usuario } from "../utils/types/Usuario";
 import useAtualizarUsuario from "../hooks/useAtualizarUsuario";
+import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 
 
 const UserComponent: React.FC = () => {
@@ -18,6 +20,7 @@ const UserComponent: React.FC = () => {
   const {usuario} = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();  
   const {usuarios, loading, error} = useGetUsuarios(usuario?.empresas[0].codEmpresa || 0,1);
+  const [paginaAtual,setPaginaAtual] = useState(1);
   const [usuariosDisponiveis,setUsuariosDisponiveis] = useState((usuario?.empresas[0].maxUsuarios! - usuarios?.length! ) || 0);
 
     useEffect(() => {
@@ -90,7 +93,7 @@ const UserComponent: React.FC = () => {
                 <React.Fragment key={rowIndex}>
                   <tr style={{opacity: row.ativo ? 1 : 0.5}}>
                     <td>{row.nome}</td>
-                    <td>{row.cnpjcpf}</td>
+                    <td>{formatCnpjCpf(row.cnpjcpf)}</td>
                     <td>{row.email}</td>
                     <td>{row.login}</td>
                     <td>{row.ativo ? "Ativo" : "Inativo"}</td>
@@ -150,6 +153,14 @@ const UserComponent: React.FC = () => {
               ))}
             </tbody>
           </table>
+          <div className={styles.paginationContainer}>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(1)}}}><FiChevronsLeft /></button>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(paginaAtual-1)}}}><FiChevronLeft /></button>
+          <p>{paginaAtual}</p>
+          {usuarios && usuarios.length === 5 ?
+          <button onClick={(e)=>{e.preventDefault();setPaginaAtual(paginaAtual+1)}}><FiChevronRight /></button> : null
+          }
+        </div>
         </div>
       </div>
 
@@ -207,8 +218,6 @@ const UserComponent: React.FC = () => {
                     }
                   />
                 </label>
-              </div>
-              <div className={styles.modalColumn}>
                 <label>
                   Tipo de Usuário:
                   <select disabled={currentUser.codUsuario === codUsuario} value={currentUser.cargo.codCargo} onChange={(e) => {console.log(e.target.value);setCurrentUser({ ...currentUser, cargo: {...currentUser.cargo,codCargo: Number(e.target.value) }})}}>
@@ -231,17 +240,22 @@ const UserComponent: React.FC = () => {
                     }
                   />
                 </label>
+                <label>
+                    Status:
                 <select disabled={currentUser.codUsuario === codUsuario} value={currentUser.ativo ? "true" : "false"} onChange={(e) => setCurrentUser({ ...currentUser, ativo: e.target.value === "true" })}>
                   <option value="true">Ativo</option>
                   <option value="false">Inativo</option>
                 </select>
+                </label>
               </div>
-              <h3>Dispositivo Conectado:</h3>
               <div>
+              <div className={styles.modalColumn}>
+              <div className={styles.deviceEditModal}>
+              <h3>Dispositivo Conectado</h3>
                 {
                   currentUser.dispositivos.length > 0 ? currentUser.dispositivos.map((dispositivo, index) => (
                     <div>
-                      <p>{dispositivo.nomeDispositivo}</p>
+                      <p className={styles.nomeDispositivo}>{dispositivo.nomeDispositivo}</p>
                       <select value={dispositivo.ativo ? "true" : "false"} onChange={(e) => setCurrentUser({ ...currentUser, dispositivos: currentUser.dispositivos?.map((disp, i) => i === index ? {...disp, ativo: e.target.value === "true"} : disp) })}>
                         <option value="true">Ativo</option>
                         <option value="false">Inativo</option>
@@ -250,6 +264,8 @@ const UserComponent: React.FC = () => {
                   )) : <p>Nenhum dispositivo conectado</p>
                 }
               </div>
+              </div>
+            </div>
             </div>
             <div className={styles.modalActions}>
               <button onClick={handleSaveChanges}>Salvar</button>

@@ -8,6 +8,9 @@ import { getCookie } from "cookies-next";
 import { FiChevronsLeft,FiChevronLeft,FiChevronRight } from "react-icons/fi";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
+import { formatTelefone } from "../utils/functions/formatTelefone";
+import { formatCep } from "../utils/functions/formatCep";
 
 const ClientesPage: React.FC = () => {
   const [paginaAtual,setPaginaAtual] = useState(1);
@@ -89,7 +92,7 @@ const ClientesPage: React.FC = () => {
                   <td>{row.codCliente}</td>
                   <td>{row.razaoSocial}</td>
                   <td>{row.nomeFantasia}</td>
-                  <td>{row.cnpjcpf}</td>
+                  <td>{formatCnpjCpf(row.cnpjcpf)}</td>
                   <td>
                     <button
                       onClick={() => toggleExpandRow(rowIndex)}
@@ -115,10 +118,10 @@ const ClientesPage: React.FC = () => {
                             <strong>Nome Fantasia:</strong> {row.nomeFantasia}
                           </p>
                           <p>
-                            <strong>CNPJ/CPF:</strong> {row.cnpjcpf}
+                            <strong>CNPJ/CPF:</strong> {formatCnpjCpf(row.cnpjcpf)}
                           </p>
                           <p>
-                            <strong>Telefone:</strong> {row.fone1}
+                            <strong>Telefone:</strong> {formatTelefone(row.fone1)}
                           </p>
                         </div>
                         <div>
@@ -133,7 +136,7 @@ const ClientesPage: React.FC = () => {
                             {row.complemento || "Nenhum"}
                           </p>
                           <p>
-                            <strong>CEP:</strong> {row.cep || "Não informado"}
+                            <strong>CEP:</strong> {formatCep(row.cep) || "Não informado"}
                           </p>
                         </div>
                         <div>
