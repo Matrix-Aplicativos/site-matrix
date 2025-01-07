@@ -65,6 +65,10 @@ body {
   color: #AAAAAA;
 }
 
+.input-field input:disabled{
+  color: #aaa;
+}
+
 .login-button {
   display: flex;
   align-items: center;
@@ -81,12 +85,32 @@ body {
   max-width: 400px;
   text-transform: uppercase;
   transition: background-color 0.3s;
-  margin-bottom: 70px;
+  margin-bottom: 8px;
 }
 
 .login-button:hover {
   background-color: #0d47a1;
 }
+
+.voltar-button{
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ec0b30;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  padding: 12px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  text-transform: uppercase;
+  transition: background-color 0.3s;
+}
+
 
 .footer {
   width: 98%; 
@@ -109,4 +133,21 @@ body {
   color: white;
   cursor: pointer;
   text-decoration: underline;
+}
+
+
+.forca-senha{
+  width: 240px;
+  height: 6px;
+  position: relative;
+  top: -12px;
+  transition: 0.2s;
+}
+
+.texto-forca-senha{
+  position: absolute;
+  left: 0;
+  top: 30px;
+  font-size: 14px;
+  font-weight: bold;
 }

@@ -1,153 +1,30 @@
 'use client'; 
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import styles from "./Pedidos.module.css";
+import useGetPedidos from "../hooks/useGetPedidos";
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const PedidosPage: React.FC = () => {
-  const data = [
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-    {
-      codPedido: 101,
-      codCliente: 1,
-      valorTotal: 199.9,
-      status: "Concluído",
-      observacao: "Pedido entregue com sucesso",
-      dataPedido: "2024-12-12",
-      itens: [
-        { codItem: 1, descricao: "Produto A", quantidade: 2, precoUnit: 50 },
-        { codItem: 2, descricao: "Produto B", quantidade: 3, precoUnit: 33.3 },
-      ],
-    },
-    {
-      codPedido: 102,
-      codCliente: 2,
-      valorTotal: 89.9,
-      status: "Pendente",
-      observacao: "Aguardando pagamento",
-      dataPedido: "2024-12-10",
-      itens: [
-        { codItem: 3, descricao: "Produto C", quantidade: 1, precoUnit: 89.9 },
-      ],
-    },
-    {
-      codPedido: 103,
-      codCliente: 3,
-      valorTotal: 129.9,
-      status: "Cancelado",
-      observacao: "Cliente desistiu da compra",
-      dataPedido: "2024-12-11",
-      itens: [
-        { codItem: 4, descricao: "Produto D", quantidade: 2, precoUnit: 64.95 },
-      ],
-    },
-  ];
-
+  const [paginaAtual,setPaginaAtual] = useState(1);
+  const token = getCookie("token");
+  const codUsuario = getUserFromToken(String(token));
+  const {usuario} = useGetLoggedUser(codUsuario || 0);
+  const {pedidos} = useGetPedidos(usuario?.empresas[0].codEmpresa || 1,paginaAtual)
   const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState(data);
+  const [filteredData, setFilteredData] = useState(pedidos);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  useEffect(()=>{
+    if(query === ""){
+      setFilteredData(pedidos);
+    }
+  },[query,pedidos])
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -159,13 +36,6 @@ const PedidosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    const lowerQuery = searchQuery.toLowerCase();
-    const filtered = data.filter((item) =>
-      Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(lowerQuery)
-      )
-    );
-    setFilteredData(filtered);
   };
 
   return (
@@ -187,10 +57,10 @@ const PedidosPage: React.FC = () => {
           {/* Segunda parte */}
           <div className={styles.filterSection}>
             <label>Filtrar por:</label>
-            <select placeholder="Status">
+            <select aria-placeholder="Status">
               <option value="">Status</option>
             </select>
-            <select placeholder="Cliente">
+            <select aria-placeholder="Cliente">
               <option value="">Cliente</option>
             </select>
           </div>
@@ -217,13 +87,13 @@ const PedidosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row, rowIndex) => (
+            {filteredData && filteredData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr>
                   <td>{row.codPedido}</td>
-                  <td>{row.dataPedido}</td>
+                  <td>{ new Date(row.dataCadastro).toLocaleDateString("pt-BR")}</td>
                   <td>R$ {row.valorTotal.toFixed(2)}</td>
-                  <td>{row.status}</td>
+                  <td>{row.status === "1" ? "Recebido" : row.status === "2" ? "Transmitido" : "Cancelado"}</td>
                   <td>
                     <button
                       onClick={() => toggleExpandRow(rowIndex)}
@@ -251,9 +121,6 @@ const PedidosPage: React.FC = () => {
                           <p>
                             <strong>Observação:</strong> {row.observacao}
                           </p>
-                          <p>
-                            <strong>Data do Pedido:</strong> {row.dataPedido}
-                          </p>
                         </div>
                         <div>
                           <p>
@@ -262,9 +129,9 @@ const PedidosPage: React.FC = () => {
                           <ul>
                             {row.itens.map((item, index) => (
                               <li key={index}>
-                                <strong>{item.descricao}</strong> - Quantidade:{" "}
-                                {item.quantidade}, Preço Unitário: R${" "}
-                                {item.precoUnit.toFixed(2)}
+                                <strong>{item.id.codItem}</strong> - Quantidade:{" "}
+                                {item.qtdItem}, Preço Unitário: R${" "}
+                                {item.precoUnitario.toFixed(2)}
                               </li>
                             ))}
                           </ul>
@@ -283,6 +150,14 @@ const PedidosPage: React.FC = () => {
             ))}
           </tbody>
         </table>
+        <div className={styles.paginationContainer}>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(1)}}}><FiChevronsLeft /></button>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(paginaAtual-1)}}}><FiChevronLeft /></button>
+          <p>{paginaAtual}</p>
+          {pedidos && pedidos.length === 10 ?
+          <button onClick={(e)=>{e.preventDefault();setPaginaAtual(paginaAtual+1)}}><FiChevronRight /></button> : null
+          }
+        </div>
       </div>
     </div>
   );

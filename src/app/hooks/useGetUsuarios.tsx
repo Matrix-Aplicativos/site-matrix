@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
+import { Cargo } from "../utils/types/Cargo";
+import { Dispositivo } from "../utils/types/Dispositivo";
+import { Empresa } from "../utils/types/Empresa";
+import { Usuario } from "../utils/types/Usuario";
 
-interface Usuario {
-  nome: string;
-  cnpjcpf: string;
-  email: string;
-  login: string;
-  codCargo: number;
-  codEmpresas: number[]; // Array de IDs de empresas
-}
+
 
 interface UseGetUsuariosHook {
   usuarios: Usuario[] | null;
@@ -16,7 +13,7 @@ interface UseGetUsuariosHook {
   error: string | null;
 }
 
-const useGetUsuarios = (codEmpresa: number): UseGetUsuariosHook => {
+const useGetUsuarios = (codEmpresa: Number,pagina: Number): UseGetUsuariosHook => {
   const [usuarios, setUsuarios] = useState<Usuario[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +22,7 @@ const useGetUsuarios = (codEmpresa: number): UseGetUsuariosHook => {
     const fetchUsuarios = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`/usuario/empresa/${codEmpresa}`);
+        const response = await axiosInstance.get(`/usuario/empresa/${codEmpresa}?pagina=${pagina}&porPagina=5`);
         setUsuarios(response.data);
         setError(null);
       } catch (err) {
@@ -41,7 +38,7 @@ const useGetUsuarios = (codEmpresa: number): UseGetUsuariosHook => {
     if (codEmpresa) {
       fetchUsuarios();
     }
-  }, [codEmpresa]);
+  }, [codEmpresa,pagina]);
 
   return { usuarios, loading, error };
 };

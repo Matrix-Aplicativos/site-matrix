@@ -1,23 +1,35 @@
 'use client'; 
 
-import React, { useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import styles from "./NewUser.module.css";
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import useNovoUsuario from "../hooks/useNovoUsuario";
 
-export default function NewUser({ closeModal }) {
+export default function NewUser({ closeModal} : {closeModal : ()=>void}) {
+  const token = getCookie("token");
+  const codCurrentUser = getUserFromToken(String(token));
+  const {usuario} = useGetLoggedUser(codCurrentUser || 0);
+  const {createNovoUsuario} = useNovoUsuario();
   const [formData, setFormData] = useState({
-    name: "",
-    cpf: "",
+    nome: "",
+    cnpjcpf: "",
+    login: "",
     email: "",
+    codEmpresas : [0],
+    codCargo : 3
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e : any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e : FormEvent) => {
     e.preventDefault();
-    console.log("Novo usuário criado:", formData);
+    console.log("Novo usuário criado:", {...formData,codEmpresas: [usuario?.empresas[0].codEmpresa]});
+    createNovoUsuario({...formData,codEmpresas: [usuario?.empresas[0].codEmpresa || 0]})
     closeModal();
   };
 
@@ -32,28 +44,42 @@ export default function NewUser({ closeModal }) {
         </div>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label htmlFor="name" className={styles.label}>
+            <label htmlFor="nome" className={styles.label}>
               Nome
             </label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="nome"
+              name="nome"
+              value={formData.nome}
               onChange={handleChange}
               className={styles.input}
               required
             />
           </div>
           <div className={styles.inputGroup}>
-            <label htmlFor="cpf" className={styles.label}>
+            <label htmlFor="cnpjcpf" className={styles.label}>
               CPF
             </label>
             <input
               type="text"
-              id="cpf"
-              name="cpf"
-              value={formData.cpf}
+              id="cnpjcpf"
+              name="cnpjcpf"
+              value={formData.cnpjcpf}
+              onChange={handleChange}
+              className={styles.input}
+              required
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor="login" className={styles.label}>
+              Login
+            </label>
+            <input
+              type="text"
+              id="login"
+              name="login"
+              value={formData.login}
               onChange={handleChange}
               className={styles.input}
               required
@@ -73,6 +99,15 @@ export default function NewUser({ closeModal }) {
               required
             />
           </div>
+          <div className={styles.inputGroup}>
+          <label>
+                  Tipo de Usuário:
+                  <select value={formData.codCargo} onChange={(e) => {setFormData({ ...formData, codCargo: Number(e.target.value) })}}>
+                    <option value="3">Representante</option>
+                    <option value="4">Loja</option>
+                  </select>
+                </label>
+                </div>
           <button type="submit" className={styles.button}>
             Criar Usuário
           </button>

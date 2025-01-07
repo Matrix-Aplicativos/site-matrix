@@ -1,114 +1,31 @@
 'use client'; 
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import styles from "./Produtos.module.css";
+import useGetProdutos from "../hooks/useGetProdutos";
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 
 const ProdutosPage: React.FC = () => {
-  const data = [
-    {
-      description: "Produto 1",
-      brand: "Marca A",
-      code: "123456",
-      price: "R$19,90",
-      stock: 10000,
-      unit: "M²",
-    },
-    {
-      description: "Produto 2",
-      brand: "Marca B",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
-    {
-      description: "Produto 3",
-      brand: "Marca C",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "ML",
-    },
-    {
-      description: "Produto 1",
-      brand: "Marca A",
-      code: "123456",
-      price: "R$19,90",
-      stock: 10000,
-      unit: "M²",
-    },
-    {
-      description: "Produto 2",
-      brand: "Marca B",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
-    {
-      description: "Produto 3",
-      brand: "Marca C",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "ML",
-    },
-    {
-      description: "Produto 1",
-      brand: "Marca A",
-      code: "123456",
-      price: "R$19,90",
-      stock: 10000,
-      unit: "M²",
-    },
-    {
-      description: "Produto 2",
-      brand: "Marca B",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
-    {
-      description: "Produto 3",
-      brand: "Marca C",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "ML",
-    },
-    {
-      description: "Produto 1",
-      brand: "Marca A",
-      code: "123456",
-      price: "R$19,90",
-      stock: 10000,
-      unit: "M²",
-    },
-    {
-      description: "Produto 2",
-      brand: "Marca B",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "KG",
-    },
-    {
-      description: "Produto 3",
-      brand: "Marca C",
-      code: "654321",
-      price: "R$29,90",
-      stock: 5000,
-      unit: "ML",
-    },
-    
-  ];
+  const [paginaAtual,setPaginaAtual] = useState(1);
+  const token = getCookie('token')
+  const codUsuario = getUserFromToken(String(token));
+  const {usuario} = useGetLoggedUser(codUsuario || 0);
+  const {produtos,loading,error} = useGetProdutos(usuario?.empresas[0]?.codEmpresa || 1,paginaAtual);
 
   const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState(data);
+  const [filteredData, setFilteredData] = useState(produtos);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  useEffect(()=>{
+    if(query === ""){
+      setFilteredData(produtos);
+    }
+  },[query,produtos])
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -119,10 +36,6 @@ const ProdutosPage: React.FC = () => {
   };
 
   const handleSearch = (searchQuery: string) => {
-    const filtered = data.filter((item) =>
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredData(filtered);
     setQuery(searchQuery);
   };
 
@@ -169,17 +82,17 @@ const ProdutosPage: React.FC = () => {
           {/* Segunda parte */}
           <div className={styles.filterSection}>
             <label>Filtrar por:</label>
-            <select placeholder="Departamento">
+            <select aria-placeholder="Departamento">
               <option value="">Departamento</option>
             </select>
-            <select placeholder="Família">
+            <select aria-placeholder="Família">
               <option value="">Família</option>
             </select>
             <div className={styles.smallSelectGroup}>
-              <select placeholder="Grupo">
+              <select aria-placeholder="Grupo">
                 <option value="">Grupo</option>
               </select>
-              <select placeholder="Subgrupo">
+              <select aria-placeholder="Subgrupo">
                 <option value="">Subgrupo</option>
               </select>
             </div>
@@ -205,16 +118,27 @@ const ProdutosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row, rowIndex) => (
+            {filteredData && filteredData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr>
-                  {columns.map((col) => (
-                    <td key={col.key}>
-                      {col.render
-                        ? col.render(row[col.key], row, rowIndex)
-                        : row[col.key]}
-                    </td>
-                  ))}
+                  <td>{row.descricaoItem}</td>
+                  <td>{row.descricaoMarca}</td>
+                  <td>{row.codItem}</td>
+                  <td>{row.precoVenda}</td>
+                  <td>{row.saldoDisponivel}</td>
+                  <td>{row.unidade}</td>
+                  <td>
+                    <button
+                      onClick={() => toggleExpandRow(rowIndex)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
@@ -222,58 +146,58 @@ const ProdutosPage: React.FC = () => {
                       <div className={styles.additionalInfo}>
                         <div>
                           <p>
-                            <strong>Código:</strong> {row.code}
+                            <strong>Código:</strong> {row.codItem}
                           </p>
                           <p>
-                            <strong>Cód. de Barras:</strong> 101010110101
+                            <strong>Cód. de Barras:</strong> {row.codBarra}
                           </p>
                           <p>
-                            <strong>Cód. de Referência:</strong> 1004ABC
+                            <strong>Cód. de Referência:</strong> {row.codReferencia}
                           </p>
                           <p>
-                            <strong>Cód. do Fabricante:</strong> 000001
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Grupo:</strong> Ferramentas
-                          </p>
-                          <p>
-                            <strong>Subgrupo:</strong> Industriais
-                          </p>
-                          <p>
-                            <strong>Departamento:</strong> Ferramentas Pesadas
-                          </p>
-                          <p>
-                            <strong>Família:</strong> Elétricos
+                            <strong>Cód. do Fabricante:</strong> {row.codFabricante}
                           </p>
                         </div>
                         <div>
                           <p>
-                            <strong>Preço Venda:</strong> {row.price}
+                            <strong>Grupo:</strong> {row.grupo}
                           </p>
                           <p>
-                            <strong>Preço Revenda:</strong> R$25,00
+                            <strong>Subgrupo:</strong> {row.subGrupo}
                           </p>
                           <p>
-                            <strong>Preço Promoção:</strong> R$20,00
+                            <strong>Departamento:</strong> {row.departamento}
                           </p>
                           <p>
-                            <strong>Desconto Máx (%):</strong> 10%
+                            <strong>Família:</strong> {row.familia}
                           </p>
                         </div>
                         <div>
                           <p>
-                            <strong>Início Promoção:</strong> 01/01/2024
+                            <strong>Preço Venda:</strong> {row.precoVenda}
                           </p>
                           <p>
-                            <strong>Fim Promoção:</strong> 15/01/2024
+                            <strong>Preço Revenda:</strong> {row.precoRevenda}
                           </p>
                           <p>
-                            <strong>Saldo Disponível:</strong> {row.stock}{" "}
+                            <strong>Preço Promoção:</strong> {row.precoPromocao}
                           </p>
                           <p>
-                            <strong>Unidade:</strong> {row.unit}
+                            <strong>Desconto Máx (%):</strong> {row.porcentagemDescontoMax}%
+                          </p>
+                        </div>
+                        <div>
+                          <p>
+                            <strong>Início Promoção:</strong> {row.dataInicioPromocao}
+                          </p>
+                          <p>
+                            <strong>Fim Promoção:</strong> {row.dataFimPromocao}
+                          </p>
+                          <p>
+                            <strong>Saldo Disponível:</strong> {row.saldoDisponivel}{" "}
+                          </p>
+                          <p>
+                            <strong>Unidade:</strong> {row.unidade}
                           </p>
                         </div>
                       </div>
@@ -284,6 +208,14 @@ const ProdutosPage: React.FC = () => {
             ))}
           </tbody>
         </table>
+        <div className={styles.paginationContainer}>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(1)}}}><FiChevronsLeft /></button>
+          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(paginaAtual-1)}}}><FiChevronLeft /></button>
+          <p>{paginaAtual}</p>
+          {produtos && produtos.length === 10 ?
+          <button onClick={(e)=>{e.preventDefault();setPaginaAtual(paginaAtual+1)}}><FiChevronRight /></button> : null
+          }
+        </div>
       </div>
     </div>
   );

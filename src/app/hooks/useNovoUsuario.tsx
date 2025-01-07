@@ -11,7 +11,7 @@ interface NovoUsuario {
 }
 
 interface useNovoUsuarioHook {
-  createUsuario: (novoUsuario: NovoUsuario) => Promise<void>;
+  createNovoUsuario: (novoUsuario: NovoUsuario) => Promise<void>;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -22,7 +22,7 @@ const useNovoUsuario = (): useNovoUsuarioHook => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  const novoUsuario = async (novoUsuario: NovoUsuario): Promise<void> => {
+  const createNovoUsuario = async (novoUsuario: NovoUsuario): Promise<void> => {
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -39,7 +39,7 @@ const useNovoUsuario = (): useNovoUsuarioHook => {
     }
   };
 
-  return { novoUsuario, loading, error, success };
+  return { createNovoUsuario, loading, error, success };
 };
 
 export default useNovoUsuario;

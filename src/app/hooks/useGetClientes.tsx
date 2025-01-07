@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
+import { AxiosError } from "axios";
 
 interface Municipio {
   codMunicipio: string;
@@ -36,32 +37,31 @@ interface UseGetClientesHook {
   error: string | null;
 }
 
-const useGetClientes = (codEmpresa: number): UseGetClientesHook => {
+const useGetClientes = (codEmpresa: number,pagina : number): UseGetClientesHook => {
   const [clientes, setClientes] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchClientes = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/cliente/${codEmpresa}?pagina=${pagina}&porPagina=10`);
+      setClientes(response.data); 
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar os clientes."
+      );
+      setClientes(null);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchClientes = async () => {
-      try {
-        setLoading(true);
-        const response = await axiosInstance.get(`/cliente/${codEmpresa}`);
-        setClientes(response.data); 
-        setError(null);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Ocorreu um erro ao buscar os clientes."
-        );
-        setClientes(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (codEmpresa) {
       fetchClientes();
     }
-  }, [codEmpresa]);
+  }, [codEmpresa,pagina]);
 
   return { clientes, loading, error };
 };

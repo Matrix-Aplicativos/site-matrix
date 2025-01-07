@@ -135,3 +135,38 @@
   background-color: #fff;
   color: #333;
 }
+
+.paginationContainer{
+  position: fixed;
+  display: flex;
+  justify-content: left;
+  margin-top: 12px;
+  align-items: center;
+  gap: 8px;
+  bottom: 32px;
+}
+
+.paginationContainer button{
+  border: 0;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: .2s;
+  font-size: 24px;
+  display: flex;
+  height: 36px;
+  align-items: center;
+}
+
+.paginationContainer button:hover{
+  background-color: #1769E3;
+  color: #fff;
+}
+
+.paginationContainer p{
+  font-size: 24px;
+  color: #333;
+  line-height: 0px;
+  user-select: none;
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance"; 
+import { AxiosError } from "axios";
 
 interface Produto {
   codItem: number;
@@ -21,7 +22,7 @@ interface Produto {
   dataFimPromocao: string;
   saldoDisponivel: number;
   porcentagemDescontoMax: number;
-  imagens: any[]; 
+  imagens: string[]; 
 }
 
 interface UseGetProdutosHook {
@@ -30,32 +31,32 @@ interface UseGetProdutosHook {
   error: string | null;
 }
 
-const useGetProdutos = (codEmpresa: number): UseGetProdutosHook => {
+const useGetProdutos = (codEmpresa: number,pagina: number): UseGetProdutosHook => {
   const [produtos, setProdutos] = useState<Produto[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProdutos = async () => {
-      try {
-        setLoading(true);
-        const response = await axiosInstance.get(`/item/${codEmpresa}`);
-        setProdutos(response.data);
-        setError(null);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Ocorreu um erro ao buscar os produtos."
-        );
-        setProdutos(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProdutos = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/item/${codEmpresa}?pagina=${pagina}&porPagina=10`);
+      setProdutos(response.data);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar os produtos."
+      );
+      setProdutos(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (codEmpresa) {
       fetchProdutos();
     }
-  }, [codEmpresa]);
+  }, [codEmpresa,pagina]);
 
   return { produtos, loading, error };
 };

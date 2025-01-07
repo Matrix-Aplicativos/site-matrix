@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from './axiosInstance';
+import { AxiosError } from 'axios';
+import { Pedido } from '../utils/types/Pedido';
 
-const useGetPedidos = (codEmpresa) => {
-  const [data, setData] = useState(null); 
+const useGetPedidos = (codEmpresa : Number,pagina : Number) => {
+  const [pedidos, setPedidos] = useState<Pedido[] | null>(null); 
   const [loading, setLoading] = useState(false); 
   const [error, setError] = useState(null); 
 
@@ -13,19 +15,22 @@ const useGetPedidos = (codEmpresa) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get(`/pedido/${codEmpresa}`);
-        setData(response.data); 
+        const response = await axiosInstance.get(`/pedido/${codEmpresa}?pagina=${pagina}&porPagina=10`);
+        setPedidos(response.data); 
+        console.log(response.data);
       } catch (err) {
-        setError(err); 
+        setError(
+          err instanceof AxiosError ? err.response?.data.message : "Ocorreu um erro ao buscar os pedidos."
+        ); 
       } finally {
         setLoading(false); 
       }
     };
 
     fetchPedidos();
-  }, [codEmpresa]); 
+  }, [codEmpresa,pagina]); 
 
-  return { data, loading, error };
+  return { pedidos, loading, error };
 };
 
 export default useGetPedidos;
