@@ -20,10 +20,8 @@ export default async function authenticationMiddleware(req: NextRequest) {
   const tokenSession = await cookies().get('token')?.value;
   const rt = await cookies().get("refreshToken")?.value;
   const currentUser = getUserFromToken(tokenSession!);
-  console.log("Usuario Atual:",currentUser);
   // 4. Check if the token is valid by fetching the user data from the API
     if (tokenSession) {
-      console.log("Tem token",tokenSession)
         try {
         const currentUser = getUserFromToken(tokenSession);
         console.log(baseApiUrl);
@@ -33,12 +31,10 @@ export default async function authenticationMiddleware(req: NextRequest) {
         return NextResponse.next();
       }
         catch(err){
-          console.log("Veio para o erro",err);
             return NextResponse.redirect(new URL('/Login', req.nextUrl))
         }
     }else{
         if(rt){
-          console.log("Existe refreshToken",rt);
           return NextResponse.next();
     }
   // 4. Redirect to /login if the user is not authenticated
