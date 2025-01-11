@@ -55,6 +55,7 @@ interface Usuario {
           ativo: boolean,
           authority: string
         },
+        primeiroAcesso : boolean,
         empresas: Empresa[],
         dispostivos: Dispositivo[]
       

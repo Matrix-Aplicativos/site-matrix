@@ -12,6 +12,7 @@ import { Usuario } from "../utils/types/Usuario";
 import useAtualizarUsuario from "../hooks/useAtualizarUsuario";
 import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
+import useInviteRepresentante from "../hooks/useInviteRepresentante";
 
 
 const UserComponent: React.FC = () => {
@@ -21,6 +22,8 @@ const UserComponent: React.FC = () => {
   const router = useRouter();  
   const {usuarios, loading, error} = useGetUsuarios(usuario?.empresas[0].codEmpresa || 0,1);
   const [paginaAtual,setPaginaAtual] = useState(1);
+  const [emailInput,setEmailInput] = useState("");
+  const [modalInviteOpen, setModalInviteOpen] = useState(false);
   const [usuariosDisponiveis,setUsuariosDisponiveis] = useState((usuario?.empresas[0].maxUsuarios! - usuarios?.length! ) || 0);
 
     useEffect(() => {
@@ -39,6 +42,7 @@ const UserComponent: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
   const {updateUsuario} = useAtualizarUsuario();
+  const {invite} = useInviteRepresentante();
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -180,6 +184,34 @@ const UserComponent: React.FC = () => {
         >
           Novo Usuário
         </button>
+        <button
+          className={styles.newUserButton}
+          onClick={() => setModalInviteOpen(true)}
+        >
+          Convidar Representante
+        </button>
+        {
+          modalInviteOpen ? (
+            <div >
+              <form onSubmit={(e) => {e.preventDefault();invite(emailInput);setModalInviteOpen(false)}}>
+              <label>
+                  Email do representante:
+                  <input
+                    type="text"
+                    value={emailInput}
+                    onChange={(e) =>
+                      setEmailInput(e.target.value)
+                    }
+                  />
+                  </label>
+                  <input
+                    type="submit"
+                    value="Convidar"
+                  />
+              </form>
+              </div>
+          ) : null
+        }
       </div>
 
       {isModalOpen && <NewUser closeModal={() => setIsModalOpen(false)} />}
