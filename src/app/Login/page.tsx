@@ -1,6 +1,6 @@
 'use client'; 
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; 
 import Image from 'next/image';
 import Logo from '@/app/img/Logo.png';
@@ -8,45 +8,29 @@ import './Login.css';
 import useLogin from '../hooks/useLogin';
 import Link from 'next/link';
 import { getCookie } from 'cookies-next';
+import useGetLoggedUser from '../hooks/useGetLoggedUser';
+import { getUserFromToken } from '../utils/functions/getUserFromToken';
+import axiosInstance from '../hooks/axiosInstance';
+import { Usuario } from '../utils/types/Usuario';
 
 
 export default function LoginPage() {
-  const { loginUsuario,identificarUsuario, loading, error,definirPrimeiraSenhaUsuario} = useLogin();
-  const [login, setLogin] = useState('');
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const { loginUsuario, loading, error,definirPrimeiraSenhaUsuario} = useLogin();
+  const [codUsuario,setCodUsuario] = useState<Number | 0>(0);
+  const [definirPrimeiraSenha, setDefinirPrimeiraSenha] = useState(false);
+  const [login,setLogin] = useState('');
   const [textoIdentificacao, setTextoIdentificacao] = useState('');
-  const [status, setStatus] = useState<Number>(0);
   const [senha, setSenha] = useState('');
   const [forcaSenha,setForcaSenha] = useState(0);
   const router = useRouter();
 
-
-  const handleIdentify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = getCookie('token');
-    if(token){
-      router.push('/');
-    }
-    const status = await identificarUsuario(login);
-    if(status === 1 || status === 2){
-      setShowPasswordInput(true);
-      setStatus(status);
-    }
-    if(status === 2){
-      setTextoIdentificacao("Este é seu primeiro acesso, defina sua senha antes de continuar")
-    }
-  };
-
   const handleDefinirSenha = async (e: React.FormEvent)=>{
     e.preventDefault();
-
-
     if(forcaSenha >= 2){
-    const message = await definirPrimeiraSenhaUsuario({login,senha});
-    setTextoIdentificacao(message!);
-    setShowPasswordInput(false);
+    const data = await definirPrimeiraSenhaUsuario({login,senha});
+    setTextoIdentificacao(data?.status === 200 ? "Senha definida com sucesso" : "Ocorreu um erro ao definir a senha");
+    setDefinirPrimeiraSenha(false);
     setSenha("");
-    setStatus(0);
     }else{
       setTextoIdentificacao("Sua senha está muito fraca, tente uma senha mais forte");
     }
@@ -55,11 +39,17 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const tokenObtido = await loginUsuario({ login, senha });
-
-    if (tokenObtido) {
-      console.log("Login bem-sucedido! Token:", tokenObtido);
-      router.push('/'); 
+    if(tokenObtido){
+      const response= await axiosInstance.get("/usuario/"+getUserFromToken(tokenObtido));
+      if(response.data.primeiroAcesso){
+        setDefinirPrimeiraSenha(true);
+        setSenha("");
+        setTextoIdentificacao("Defina sua senha");
+      }else{
+        router.push("/")
+      }
     }
+    
   };
 
   const verificarForcaSenha = ()=>{
@@ -73,7 +63,6 @@ export default function LoginPage() {
     if (/\d/.test(senha))pontuacao++;
 
     if (/[!@#$%^&*(),.?":{}|<>]/.test(senha)) pontuacao++;
-    console.log(pontuacao);
     if (pontuacao === 0) return 0; // Muito Fraco
     if (pontuacao <= 2) return 1; // Fraco
     if (pontuacao === 3) return 2; // Moderado
@@ -89,19 +78,14 @@ export default function LoginPage() {
 
         <h5 className="heading">Área do Cliente</h5>
         <form className="login-form" onSubmit={(event : React.FormEvent)=>{
-          if(status === 2){
-              handleDefinirSenha(event);
-          }else{
-          if(showPasswordInput){
+          if(definirPrimeiraSenha){
+            handleDefinirSenha(event);
+          }else
             handleSubmit(event);
-          } else {
-            handleIdentify(event);
-          }
-          }
         }}>
           <div className="input-field">
             <input
-              disabled={showPasswordInput}
+            disabled={definirPrimeiraSenha}
               id="login"
               type="text"
               className="validate"
@@ -111,7 +95,7 @@ export default function LoginPage() {
             />
             <label htmlFor="login">Login</label>
           </div>
-          {showPasswordInput ?  (
+
           <div className="input-field">
             <input
               id="senha"
@@ -121,13 +105,13 @@ export default function LoginPage() {
               value={senha}
               onChange={(e) => {
                 setSenha(e.target.value)
-                if(status == 2)
+                if(definirPrimeiraSenha)
                   setForcaSenha(verificarForcaSenha());
                 }}
             />
             <label htmlFor="senha">Senha</label>
             {
-              status === 2 ? (
+              definirPrimeiraSenha ? (
                 <>
                 <div
                 style={{backgroundColor: forcaSenha >= 3 ? "green" : forcaSenha >= 2 ? "orange" : "red",
@@ -142,16 +126,15 @@ export default function LoginPage() {
               ) : null
             }
           </div>
-          ) : null}
           <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Entrando...' : status === 2 ? "Definir Senha" : "Entrar"}
+            {loading ? 'Entrando...' : definirPrimeiraSenha ? "Definir Senha" : "Entrar"}
           </button>
-          {showPasswordInput ? (
+          {definirPrimeiraSenha ? (
           <button onClick={(e)=>{e.preventDefault();
             setLogin("");
-            setShowPasswordInput(false);
-            setStatus(0);
+            setDefinirPrimeiraSenha(false);
             setTextoIdentificacao("");
+            setSenha("");
             }} className="voltar-button" disabled={loading}>Voltar</button>
           ) : null}
             </form>
