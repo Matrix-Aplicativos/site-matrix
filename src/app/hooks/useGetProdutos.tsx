@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "./axiosInstance"; 
+import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
 
 interface Produto {
@@ -22,7 +22,7 @@ interface Produto {
   dataFimPromocao: string;
   saldoDisponivel: number;
   porcentagemDescontoMax: number;
-  imagens: string[]; 
+  imagens: string[];
 }
 
 interface UseGetProdutosHook {
@@ -31,7 +31,12 @@ interface UseGetProdutosHook {
   error: string | null;
 }
 
-const useGetProdutos = (codEmpresa: number,pagina: number): UseGetProdutosHook => {
+const useGetProdutos = (
+  codEmpresa: number,
+  pagina: number,
+  sortKey?: string,
+  sortDirection?: "asc" | "desc"
+): UseGetProdutosHook => {
   const [produtos, setProdutos] = useState<Produto[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +44,25 @@ const useGetProdutos = (codEmpresa: number,pagina: number): UseGetProdutosHook =
   const fetchProdutos = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/item/${codEmpresa}?pagina=${pagina}&porPagina=10`);
+      const queryParams = [
+        `pagina=${pagina}`,
+        `porPagina=10`,
+        sortKey ? `sortKey=${sortKey}` : null,
+        sortDirection ? `sortDirection=${sortDirection}` : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      const response = await axiosInstance.get(
+        `/item/${codEmpresa}?${queryParams}`
+      );
       setProdutos(response.data);
       setError(null);
     } catch (err) {
       setError(
-        err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar os produtos."
+        err instanceof AxiosError
+          ? err.message
+          : "Ocorreu um erro ao buscar os produtos."
       );
       setProdutos(null);
     } finally {
@@ -56,7 +74,7 @@ const useGetProdutos = (codEmpresa: number,pagina: number): UseGetProdutosHook =
     if (codEmpresa) {
       fetchProdutos();
     }
-  }, [codEmpresa,pagina]);
+  }, [codEmpresa, pagina, sortKey, sortDirection]);
 
   return { produtos, loading, error };
 };

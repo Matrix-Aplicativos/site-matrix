@@ -1,34 +1,58 @@
-import { useState, useEffect } from 'react';
-import axiosInstance from './axiosInstance';
-import { AxiosError } from 'axios';
-import { Pedido } from '../utils/types/Pedido';
+import { useState, useEffect } from "react";
+import axiosInstance from "./axiosInstance";
+import { AxiosError } from "axios";
+import { Pedido } from "../utils/types/Pedido";
 
-const useGetPedidos = (codEmpresa : Number,pagina : Number) => {
-  const [pedidos, setPedidos] = useState<Pedido[] | null>(null); 
-  const [loading, setLoading] = useState(false); 
-  const [error, setError] = useState(null); 
+interface UseGetPedidosHook {
+  pedidos: Pedido[] | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const useGetPedidos = (
+  codEmpresa: number,
+  pagina: number,
+  sortKey?: string,
+  sortDirection?: "asc" | "desc"
+): UseGetPedidosHook => {
+  const [pedidos, setPedidos] = useState<Pedido[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPedidos = async () => {
+    try {
+      setLoading(true);
+      const queryParams = [
+        `pagina=${pagina}`,
+        `porPagina=10`,
+        sortKey ? `sortKey=${sortKey}` : null,
+        sortDirection ? `sortDirection=${sortDirection}` : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      const response = await axiosInstance.get(
+        `/pedido/${codEmpresa}?${queryParams}`
+      );
+      setPedidos(response.data);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof AxiosError
+          ? err.message
+          : "Ocorreu um erro ao buscar os pedidos."
+      );
+      setPedidos(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!codEmpresa) return; 
-
-    const fetchPedidos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await axiosInstance.get(`/pedido/${codEmpresa}?pagina=${pagina}&porPagina=10`);
-        setPedidos(response.data); 
-        console.log(response.data);
-      } catch (err) {
-        setError(
-          err instanceof AxiosError ? err.response?.data.message : "Ocorreu um erro ao buscar os pedidos."
-        ); 
-      } finally {
-        setLoading(false); 
-      }
-    };
-
-    fetchPedidos();
-  }, [codEmpresa,pagina]); 
+    if (codEmpresa) {
+      fetchPedidos();
+    }
+  }, [codEmpresa, pagina, sortKey, sortDirection]);
 
   return { pedidos, loading, error };
 };

@@ -1,4 +1,4 @@
-'use client'; 
+"use client";
 
 import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
@@ -8,25 +8,35 @@ import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
+import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
 
+const ITEMS_PER_PAGE = 5;
+
 const ProdutosPage: React.FC = () => {
-  const [paginaAtual,setPaginaAtual] = useState(1);
-  const token = getCookie('token')
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
-  const {usuario} = useGetLoggedUser(codUsuario || 0);
-  const {produtos,loading,error} = useGetProdutos(usuario?.empresas[0]?.codEmpresa || 1,paginaAtual);
+  const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const { produtos, loading, error } = useGetProdutos(
+    usuario?.empresas[0]?.codEmpresa || 1,
+    1 // Fetch all products, not paginated at this level
+  );
 
   const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState(produtos);
+  const [sortedData, setSortedData] = useState<any[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc" | null;
+  } | null>(null);
 
-  useEffect(()=>{
-    if(query === ""){
-      setFilteredData(produtos);
+  useEffect(() => {
+    if (produtos) {
+      setSortedData(produtos);
     }
-  },[query,produtos])
+  }, [produtos]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -38,15 +48,48 @@ const ProdutosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+
+    if (produtos) {
+      const filtered = produtos.filter((produto: any) =>
+        produto.descricaoItem.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setSortedData(filtered);
+    }
   };
 
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" | null = "asc";
+
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
+    }
+
+    const sorted = [...produtos].sort((a: any, b: any) => {
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setSortedData(sorted);
+    setSortConfig({ key, direction });
+  };
+
+  const paginatedData = sortedData.slice(
+    (paginaAtual - 1) * ITEMS_PER_PAGE,
+    paginaAtual * ITEMS_PER_PAGE
+  );
+
   const columns = [
-    { key: "description", label: "Descrição" },
-    { key: "brand", label: "Marca" },
-    { key: "code", label: "Código" },
-    { key: "price", label: "Preço" },
-    { key: "stock", label: "Saldo" },
-    { key: "unit", label: "Unidade" },
+    { key: "descricaoItem", label: "Descrição" },
+    { key: "descricaoMarca", label: "Marca" },
+    { key: "codItem", label: "Código" },
+    { key: "precoVenda", label: "Preço" },
+    { key: "saldoDisponivel", label: "Saldo" },
+    { key: "unidade", label: "Unidade" },
     {
       key: "actions",
       render: (_value: any, _row: any, rowIndex: number) => (
@@ -70,7 +113,6 @@ const ProdutosPage: React.FC = () => {
       />
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          {/* Primeira parte */}
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
             <select>
@@ -79,34 +121,6 @@ const ProdutosPage: React.FC = () => {
               <option value="Codigo">Código</option>
             </select>
           </div>
-
-          {/* Segunda parte */}
-          <div className={styles.filterSection}>
-            <label>Filtrar por:</label>
-            <select aria-placeholder="Departamento">
-              <option value="">Departamento</option>
-            </select>
-            <select aria-placeholder="Família">
-              <option value="">Família</option>
-            </select>
-            <div className={styles.smallSelectGroup}>
-              <select aria-placeholder="Grupo">
-                <option value="">Grupo</option>
-              </select>
-              <select aria-placeholder="Subgrupo">
-                <option value="">Subgrupo</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Terceira parte */}
-          <div className={styles.filterSection}>
-            <label>Período da Promoção:</label>
-            <div className={styles.dateRange}>
-              <input type="date" placeholder="Início" />
-              <input type="date" placeholder="Fim" />
-            </div>
-          </div>
         </div>
       )}
       <div className={styles.tableContainer}>
@@ -114,12 +128,20 @@ const ProdutosPage: React.FC = () => {
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key}>{col.label}</th>
+                <th key={col.key}>
+                  {col.label}
+                  {col.key !== "actions" && (
+                    <FaSort
+                      style={{ marginLeft: "0.5em", cursor: "pointer" }}
+                      onClick={() => handleSort(col.key)}
+                    />
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredData && filteredData.map((row, rowIndex) => (
+            {paginatedData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr>
                   <td>{row.descricaoItem}</td>
@@ -153,10 +175,12 @@ const ProdutosPage: React.FC = () => {
                             <strong>Cód. de Barras:</strong> {row.codBarra}
                           </p>
                           <p>
-                            <strong>Cód. de Referência:</strong> {row.codReferencia}
+                            <strong>Cód. de Referência:</strong>{" "}
+                            {row.codReferencia}
                           </p>
                           <p>
-                            <strong>Cód. do Fabricante:</strong> {row.codFabricante}
+                            <strong>Cód. do Fabricante:</strong>{" "}
+                            {row.codFabricante}
                           </p>
                         </div>
                         <div>
@@ -175,27 +199,38 @@ const ProdutosPage: React.FC = () => {
                         </div>
                         <div>
                           <p>
-                            <strong>Preço Venda:</strong> {formatPreco(row.precoVenda)}
+                            <strong>Preço Venda:</strong>{" "}
+                            {formatPreco(row.precoVenda)}
                           </p>
                           <p>
-                            <strong>Preço Revenda:</strong> {formatPreco(row.precoRevenda)}
+                            <strong>Preço Revenda:</strong>{" "}
+                            {formatPreco(row.precoRevenda)}
                           </p>
                           <p>
-                            <strong>Preço Promoção:</strong> {formatPreco(row.precoPromocao)}
+                            <strong>Preço Promoção:</strong>{" "}
+                            {formatPreco(row.precoPromocao)}
                           </p>
                           <p>
-                            <strong>Desconto Máx (%):</strong> {row.porcentagemDescontoMax}%
+                            <strong>Desconto Máx (%):</strong>{" "}
+                            {row.porcentagemDescontoMax}%
                           </p>
                         </div>
                         <div>
                           <p>
-                            <strong>Início Promoção:</strong> {new Date(row.dataInicioPromocao).toLocaleDateString("pt-BR")}
+                            <strong>Início Promoção:</strong>{" "}
+                            {new Date(
+                              row.dataInicioPromocao
+                            ).toLocaleDateString("pt-BR")}
                           </p>
                           <p>
-                            <strong>Fim Promoção:</strong> {new Date(row.dataFimPromocao).toLocaleDateString("pt-BR")}
+                            <strong>Fim Promoção:</strong>{" "}
+                            {new Date(row.dataFimPromocao).toLocaleDateString(
+                              "pt-BR"
+                            )}
                           </p>
                           <p>
-                            <strong>Saldo Disponível:</strong> {row.saldoDisponivel}{" "}
+                            <strong>Saldo Disponível:</strong>{" "}
+                            {row.saldoDisponivel}{" "}
                           </p>
                           <p>
                             <strong>Unidade:</strong> {row.unidade}
@@ -210,12 +245,22 @@ const ProdutosPage: React.FC = () => {
           </tbody>
         </table>
         <div className={styles.paginationContainer}>
-          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(1)}}}><FiChevronsLeft /></button>
-          <button onClick={(e)=>{if(paginaAtual >= 2){e.preventDefault();setPaginaAtual(paginaAtual-1)}}}><FiChevronLeft /></button>
+          <button onClick={() => setPaginaAtual(1)}>
+            <FiChevronsLeft />
+          </button>
+          <button
+            onClick={() => {
+              if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
+            }}
+          >
+            <FiChevronLeft />
+          </button>
           <p>{paginaAtual}</p>
-          {produtos && produtos.length === 10 ?
-          <button onClick={(e)=>{e.preventDefault();setPaginaAtual(paginaAtual+1)}}><FiChevronRight /></button> : null
-          }
+          {sortedData.length > paginaAtual * ITEMS_PER_PAGE && (
+            <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
+              <FiChevronRight />
+            </button>
+          )}
         </div>
       </div>
     </div>
