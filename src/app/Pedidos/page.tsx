@@ -28,12 +28,41 @@ const PedidosPage: React.FC = () => {
     key: keyof Pedido;
     direction: "asc" | "desc";
   } | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState("codPedido");
+  const [dateRange, setDateRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
 
   useEffect(() => {
-    if (query === "") {
+    if (
+      query === "" &&
+      dateRange.startDate === "" &&
+      dateRange.endDate === ""
+    ) {
       setFilteredData(pedidos || []);
+    } else {
+      let filtered = pedidos || [];
+
+      if (query) {
+        filtered = filtered.filter((pedido) =>
+          pedido[selectedFilter]?.toString().includes(query)
+        );
+      }
+
+      if (dateRange.startDate && dateRange.endDate) {
+        filtered = filtered.filter((pedido) => {
+          const pedidoDate = new Date(pedido.dataCadastro);
+          return (
+            pedidoDate >= new Date(dateRange.startDate) &&
+            pedidoDate <= new Date(dateRange.endDate)
+          );
+        });
+      }
+
+      setFilteredData(filtered);
     }
-  }, [query, pedidos]);
+  }, [query, dateRange, pedidos, selectedFilter]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -45,6 +74,14 @@ const PedidosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDateRange((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const sortData = (key: keyof Pedido) => {
@@ -75,35 +112,40 @@ const PedidosPage: React.FC = () => {
     <div className={styles.container}>
       <h1 className={styles.title}>PEDIDOS</h1>
       <SearchBar
-        placeholder="Qual produto deseja buscar?"
+        placeholder="Qual pedido deseja buscar?"
         onSearch={handleSearch}
         onFilterClick={toggleFilterExpansion}
       />
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          {/* Primeira parte */}
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
-            <input type="number" placeholder="Código do Pedido" />
-          </div>
-
-          {/* Segunda parte */}
-          <div className={styles.filterSection}>
-            <label>Filtrar por:</label>
-            <select aria-placeholder="Status">
-              <option value="">Status</option>
-            </select>
-            <select aria-placeholder="Cliente">
-              <option value="">Cliente</option>
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+            >
+              <option value="codPedido">Código do Pedido</option>
+              <option value="codCliente">Número do Cliente</option>
+              <option value="status">Status</option>
             </select>
           </div>
-
-          {/* Terceira parte */}
           <div className={styles.filterSection}>
             <label>Período que deseja ver os pedidos:</label>
             <div className={styles.dateRange}>
-              <input type="date" placeholder="Início" />
-              <input type="date" placeholder="Fim" />
+              <input
+                type="date"
+                name="startDate"
+                value={dateRange.startDate}
+                onChange={handleDateChange}
+                placeholder="Início"
+              />
+              <input
+                type="date"
+                name="endDate"
+                value={dateRange.endDate}
+                onChange={handleDateChange}
+                placeholder="Fim"
+              />
             </div>
           </div>
         </div>
@@ -161,17 +203,15 @@ const PedidosPage: React.FC = () => {
                     <tr className={styles.expandedRow}>
                       <td colSpan={5}>
                         <div className={styles.additionalInfo}>
-                          <div>
-                            <p>
-                              <strong>Cliente:</strong> {row.codCliente}
-                            </p>
-                            <p>
-                              <strong>Status:</strong> {row.status}
-                            </p>
-                            <p>
-                              <strong>Observação:</strong> {row.observacao}
-                            </p>
-                          </div>
+                          <p>
+                            <strong>Cliente:</strong> {row.codCliente}
+                          </p>
+                          <p>
+                            <strong>Status:</strong> {row.status}
+                          </p>
+                          <p>
+                            <strong>Observação:</strong> {row.observacao}
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -190,11 +230,11 @@ const PedidosPage: React.FC = () => {
             <FiChevronLeft />
           </button>
           <p>{paginaAtual}</p>
-          {pedidos && pedidos.length === 1 ? (
+          {pedidos && pedidos.length > 0 && (
             <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
               <FiChevronRight />
             </button>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

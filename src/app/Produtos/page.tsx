@@ -32,6 +32,8 @@ const ProdutosPage: React.FC = () => {
     direction: "asc" | "desc" | null;
   } | null>(null);
 
+  const [selectedFilter, setSelectedFilter] = useState<string>("Descricao");
+
   useEffect(() => {
     if (produtos) {
       setSortedData(produtos);
@@ -50,9 +52,25 @@ const ProdutosPage: React.FC = () => {
     setQuery(searchQuery);
 
     if (produtos) {
-      const filtered = produtos.filter((produto: any) =>
-        produto.descricaoItem.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filtered = produtos.filter((produto: any) => {
+        if (selectedFilter === "Descricao") {
+          return produto.descricaoItem
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
+        }
+        if (selectedFilter === "Marca") {
+          return produto.descricaoMarca
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
+        }
+        if (selectedFilter === "Codigo") {
+          return produto.codItem
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
+        }
+        return true;
+      });
       setSortedData(filtered);
     }
   };
@@ -115,9 +133,12 @@ const ProdutosPage: React.FC = () => {
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
-            <select>
-              <option value="Marca">Marca</option>
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+            >
               <option value="Descricao">Descrição</option>
+              <option value="Marca">Marca</option>
               <option value="Codigo">Código</option>
             </select>
           </div>
@@ -167,74 +188,79 @@ const ProdutosPage: React.FC = () => {
                   <tr className={styles.expandedRow}>
                     <td colSpan={columns.length}>
                       <div className={styles.additionalInfo}>
-                        <div>
-                          <p>
-                            <strong>Código:</strong> {row.codItem}
-                          </p>
-                          <p>
-                            <strong>Cód. de Barras:</strong> {row.codBarra}
-                          </p>
-                          <p>
-                            <strong>Cód. de Referência:</strong>{" "}
-                            {row.codReferencia}
-                          </p>
-                          <p>
-                            <strong>Cód. do Fabricante:</strong>{" "}
-                            {row.codFabricante}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Grupo:</strong> {row.grupo}
-                          </p>
-                          <p>
-                            <strong>Subgrupo:</strong> {row.subGrupo}
-                          </p>
-                          <p>
-                            <strong>Departamento:</strong> {row.departamento}
-                          </p>
-                          <p>
-                            <strong>Família:</strong> {row.familia}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Preço Venda:</strong>{" "}
-                            {formatPreco(row.precoVenda)}
-                          </p>
-                          <p>
-                            <strong>Preço Revenda:</strong>{" "}
-                            {formatPreco(row.precoRevenda)}
-                          </p>
-                          <p>
-                            <strong>Preço Promoção:</strong>{" "}
-                            {formatPreco(row.precoPromocao)}
-                          </p>
-                          <p>
-                            <strong>Desconto Máx (%):</strong>{" "}
-                            {row.porcentagemDescontoMax}%
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Início Promoção:</strong>{" "}
-                            {new Date(
-                              row.dataInicioPromocao
-                            ).toLocaleDateString("pt-BR")}
-                          </p>
-                          <p>
-                            <strong>Fim Promoção:</strong>{" "}
-                            {new Date(row.dataFimPromocao).toLocaleDateString(
-                              "pt-BR"
-                            )}
-                          </p>
-                          <p>
-                            <strong>Saldo Disponível:</strong>{" "}
-                            {row.saldoDisponivel}{" "}
-                          </p>
-                          <p>
-                            <strong>Unidade:</strong> {row.unidade}
-                          </p>
+                        <p>
+                          <strong>Código:</strong> {row.codItem}
+                        </p>
+                        <div className={styles.additionalInfo}>
+                          <div>
+                            <p>
+                              <strong>Código:</strong> {row.codItem}
+                            </p>
+                            <p>
+                              <strong>Cód. de Barras:</strong> {row.codBarra}
+                            </p>
+                            <p>
+                              <strong>Cód. de Referência:</strong>{" "}
+                              {row.codReferencia}
+                            </p>
+                            <p>
+                              <strong>Cód. do Fabricante:</strong>{" "}
+                              {row.codFabricante}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Grupo:</strong> {row.grupo}
+                            </p>
+                            <p>
+                              <strong>Subgrupo:</strong> {row.subGrupo}
+                            </p>
+                            <p>
+                              <strong>Departamento:</strong> {row.departamento}
+                            </p>
+                            <p>
+                              <strong>Família:</strong> {row.familia}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Preço Venda:</strong>{" "}
+                              {formatPreco(row.precoVenda)}
+                            </p>
+                            <p>
+                              <strong>Preço Revenda:</strong>{" "}
+                              {formatPreco(row.precoRevenda)}
+                            </p>
+                            <p>
+                              <strong>Preço Promoção:</strong>{" "}
+                              {formatPreco(row.precoPromocao)}
+                            </p>
+                            <p>
+                              <strong>Desconto Máx (%):</strong>{" "}
+                              {row.porcentagemDescontoMax}%
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Início Promoção:</strong>{" "}
+                              {new Date(
+                                row.dataInicioPromocao
+                              ).toLocaleDateString("pt-BR")}
+                            </p>
+                            <p>
+                              <strong>Fim Promoção:</strong>{" "}
+                              {new Date(row.dataFimPromocao).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </p>
+                            <p>
+                              <strong>Saldo Disponível:</strong>{" "}
+                              {row.saldoDisponivel}{" "}
+                            </p>
+                            <p>
+                              <strong>Unidade:</strong> {row.unidade}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </td>

@@ -33,6 +33,7 @@ const ClientesPage: React.FC = () => {
     key: string;
     direction: "asc" | "desc" | null;
   } | null>(null);
+  const [searchTopic, setSearchTopic] = useState<string>("RazaoSocial"); 
 
   useEffect(() => {
     if (clientes) {
@@ -52,9 +53,19 @@ const ClientesPage: React.FC = () => {
     setQuery(searchQuery);
 
     if (clientes) {
-      const filtered = clientes.filter((cliente: any) =>
-        cliente.razaoSocial.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filtered = clientes.filter((cliente: any) => {
+        const searchValue = searchQuery.toLowerCase();
+        switch (searchTopic) {
+          case "RazaoSocial":
+            return cliente.razaoSocial.toLowerCase().includes(searchValue);
+          case "CnpjCpf":
+            return cliente.cnpjcpf.toLowerCase().includes(searchValue);
+          case "Codigo":
+            return cliente.codCliente.toString().includes(searchValue);
+          default:
+            return false;
+        }
+      });
       setSortedData(filtered);
     }
   };
@@ -115,7 +126,10 @@ const ClientesPage: React.FC = () => {
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
-            <select>
+            <select
+              value={searchTopic}
+              onChange={(e) => setSearchTopic(e.target.value)}
+            >
               <option value="RazaoSocial">Razão Social</option>
               <option value="CnpjCpf">CNPJ/CPF</option>
               <option value="Codigo">Código</option>
