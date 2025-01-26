@@ -1,24 +1,34 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import RankingTable from "./components/RankingTable";
-import RelatorioPedidos from "./components/RelatorioPedidos"; 
+import RelatorioPedidos from "./components/RelatorioPedidos";
+import { useRankingItensMais } from "./hooks/useRankingMais"; 
+import { useRankingItensMenos } from "./hooks/useRankingMenos"; 
 import styles from "./Home.module.css";
 
 export default function HomePage() {
-  const maisVendidos = [
-    { descricao: "Produto A", marca: "Marca X", quantidadeVendida: 100000 },
-    { descricao: "Produto B", marca: "Marca Y", quantidadeVendida: 90000 },
-    { descricao: "Produto C", marca: "Marca Z", quantidadeVendida: 85000 },
-    { descricao: "Produto D", marca: "Marca W", quantidadeVendida: 80000 },
-    { descricao: "Produto E", marca: "Marca V", quantidadeVendida: 75000 },
-  ];
+  const [periodoIni, setPeriodoIni] = useState("2024-01-01"); 
+  const [periodoFim, setPeriodoFim] = useState("2024-12-31"); 
+  const codEmpresa = 1; 
 
-  const menosVendidos = [
-    { descricao: "Produto X", marca: "Marca P", quantidadeVendida: 10 },
-    { descricao: "Produto Y", marca: "Marca Q", quantidadeVendida: 20 },
-    { descricao: "Produto Z", marca: "Marca R", quantidadeVendida: 30 },
-    { descricao: "Produto W", marca: "Marca S", quantidadeVendida: 40 },
-    { descricao: "Produto V", marca: "Marca T", quantidadeVendida: 50 },
-  ];
+  const { data: maisVendidos, error: errorMaisVendidos, isLoading: isLoadingMaisVendidos } = useRankingItensMais(
+    codEmpresa,
+    periodoIni,
+    periodoFim
+  );
+
+  const { data: menosVendidos, error: errorMenosVendidos, isLoading: isLoadingMenosVendidos } = useRankingItensMenos(
+    codEmpresa,
+    periodoIni,
+    periodoFim
+  );
+
+  if (isLoadingMaisVendidos) return <p>Carregando os produtos mais vendidos...</p>;
+  if (errorMaisVendidos) return <p>Ocorreu um erro ao carregar os produtos mais vendidos: {errorMaisVendidos.message}</p>;
+
+  if (isLoadingMenosVendidos) return <p>Carregando os produtos menos vendidos...</p>;
+  if (errorMenosVendidos) return <p>Ocorreu um erro ao carregar os produtos menos vendidos: {errorMenosVendidos.message}</p>;
 
   return (
     <div className={styles.container}>
@@ -37,7 +47,7 @@ export default function HomePage() {
                 Fevereiro
               </span>
             </div>
-            <RankingTable title="Produtos Mais Vendidos" data={maisVendidos} />
+            <RankingTable title="Produtos Mais Vendidos" data={maisVendidos || []} />
           </div>
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
@@ -50,7 +60,7 @@ export default function HomePage() {
             </div>
             <RankingTable
               title="Produtos Menos Vendidos"
-              data={menosVendidos}
+              data={menosVendidos || []} 
             />
           </div>
         </div>

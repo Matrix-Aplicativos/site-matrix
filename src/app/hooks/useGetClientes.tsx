@@ -28,7 +28,7 @@ interface Cliente {
   status: string | null;
   territorio: number;
   vendedorResponsavel: string | null;
-  areceber: any[]; 
+  areceber: any[];
 }
 
 interface UseGetClientesHook {
@@ -37,7 +37,12 @@ interface UseGetClientesHook {
   error: string | null;
 }
 
-const useGetClientes = (codEmpresa: number,pagina : number): UseGetClientesHook => {
+const useGetClientes = (
+  codEmpresa: number,
+  pagina: number,
+  sortKey?: string,
+  sortDirection?: "asc" | "desc"
+): UseGetClientesHook => {
   const [clientes, setClientes] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,23 +50,37 @@ const useGetClientes = (codEmpresa: number,pagina : number): UseGetClientesHook 
   const fetchClientes = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/cliente/${codEmpresa}?pagina=${pagina}&porPagina=10`);
-      setClientes(response.data); 
+      const queryParams = [
+        `pagina=${pagina}`,
+        `porPagina=10`,
+        sortKey ? `sortKey=${sortKey}` : null,
+        sortDirection ? `sortDirection=${sortDirection}` : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      const response = await axiosInstance.get(
+        `/cliente/${codEmpresa}?${queryParams}`
+      );
+      setClientes(response.data);
       setError(null);
     } catch (err) {
       setError(
-        err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar os clientes."
+        err instanceof AxiosError
+          ? err.message
+          : "Ocorreu um erro ao buscar os clientes."
       );
       setClientes(null);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (codEmpresa) {
       fetchClientes();
     }
-  }, [codEmpresa,pagina]);
+  }, [codEmpresa, pagina, sortKey, sortDirection]);
 
   return { clientes, loading, error };
 };
