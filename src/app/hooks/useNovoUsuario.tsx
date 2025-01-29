@@ -8,6 +8,7 @@ interface NovoUsuario {
   login: string;
   codCargo: number;
   codEmpresas: number[]; 
+  codUsuarioErp: string;
 }
 
 interface useNovoUsuarioHook {

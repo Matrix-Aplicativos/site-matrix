@@ -19,6 +19,7 @@ interface UseAtualizarUsuarioHook {
             setLoading(true);
             const response = await axiosInstance.put(`/usuario`, {
               codUsuario: user.codUsuario,
+              codUsuarioErp: user.codUsuarioErp,
               nome: user.nome,
               cnpjcpf: user.cnpjcpf,
               email: user.email,

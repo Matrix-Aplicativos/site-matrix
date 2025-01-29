@@ -21,15 +21,17 @@ const UserComponent: React.FC = () => {
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();
   const { usuarios, loading, error } = useGetUsuarios(
-    usuario?.empresas[0].codEmpresa || 0,
+    usuario?.empresas?.[0]?.codEmpresa ?? 0,
     1
   );
 
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [emailInput, setEmailInput] = useState("");
   const [modalInviteOpen, setModalInviteOpen] = useState(false);
+  const maxUsuarios = usuario?.empresas?.[0]?.maxUsuarios ?? 0;
+  const totalUsuarios = usuarios?.length ?? 0;
   const [usuariosDisponiveis, setUsuariosDisponiveis] = useState(
-    usuario?.empresas[0].maxUsuarios! - usuarios?.length! || 0
+    maxUsuarios - totalUsuarios
   );
 
   const [query, setQuery] = useState("");

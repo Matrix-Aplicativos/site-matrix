@@ -1,4 +1,4 @@
-'use client'; 
+"use client";
 
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import styles from "./NewUser.module.css";
@@ -7,30 +7,41 @@ import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import useNovoUsuario from "../hooks/useNovoUsuario";
 
-export default function NewUser({ closeModal} : {closeModal : ()=>void}) {
+export default function NewUser({ closeModal }: { closeModal: () => void }) {
   const token = getCookie("token");
   const codCurrentUser = getUserFromToken(String(token));
-  const {usuario} = useGetLoggedUser(codCurrentUser || 0);
-  const {createNovoUsuario} = useNovoUsuario();
+  const { usuario } = useGetLoggedUser(codCurrentUser || 0);
+  const { createNovoUsuario } = useNovoUsuario();
   const [formData, setFormData] = useState({
     nome: "",
     cnpjcpf: "",
     login: "",
     email: "",
-    codEmpresas : [0],
-    codCargo : 3
+    codEmpresas: [0],
+    codCargo: 4,
+    codUsuarioErp: "",
   });
 
-  const handleChange = (e : any) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e : FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log("Novo usuário criado:", {...formData,codEmpresas: [usuario?.empresas[0].codEmpresa]});
-    createNovoUsuario({...formData,codEmpresas: [usuario?.empresas[0].codEmpresa || 0]})
-    closeModal();
+    console.log("Novo usuário criado:", {
+      ...formData,
+      codEmpresas: usuario?.empresas?.[0]?.codEmpresa
+        ? [usuario.empresas[0].codEmpresa]
+        : [],
+    });
+
+    createNovoUsuario({
+      ...formData,
+      codEmpresas: usuario?.empresas?.[0]?.codEmpresa
+        ? [usuario.empresas[0].codEmpresa]
+        : [],
+    });
   };
 
   return (
@@ -99,15 +110,6 @@ export default function NewUser({ closeModal} : {closeModal : ()=>void}) {
               required
             />
           </div>
-          <div className={styles.inputGroup}>
-            <label htmlFor="cargo" className={styles.label}>
-                  <p>Tipo de Usuário:</p>
-                  <select value={formData.codCargo} onChange={(e) => {setFormData({ ...formData, codCargo: Number(e.target.value) })}}>
-                    <option value="3">Representante</option>
-                    <option value="4">Loja</option>
-                  </select>
-              </label>
-            </div>
           <button type="submit" className={styles.button}>
             Criar Usuário
           </button>

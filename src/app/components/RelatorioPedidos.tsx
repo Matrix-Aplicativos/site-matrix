@@ -11,41 +11,16 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import useGetPedidos from '../hooks/useGetPedidos';
+import useGraficoPedidos from '../hooks/useGraficoPedidos';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function RelatorioPedidos() {
-  const [view, setView] = useState('mensal');
+  const [view, setView] = useState<'mensal' | 'anual'>('mensal');
+  const { pedidos, loading, error } = useGetPedidos(1, 1); // Exemplo com codEmpresa=1 e pagina=1
+  const chartData = useGraficoPedidos(pedidos, view);
 
-  // Dados para o gráfico diário (mensal)
-  const dataMensal = {
-    labels: Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`),
-    datasets: [
-      {
-        label: 'Pedidos Diários',
-        data: [12, 14, 15, 20, 18, 22, 25, 19, 23, 24, 20, 18, 17, 21, 25, 26, 28, 30, 29, 24, 22, 20, 18, 16, 17, 15, 14, 13, 18, 19, 20],
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // Dados para o gráfico mensal (anual)
-  const dataAnual = {
-    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-    datasets: [
-      {
-        label: 'Pedidos Mensais',
-        data: [120, 100, 140, 180, 90, 130, 150, 170, 200, 210, 190, 180],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // Opções de configuração
   const options = {
     responsive: true,
     plugins: {
@@ -104,10 +79,12 @@ export default function RelatorioPedidos() {
           margin: '0 auto',
         }}
       >
-        {view === 'mensal' ? (
-          <Bar data={dataMensal} options={options} />
+        {loading ? (
+          <p>Carregando...</p>
+        ) : error ? (
+          <p>{error}</p>
         ) : (
-          <Bar data={dataAnual} options={options} />
+          <Bar data={chartData} options={options} />
         )}
       </div>
     </div>

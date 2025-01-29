@@ -16,10 +16,9 @@ const PedidosPage: React.FC = () => {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const { pedidos } = useGetPedidos(
-    usuario?.empresas[0].codEmpresa || 1,
-    paginaAtual
-  );
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
+  const { pedidos } = useGetPedidos(codEmpresa, paginaAtual);
+
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(pedidos || []);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
