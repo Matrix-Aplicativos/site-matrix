@@ -1,100 +1,88 @@
 import { useMemo } from "react";
-import { Pedido } from "../utils/types/Pedido";
+import { ChartData } from "chart.js";
 
-interface ChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    backgroundColor: string;
-    borderColor: string;
-    borderWidth: number;
-  }[];
-  options: {
-    scales: {
-      y: {
-        beginAtZero: true;
-        ticks: {
-          stepSize: 1;
-          precision: 0;
-        };
-      };
-    };
-  };
+interface Pedido {
+  data: string; 
 }
 
-const useGraficoPedidos = (pedidos: Pedido[] | null, view: "mensal" | "anual"): ChartData => {
+export default function useGraficoPedidos(
+  pedidos: Pedido[] | null,
+  view: "mensal" | "anual"
+): ChartData<"bar"> {
   return useMemo(() => {
-    if (!pedidos) {
-      return { labels: [], datasets: [], options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } } };
-    }
-
-    if (view === "mensal") {
-      const labels = Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`);
-      const data = new Array(31).fill(0);
-      
-      pedidos.forEach((pedido) => {
-        const dia = new Date(pedido.dataPedido).getDate() - 1;
-        data[dia] += 1;
-      });
-
+    if (!pedidos || pedidos.length === 0) {
       return {
-        labels,
-        datasets: [
-          {
-            label: "Pedidos Diários",
-            data,
-            backgroundColor: "rgba(54, 162, 235, 0.5)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1,
-          },
-        ],
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1,
-                precision: 0,
-              },
-            },
-          },
-        },
-      };
-    } else {
-      const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-      const data = new Array(12).fill(0);
-      
-      pedidos.forEach((pedido) => {
-        const mes = new Date(pedido.dataPedido).getMonth();
-        data[mes] += 1;
-      });
-
-      return {
-        labels,
-        datasets: [
-          {
-            label: "Pedidos Mensais",
-            data,
-            backgroundColor: "rgba(255, 99, 132, 0.5)",
-            borderColor: "rgba(255, 99, 132, 1)",
-            borderWidth: 1,
-          },
-        ],
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1,
-                precision: 0,
-              },
-            },
-          },
-        },
+        labels: [],
+        datasets: [],
       };
     }
+
+    console.log("Pedidos recebidos para o gráfico:", pedidos);
+
+    const agrupados: Record<string, number> = {};
+    const meses = [
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
+    ];
+
+    let labels: string[] = view === "mensal"
+      ? Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`)
+      : meses;
+
+    pedidos.forEach(({ data }) => {
+      if (!data) {
+        console.warn("Pedido sem data:", data);
+        return;
+      }
+
+      const date = new Date(data);
+      if (isNaN(date.getTime())) {
+        console.warn("Data inválida ignorada:", data);
+        return;
+      }
+
+      console.log("Data do pedido processada:", date);
+
+      let key = view === "mensal" 
+        ? `Dia ${date.getUTCDate()}` 
+        : meses[date.getUTCMonth()];
+
+      console.log(`Agrupando por chave: ${key}`);
+      
+      agrupados[key] = (agrupados[key] || 0) + 1;
+    });
+
+    console.log("Agrupados (resultado final):", agrupados);
+
+    const valores = labels.map((label) => agrupados[label] || 0);
+    console.log("Labels:", labels);
+    console.log("Valores:", valores);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: view === "mensal" ? "Pedidos por Dia" : "Pedidos por Mês",
+          data: valores,
+          backgroundColor:
+            view === "mensal"
+              ? "rgba(75, 192, 192, 0.5)"
+              : "rgba(255, 99, 132, 0.5)",
+          borderColor:
+            view === "mensal" ? "rgba(75, 192, 192, 1)" : "rgba(255, 99, 132, 1)",
+          borderWidth: 1,
+        },
+      ],
+    };
   }, [pedidos, view]);
-};
-
-export default useGraficoPedidos;
+}

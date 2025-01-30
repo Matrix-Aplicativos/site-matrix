@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 import { Pedido } from "../utils/types/Pedido";
 
 interface UseGetPedidosHook {
-  pedidos: Pedido[] | null;
+  pedidos: Pedido[];
   loading: boolean;
   error: string | null;
 }
@@ -15,13 +15,15 @@ const useGetPedidos = (
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetPedidosHook => {
-  const [pedidos, setPedidos] = useState<Pedido[] | null>(null);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPedidos = async () => {
     try {
       setLoading(true);
+      console.log("Buscando pedidos...");
+
       const queryParams = [
         `pagina=${pagina}`,
         `porPagina=10`,
@@ -34,15 +36,18 @@ const useGetPedidos = (
       const response = await axiosInstance.get(
         `/pedido/${codEmpresa}?${queryParams}`
       );
+
+      console.log("Pedidos recebidos da API:", response.data);
       setPedidos(response.data);
       setError(null);
     } catch (err) {
+      console.error("Erro ao buscar pedidos:", err);
       setError(
         err instanceof AxiosError
           ? err.message
           : "Ocorreu um erro ao buscar os pedidos."
       );
-      setPedidos(null);
+      setPedidos([]);
     } finally {
       setLoading(false);
     }
