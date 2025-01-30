@@ -10,8 +10,9 @@ import styles from "./Home.module.css";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
-  const [periodoIni, setPeriodoIni] = useState("2024-01-01");
-  const [periodoFim, setPeriodoFim] = useState("2024-12-31");
+  const [periodoIni, setPeriodoIni] = useState("2025-01-01");
+  const [periodoFim, setPeriodoFim] = useState("2025-01-31");
+  const [isFullyLoaded, setIsFullyLoaded] = useState(false);
   const codEmpresa = 1;
 
   const {
@@ -26,19 +27,19 @@ export default function HomePage() {
     isLoading: isLoadingMenosVendidos,
   } = useRankingItensMenos(codEmpresa, periodoIni, periodoFim);
 
-  // Começa a mostrar o carregamento quando a página carrega
   useEffect(() => {
     showLoading();
 
-    // Esconde o carregamento quando os dados são carregados
+    // Quando os dados são carregados, aguardar um pequeno delay antes de ocultar o loading
     if (!isLoadingMaisVendidos && !isLoadingMenosVendidos) {
-      hideLoading();
+      setTimeout(() => {
+        setIsFullyLoaded(true);
+        hideLoading();
+      }, 1000); // Delay de 1 segundo para garantir que os gráficos renderizem
     }
   }, [isLoadingMaisVendidos, isLoadingMenosVendidos, showLoading, hideLoading]);
 
-  // Se ainda estiver carregando os dados, mostra o carregamento
-  if (isLoadingMaisVendidos || isLoadingMenosVendidos)
-    return <p>Carregando os dados...</p>;
+  if (!isFullyLoaded) return <p>Carregando os dados...</p>;
 
   if (errorMaisVendidos || errorMenosVendidos)
     return <p>Ocorreu um erro ao carregar os dados!</p>;

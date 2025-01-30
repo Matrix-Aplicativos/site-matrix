@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { ChartData } from "chart.js";
 
 interface Pedido {
-  data: string; 
+  dataCadastro: string;
 }
 
 export default function useGraficoPedidos(
@@ -19,7 +19,7 @@ export default function useGraficoPedidos(
 
     console.log("Pedidos recebidos para o gráfico:", pedidos);
 
-    const agrupados: Record<string, number> = {};
+    const agrupados: Map<number, number> = new Map();
     const meses = [
       "Janeiro",
       "Fevereiro",
@@ -35,37 +35,42 @@ export default function useGraficoPedidos(
       "Dezembro",
     ];
 
-    let labels: string[] = view === "mensal"
-      ? Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`)
-      : meses;
+    let labels: string[] =
+      view === "mensal"
+        ? Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`)
+        : meses;
 
-    pedidos.forEach(({ data }) => {
-      if (!data) {
-        console.warn("Pedido sem data:", data);
+    pedidos.forEach(({ dataCadastro }) => {
+      if (!dataCadastro) {
+        console.warn("Pedido sem data:", dataCadastro);
         return;
       }
 
-      const date = new Date(data);
+      const date = new Date(dataCadastro);
       if (isNaN(date.getTime())) {
-        console.warn("Data inválida ignorada:", data);
+        console.warn("Data inválida ignorada:", dataCadastro);
         return;
       }
 
       console.log("Data do pedido processada:", date);
 
-      let key = view === "mensal" 
-        ? `Dia ${date.getUTCDate()}` 
-        : meses[date.getUTCMonth()];
+      let key = view === "mensal" ? date.getDate() : date.getMonth() ;
 
       console.log(`Agrupando por chave: ${key}`);
-      
-      agrupados[key] = (agrupados[key] || 0) + 1;
+
+      agrupados.set(key, (agrupados.get(key) || 0) + 1);
     });
 
     console.log("Agrupados (resultado final):", agrupados);
 
-    const valores = labels.map((label) => agrupados[label] || 0);
-    console.log("Labels:", labels);
+    let valores: any[] = [];
+    if(view === 'mensal'){
+       valores = labels.map((label) => agrupados.get(Number(label.replace('Dia ', ""))) || 0);
+    }
+    else{
+      valores = labels.map((label, index) => agrupados.get(index) || 0);
+    }
+    
     console.log("Valores:", valores);
 
     return {
@@ -79,7 +84,9 @@ export default function useGraficoPedidos(
               ? "rgba(75, 192, 192, 0.5)"
               : "rgba(255, 99, 132, 0.5)",
           borderColor:
-            view === "mensal" ? "rgba(75, 192, 192, 1)" : "rgba(255, 99, 132, 1)",
+            view === "mensal"
+              ? "rgba(75, 192, 192, 1)"
+              : "rgba(255, 99, 132, 1)",
           borderWidth: 1,
         },
       ],
