@@ -6,6 +6,5 @@ export interface Empresa{
     razaoSocial: string,
     nomeFantasia: string,
     configuracoes: Configuracao[],
-    maxUsuarios: number,
     ativo: boolean
 }

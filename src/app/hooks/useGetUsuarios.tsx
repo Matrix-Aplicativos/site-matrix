@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
 import { Usuario } from "../utils/types/Usuario";
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 
 interface UseGetUsuariosHook {
-  usuarios: Usuario[] | null;
+  usuarios: UsuarioGet[] | null;
   loading: boolean;
   error: string | null;
 }
@@ -15,7 +16,7 @@ const useGetUsuarios = (
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetUsuariosHook => {
-  const [usuarios, setUsuarios] = useState<Usuario[] | null>(null);
+  const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +36,7 @@ const useGetUsuarios = (
         `/usuario/empresa/${codEmpresa}?${queryParams}`
       );
       setUsuarios(response.data);
+      console.log(response);
       setError(null);
     } catch (err) {
       setError(

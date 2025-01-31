@@ -14,9 +14,9 @@ interface UseAtualizarUsuarioHook {
     const [error, setError] = useState<string | null>(null);
 
     const updateUsuario = async (user: Usuario) => {
+      setLoading(true);
         try {
-          console.log(user);
-            setLoading(true);
+
             const response = await axiosInstance.put(`/usuario`, {
               codUsuario: user.codUsuario,
               codUsuarioErp: user.codUsuarioErp,
@@ -25,11 +25,10 @@ interface UseAtualizarUsuarioHook {
               email: user.email,
               login: user.login,
               codCargo: user.cargo.codCargo,
-              codEmpresas: user.empresas.map((empresa) => empresa.codEmpresa),
+              codEmpresa: user.codEmpresa,
               dispositivos: user.dispositivos.map(dispositivo=>{
                 return {
-                  imei1: dispositivo.id.codImei1,
-                  imei2: dispositivo.id.codImei2,
+                  codDispositivo: dispositivo.id.codDispositivo,
                   nomeDispositivo: dispositivo.nomeDispositivo,
                   ativo: dispositivo.ativo
                 }

@@ -76,6 +76,7 @@ const useGetLoggedUser = (codUsuario : Number) => {
         try {
           const response = await axiosInstance.get(`/usuario/${codUsuario}`);
           setUsuario(response.data);
+
         } catch (err) {
           setError(err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar o usuário Atual.");
           router.push("/Login");

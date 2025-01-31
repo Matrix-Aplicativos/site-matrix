@@ -31,16 +31,16 @@ export default function NewUser({ closeModal }: { closeModal: () => void }) {
     e.preventDefault();
     console.log("Novo usuário criado:", {
       ...formData,
-      codEmpresas: usuario?.empresas?.[0]?.codEmpresa
-        ? [usuario.empresas[0].codEmpresa]
-        : [],
+      codEmpresa: usuario?.empresas?.[0]?.codEmpresa
+        ? usuario.empresas[0].codEmpresa
+        : 0,
     });
 
     createNovoUsuario({
       ...formData,
-      codEmpresas: usuario?.empresas?.[0]?.codEmpresa
-        ? [usuario.empresas[0].codEmpresa]
-        : [],
+      codEmpresa: usuario?.empresas?.[0]?.codEmpresa
+        ? usuario.empresas[0].codEmpresa
+        : 0,
     });
   };
 

@@ -4,6 +4,7 @@ import { Empresa } from "./Empresa";
 
 export interface Usuario {
   codUsuario: number;
+  codUsuarioErp: string;
     nome: string;
     cnpjcpf: string;
     email: string;
@@ -11,5 +12,5 @@ export interface Usuario {
     cargo: Cargo;
     ativo: boolean,
     dispositivos : Dispositivo[],
-    empresas: Empresa[]
+    codEmpresa: number,
   }

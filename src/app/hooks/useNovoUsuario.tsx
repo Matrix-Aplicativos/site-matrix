@@ -7,7 +7,7 @@ interface NovoUsuario {
   email: string;
   login: string;
   codCargo: number;
-  codEmpresas: number[]; 
+  codEmpresa: number; 
   codUsuarioErp: string;
 }
 

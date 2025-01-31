@@ -14,6 +14,7 @@ import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import useInviteRepresentante from "../hooks/useInviteRepresentante";
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 
 const UserComponent: React.FC = () => {
   const token = getCookie("token");
@@ -21,7 +22,7 @@ const UserComponent: React.FC = () => {
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();
   const { usuarios, loading, error } = useGetUsuarios(
-    usuario?.empresas?.[0]?.codEmpresa ?? 0,
+    usuario?.empresas[0].codEmpresa ?? 0,
     1
   );
 
@@ -57,7 +58,7 @@ const UserComponent: React.FC = () => {
     );
   }, [usuarios]);
 
-  const handleSort = (key: keyof Usuario) => {
+  const handleSort = (key: keyof UsuarioGet) => {
     const direction =
       sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
@@ -88,7 +89,7 @@ const UserComponent: React.FC = () => {
 
   const handleSaveChanges = () => {
     if (!currentUser) return;
-    updateUsuario(currentUser);
+    updateUsuario({...currentUser,codEmpresa: usuario?.empresas[0].codEmpresa ?? 0});
     closeEditModal();
   };
 
@@ -170,7 +171,10 @@ const UserComponent: React.FC = () => {
                         <div className={styles.additionalInfo}>
                           <button
                             className={styles.editButton}
-                            onClick={() => openEditModal(row)}
+                            onClick={() => openEditModal({
+                              ...row,
+                              codEmpresa: 0,
+                            })}
                           >
                             ✏️
                           </button>

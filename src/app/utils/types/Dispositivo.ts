@@ -1,7 +1,8 @@
 
 export interface Dispositivo{
-    imei1 : string,
-    imei2: string,
+    id:{
+    codDispositivo: string,
+    },
     nomeDispositivo: string,
     ativo: boolean
 }
