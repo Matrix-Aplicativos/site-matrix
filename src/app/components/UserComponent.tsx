@@ -329,29 +329,7 @@ const UserComponent: React.FC = () => {
                       setCurrentUser({ ...currentUser, email: e.target.value })
                     }
                   />
-                </label>
-                <label>
-                  Tipo de Usuário:
-                  <select
-                    disabled={currentUser.codUsuario === codUsuario}
-                    value={currentUser.cargo.codCargo}
-                    onChange={(e) => {
-                      setCurrentUser({
-                        ...currentUser,
-                        cargo: {
-                          ...currentUser.cargo,
-                          codCargo: Number(e.target.value),
-                        },
-                      });
-                    }}
-                  >
-                    {currentUser.codUsuario === codUsuario && (
-                      <option value="2">Gerente</option>
-                    )}
-                    <option value="3">Representante</option>
-                    <option value="4">Loja</option>
-                  </select>
-                </label>
+                </label>                
                 <label>
                   CPF:
                   <input
