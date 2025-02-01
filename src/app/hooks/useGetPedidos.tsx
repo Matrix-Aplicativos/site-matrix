@@ -12,6 +12,7 @@ interface UseGetPedidosHook {
 const useGetPedidos = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetPedidosHook => {
@@ -24,7 +25,7 @@ const useGetPedidos = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]

@@ -9,15 +9,60 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import useGetPedidos from "../hooks/useGetPedidos";
+import { useTotalPedidos } from "../hooks/useTotalPedidos";
 import useGraficoPedidos from "../hooks/useGraficoPedidos";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function RelatorioPedidos() {
+  const today = new Date();
+  const firstDayCurrentMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  )
+    .toISOString()
+    .split("T")[0];
+  const lastDayCurrentMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0
+  )
+    .toISOString()
+    .split("T")[0];
+
+  const firstDayPreviousMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() - 1,
+    1
+  )
+    .toISOString()
+    .split("T")[0];
+  const lastDayPreviousMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() - 1,
+    new Date(today.getFullYear(), today.getMonth(), 0).getDate()
+  )
+    .toISOString()
+    .split("T")[0];
+
+  const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
+  const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
   const [view, setView] = useState<"mensal" | "anual">("mensal");
-  const { pedidos, loading, error } = useGetPedidos(1, 1); 
-  const chartData = useGraficoPedidos(pedidos, view);
+  const { totalPedidos, isLoading, error } = useTotalPedidos(
+    1,
+    '2025-01-01',
+    '2025-12-31',
+    10000
+  );
+  const chartData = useGraficoPedidos(totalPedidos, view);
 
   const options = {
     responsive: true,
@@ -77,7 +122,7 @@ export default function RelatorioPedidos() {
           margin: "0 auto",
         }}
       >
-        {loading ? (
+        {isLoading ? (
           <p>Carregando...</p>
         ) : error ? (
           <p>{error}</p>

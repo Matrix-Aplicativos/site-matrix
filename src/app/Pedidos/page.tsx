@@ -17,7 +17,7 @@ const PedidosPage: React.FC = () => {
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
-  const { pedidos } = useGetPedidos(codEmpresa, paginaAtual);
+  const { pedidos } = useGetPedidos(codEmpresa, paginaAtual, 10);
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(pedidos || []);

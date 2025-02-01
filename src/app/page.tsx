@@ -11,11 +11,23 @@ import styles from "./Home.module.css";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
-  const [periodoIni, setPeriodoIni] = useState("2025-01-01");
-  const [periodoFim, setPeriodoFim] = useState("2025-01-31");
-  const [isFullyLoaded, setIsFullyLoaded] = useState(false);
-  const codEmpresa = 1;
+  
+  const today = new Date();
+  const firstDayCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
+  const lastDayCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
+  
+  const firstDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split("T")[0];
+  const lastDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, new Date(today.getFullYear(), today.getMonth(), 0).getDate()).toISOString().split("T")[0];
 
+  const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
+  const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
+  const codEmpresa = 1;
+  const porPagina = 1000;
+
+  console.log(lastDayPreviousMonth)
+  
+
+  
   const {
     data: maisVendidos,
     error: errorMaisVendidos,
@@ -31,33 +43,22 @@ export default function HomePage() {
   const {
     totalPedidos: pedidosAtual,
     isLoading: isLoadingPedidosAtual,
-  } = useTotalPedidos(codEmpresa, periodoIni, periodoFim);
-
-  const mesAnteriorIni = "2025-01-01";
-  const mesAnteriorFim = "2025-01-31";
+  } = useTotalPedidos(codEmpresa, periodoIni, periodoFim, porPagina);
 
   const {
     totalPedidos: pedidosAnterior,
     isLoading: isLoadingPedidosAnterior,
-  } = useTotalPedidos(codEmpresa, mesAnteriorIni, mesAnteriorFim);
+  } = useTotalPedidos(codEmpresa, firstDayPreviousMonth, lastDayPreviousMonth, porPagina);
 
-  // Calcular variação percentual
   const variacaoPedidos =
-    pedidosAnterior > 0
-      ? ((pedidosAtual - pedidosAnterior) / pedidosAnterior) * 100
-      : 0;
+    pedidosAnterior.length > 0
+      ? ((pedidosAtual.length - pedidosAnterior.length) / pedidosAnterior.length) * 100
+      : null;
 
   useEffect(() => {
     showLoading();
-
-    if (
-      !isLoadingMaisVendidos &&
-      !isLoadingMenosVendidos &&
-      !isLoadingPedidosAtual &&
-      !isLoadingPedidosAnterior
-    ) {
+    if (!isLoadingMaisVendidos && !isLoadingMenosVendidos && !isLoadingPedidosAtual && !isLoadingPedidosAnterior) {
       setTimeout(() => {
-        setIsFullyLoaded(true);
         hideLoading();
       }, 1000);
     }
@@ -70,10 +71,7 @@ export default function HomePage() {
     hideLoading,
   ]);
 
-  if (!isFullyLoaded) return <p>Carregando os dados...</p>;
-
-  if (errorMaisVendidos || errorMenosVendidos)
-    return <p>Ocorreu um erro ao carregar os dados!</p>;
+  if (errorMaisVendidos || errorMenosVendidos) return <p>Ocorreu um erro ao carregar os dados!</p>;
 
   return (
     <div className={styles.container}>
@@ -85,39 +83,33 @@ export default function HomePage() {
         <div className={styles.tablesWithStats}>
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>{pedidosAtual}</span>
+              <span className={styles.number}>{pedidosAtual.length || 0}</span>
               <span>Pedidos Feitos esse mês</span>
               <span className={styles.comparison}>
-                <span
-                  className={
-                    variacaoPedidos >= 0 ? styles.positive : styles.negative
-                  }
-                >
-                  {variacaoPedidos >= 0 ? "▲" : "▼"}{" "}
-                  {Math.abs(variacaoPedidos).toFixed(1)}%
-                </span>{" "}
-                em relação a {new Date(mesAnteriorIni).toLocaleString("pt-BR", {
-                  month: "long",
-                })}
+                {variacaoPedidos !== null ? (
+                  <>
+                    <span className={variacaoPedidos >= 0 ? styles.positive : styles.negative}>
+                      {variacaoPedidos >= 0 ? "▲" : "▼"} {Math.abs(variacaoPedidos).toFixed(1)}%
+                    </span>{" "}
+                    em relação a {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", { month: "long" })}
+                  </>
+                ) : (
+                  "Sem dados para comparação"
+                )}
               </span>
             </div>
-            <RankingTable
-              title="Produtos Mais Vendidos"
-              data={maisVendidos ?? []}
-            />
+            <RankingTable title="Produtos Mais Vendidos" data={maisVendidos ?? []} />
           </div>
+
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>1000 </span>
+              <span className={styles.number}>1000</span>
               <span>Clientes Atendidos</span>
               <span className={styles.comparison}>
                 <span className={styles.negative}>▼ 12%</span> em relação a Fevereiro
               </span>
             </div>
-            <RankingTable
-              title="Produtos Menos Vendidos"
-              data={menosVendidos ?? []}
-            />
+            <RankingTable title="Produtos Menos Vendidos" data={menosVendidos ?? []} />
           </div>
         </div>
       </div>
