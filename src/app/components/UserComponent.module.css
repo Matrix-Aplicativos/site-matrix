@@ -339,3 +339,23 @@
   line-height: 0px;
   user-select: none;
 }
+
+.modalRepresentanteContainer {
+  margin-top: 7px;
+  margin-bottom: 5px;
+}
+
+.inviteButton {
+  background-color: #0073e6;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 5px;
+  display: flex;
+}
+
+.inviteButton:hover {
+  background-color: #005bb5;
+}

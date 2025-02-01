@@ -270,7 +270,7 @@ const UserComponent: React.FC = () => {
           Convidar Representante
         </button>
         {modalInviteOpen && (
-          <div>
+          <div className={styles.modalRepresentanteContainer}>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -286,7 +286,11 @@ const UserComponent: React.FC = () => {
                   onChange={(e) => setEmailInput(e.target.value)}
                 />
               </label>
-              <input type="submit" value="Convidar" />
+              <input
+                type="submit"
+                value="Convidar"
+                className={styles.inviteButton}
+              />
             </form>
           </div>
         )}

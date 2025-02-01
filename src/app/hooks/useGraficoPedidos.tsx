@@ -17,7 +17,7 @@ export default function useGraficoPedidos(
       };
     }
 
-    console.log("Pedidos recebidos para o gráfico:", pedidos);
+    
 
     const agrupados: Map<number, number> = new Map();
     const meses = [
@@ -52,16 +52,16 @@ export default function useGraficoPedidos(
         return;
       }
 
-      console.log("Data do pedido processada:", date);
+      
 
       let key = view === "mensal" ? date.getDate() : date.getMonth() ;
 
-      console.log(`Agrupando por chave: ${key}`);
+      
 
       agrupados.set(key, (agrupados.get(key) || 0) + 1);
     });
 
-    console.log("Agrupados (resultado final):", agrupados);
+    
 
     let valores: any[] = [];
     if(view === 'mensal'){

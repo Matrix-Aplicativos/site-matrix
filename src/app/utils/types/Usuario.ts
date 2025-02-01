@@ -3,6 +3,7 @@ import { Dispositivo } from "./Dispositivo";
 import { Empresa } from "./Empresa";
 
 export interface Usuario {
+  codUsuarioErp: any;
   codUsuario: number;
   codUsuarioErp: string;
     nome: string;

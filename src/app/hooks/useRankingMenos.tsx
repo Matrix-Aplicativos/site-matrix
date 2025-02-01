@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 
 export const useRankingItensMenos = (codEmpresa, periodoIni, periodoFim) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -13,15 +13,14 @@ export const useRankingItensMenos = (codEmpresa, periodoIni, periodoFim) => {
       setIsLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/pedido/${codEmpresa}/ranking-itens/menos`, {
-            params: {
-              periodoIni, 
-              periodoFim
-            }
+          `/pedido/${codEmpresa}/ranking-itens/menos`,
+          {
+            params: { periodoIni, periodoFim },
           }
         );
-        setData(response.data);
+        setData(response.data || []);
       } catch (err) {
+        console.error("❌ Erro ao buscar itens menos vendidos:", err);
         setError(err);
       } finally {
         setIsLoading(false);

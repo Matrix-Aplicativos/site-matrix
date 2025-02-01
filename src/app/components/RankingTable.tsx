@@ -1,6 +1,25 @@
-import styles from './RankingTable.module.css';
+"use client";
 
-export default function RankingTable({ title, data } : {title : string, data: any[]}) {
+import styles from "./RankingTable.module.css";
+
+export default function RankingTable({ title, data }) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return (
+      <div className={styles.tableContainer}>
+        <h2 className={styles.tableTitle}>{title}</h2>
+        <p className={styles.noDataMessage}>Nenhum dado disponível</p>
+      </div>
+    );
+  }
+
+  const sortedData = [...data].sort((a, b) => {
+    if (title.includes("Mais Vendidos")) {
+      return b.qtdItem - a.qtdItem; 
+    } else {
+      return a.qtdItem - b.qtdItem; 
+    }
+  });
+
   return (
     <div className={styles.tableContainer}>
       <h2 className={styles.tableTitle}>{title}</h2>
@@ -14,12 +33,12 @@ export default function RankingTable({ title, data } : {title : string, data: an
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
+          {sortedData.map((item, index) => (
             <tr key={index}>
               <td>{index + 1}</td>
-              <td>{item.descricao}</td>
-              <td>{item.marca}</td>
-              <td>{item.quantidadeVendida}</td>
+              <td>{item.item.descricaoItem || "Sem descrição"}</td>
+              <td>{item.item.descricaoMarca || "Sem marca"}</td>
+              <td>{item.qtdItem ?? 0}</td>
             </tr>
           ))}
         </tbody>

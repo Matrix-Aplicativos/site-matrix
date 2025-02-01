@@ -22,8 +22,6 @@ const useGetPedidos = (
   const fetchPedidos = async () => {
     try {
       setLoading(true);
-      console.log("Buscando pedidos...");
-
       const queryParams = [
         `pagina=${pagina}`,
         `porPagina=10`,
@@ -37,7 +35,6 @@ const useGetPedidos = (
         `/pedido/${codEmpresa}?${queryParams}`
       );
 
-      console.log("Pedidos recebidos da API:", response.data);
       setPedidos(response.data);
       setError(null);
     } catch (err) {

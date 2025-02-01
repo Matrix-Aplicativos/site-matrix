@@ -5,6 +5,7 @@ import RankingTable from "./components/RankingTable";
 import RelatorioPedidos from "./components/RelatorioPedidos";
 import { useRankingItensMais } from "./hooks/useRankingMais";
 import { useRankingItensMenos } from "./hooks/useRankingMenos";
+import { useTotalPedidos } from "./hooks/useTotalPedidos"; 
 import { useLoading } from "./Context/LoadingContext";
 import styles from "./Home.module.css";
 
@@ -27,17 +28,47 @@ export default function HomePage() {
     isLoading: isLoadingMenosVendidos,
   } = useRankingItensMenos(codEmpresa, periodoIni, periodoFim);
 
+  const {
+    totalPedidos: pedidosAtual,
+    isLoading: isLoadingPedidosAtual,
+  } = useTotalPedidos(codEmpresa, periodoIni, periodoFim);
+
+  const mesAnteriorIni = "2025-01-01";
+  const mesAnteriorFim = "2025-01-31";
+
+  const {
+    totalPedidos: pedidosAnterior,
+    isLoading: isLoadingPedidosAnterior,
+  } = useTotalPedidos(codEmpresa, mesAnteriorIni, mesAnteriorFim);
+
+  // Calcular variação percentual
+  const variacaoPedidos =
+    pedidosAnterior > 0
+      ? ((pedidosAtual - pedidosAnterior) / pedidosAnterior) * 100
+      : 0;
+
   useEffect(() => {
     showLoading();
 
-    // Quando os dados são carregados, aguardar um pequeno delay antes de ocultar o loading
-    if (!isLoadingMaisVendidos && !isLoadingMenosVendidos) {
+    if (
+      !isLoadingMaisVendidos &&
+      !isLoadingMenosVendidos &&
+      !isLoadingPedidosAtual &&
+      !isLoadingPedidosAnterior
+    ) {
       setTimeout(() => {
         setIsFullyLoaded(true);
         hideLoading();
-      }, 1000); // Delay de 1 segundo para garantir que os gráficos renderizem
+      }, 1000);
     }
-  }, [isLoadingMaisVendidos, isLoadingMenosVendidos, showLoading, hideLoading]);
+  }, [
+    isLoadingMaisVendidos,
+    isLoadingMenosVendidos,
+    isLoadingPedidosAtual,
+    isLoadingPedidosAnterior,
+    showLoading,
+    hideLoading,
+  ]);
 
   if (!isFullyLoaded) return <p>Carregando os dados...</p>;
 
@@ -54,15 +85,25 @@ export default function HomePage() {
         <div className={styles.tablesWithStats}>
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>500 </span>
+              <span className={styles.number}>{pedidosAtual}</span>
               <span>Pedidos Feitos esse mês</span>
               <span className={styles.comparison}>
-                <span className={styles.positive}>▲ 10%</span> em relação a Fevereiro
+                <span
+                  className={
+                    variacaoPedidos >= 0 ? styles.positive : styles.negative
+                  }
+                >
+                  {variacaoPedidos >= 0 ? "▲" : "▼"}{" "}
+                  {Math.abs(variacaoPedidos).toFixed(1)}%
+                </span>{" "}
+                em relação a {new Date(mesAnteriorIni).toLocaleString("pt-BR", {
+                  month: "long",
+                })}
               </span>
             </div>
             <RankingTable
               title="Produtos Mais Vendidos"
-              data={maisVendidos || []}
+              data={maisVendidos ?? []}
             />
           </div>
           <div className={styles.statWithTable}>
@@ -75,7 +116,7 @@ export default function HomePage() {
             </div>
             <RankingTable
               title="Produtos Menos Vendidos"
-              data={menosVendidos || []}
+              data={menosVendidos ?? []}
             />
           </div>
         </div>
