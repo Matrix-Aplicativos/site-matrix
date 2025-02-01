@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -23,43 +23,36 @@ ChartJS.register(
 
 export default function RelatorioPedidos() {
   const today = new Date();
-  const firstDayCurrentMonth = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1
-  )
-    .toISOString()
-    .split("T")[0];
-  const lastDayCurrentMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    0
-  )
-    .toISOString()
-    .split("T")[0];
-
-  const firstDayPreviousMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() - 1,
-    1
-  )
-    .toISOString()
-    .split("T")[0];
-  const lastDayPreviousMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() - 1,
-    new Date(today.getFullYear(), today.getMonth(), 0).getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-
-  const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
-  const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
   const [view, setView] = useState<"mensal" | "anual">("mensal");
+  const [periodoIni, setPeriodoIni] = useState("");
+  const [periodoFim, setPeriodoFim] = useState("");
+
+  useEffect(() => {
+    if (view === "mensal") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        .toISOString()
+        .split("T")[0];
+      setPeriodoIni(firstDay);
+      setPeriodoFim(lastDay);
+    } else {
+      const firstDay = new Date(today.getFullYear(), 0, 1)
+        .toISOString()
+        .split("T")[0];
+      const lastDay = new Date(today.getFullYear(), 11, 31)
+        .toISOString()
+        .split("T")[0];
+      setPeriodoIni(firstDay);
+      setPeriodoFim(lastDay);
+    }
+  }, [view, today]);
+
   const { totalPedidos, isLoading, error } = useTotalPedidos(
     1,
-    '2025-01-01',
-    '2025-12-31',
+    periodoIni,
+    periodoFim,
     10000
   );
   const chartData = useGraficoPedidos(totalPedidos, view);

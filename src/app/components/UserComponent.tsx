@@ -265,10 +265,11 @@ const UserComponent: React.FC = () => {
         </button>
         <button
           className={styles.newUserButton}
-          onClick={() => setModalInviteOpen(true)}
+          onClick={() => setModalInviteOpen((prev) => !prev)}
         >
           Convidar Representante
         </button>
+
         {modalInviteOpen && (
           <div className={styles.modalRepresentanteContainer}>
             <form

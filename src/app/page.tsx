@@ -98,7 +98,7 @@ export default function HomePage() {
                 )}
               </span>
             </div>
-            <RankingTable title="Produtos Mais Vendidos" data={maisVendidos ?? []} />
+            <RankingTable title="Produtos Mais Vendidos" data={(maisVendidos ?? []).slice(0, 5)} />
           </div>
 
           <div className={styles.statWithTable}>
@@ -109,7 +109,7 @@ export default function HomePage() {
                 <span className={styles.negative}>▼ 12%</span> em relação a Fevereiro
               </span>
             </div>
-            <RankingTable title="Produtos Menos Vendidos" data={menosVendidos ?? []} />
+            <RankingTable title="Produtos Menos Vendidos" data={(menosVendidos ?? []).slice(0, 5)} />
           </div>
         </div>
       </div>
