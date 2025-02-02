@@ -12,10 +12,12 @@ import { FaSort } from "react-icons/fa";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import { formatTelefone } from "../utils/functions/formatTelefone";
 import { formatCep } from "../utils/functions/formatCep";
+import { useLoading } from "../Context/LoadingContext";
 
 const ITEMS_PER_PAGE = 5;
 
 const ClientesPage: React.FC = () => {
+  const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
@@ -40,6 +42,14 @@ const ClientesPage: React.FC = () => {
       setSortedData(clientes);
     }
   }, [clientes]);
+
+  useEffect(() => {
+        if (loading) {
+          showLoading();
+        } else {
+          hideLoading(); 
+        }
+      }, [loading, showLoading, hideLoading]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));

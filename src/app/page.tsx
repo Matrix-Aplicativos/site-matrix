@@ -5,7 +5,8 @@ import RankingTable from "./components/RankingTable";
 import RelatorioPedidos from "./components/RelatorioPedidos";
 import { useRankingItensMais } from "./hooks/useRankingMais";
 import { useRankingItensMenos } from "./hooks/useRankingMenos";
-import { useTotalPedidos } from "./hooks/useTotalPedidos"; 
+import { useTotalPedidos } from "./hooks/useTotalPedidos";
+import { useTotalClientes } from "./hooks/useTotalClientes";
 import { useLoading } from "./Context/LoadingContext";
 import styles from "./Home.module.css";
 
@@ -17,17 +18,13 @@ export default function HomePage() {
   const lastDayCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
   
   const firstDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split("T")[0];
-  const lastDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, new Date(today.getFullYear(), today.getMonth(), 0).getDate()).toISOString().split("T")[0];
+  const lastDayPreviousMonth = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
 
   const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
   const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
   const codEmpresa = 1;
   const porPagina = 1000;
 
-  console.log(lastDayPreviousMonth)
-  
-
-  
   const {
     data: maisVendidos,
     error: errorMaisVendidos,
@@ -55,9 +52,31 @@ export default function HomePage() {
       ? ((pedidosAtual.length - pedidosAnterior.length) / pedidosAnterior.length) * 100
       : null;
 
+  const {
+    totalClientes: clientesAtual,
+    isLoading: isLoadingClientesAtual,
+  } = useTotalClientes(codEmpresa, periodoIni, periodoFim, porPagina);
+
+  const {
+    totalClientes: clientesAnterior,
+    isLoading: isLoadingClientesAnterior,
+  } = useTotalClientes(codEmpresa, firstDayPreviousMonth, lastDayPreviousMonth, porPagina);
+
+  const variacaoClientes =
+    clientesAnterior > 0
+      ? ((clientesAtual - clientesAnterior) / clientesAnterior) * 100
+      : null;
+
   useEffect(() => {
     showLoading();
-    if (!isLoadingMaisVendidos && !isLoadingMenosVendidos && !isLoadingPedidosAtual && !isLoadingPedidosAnterior) {
+    if (
+      !isLoadingMaisVendidos &&
+      !isLoadingMenosVendidos &&
+      !isLoadingPedidosAtual &&
+      !isLoadingPedidosAnterior &&
+      !isLoadingClientesAtual &&
+      !isLoadingClientesAnterior
+    ) {
       setTimeout(() => {
         hideLoading();
       }, 1000);
@@ -67,6 +86,8 @@ export default function HomePage() {
     isLoadingMenosVendidos,
     isLoadingPedidosAtual,
     isLoadingPedidosAnterior,
+    isLoadingClientesAtual,
+    isLoadingClientesAnterior,
     showLoading,
     hideLoading,
   ]);
@@ -103,10 +124,19 @@ export default function HomePage() {
 
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>1000</span>
+              <span className={styles.number}>{clientesAtual || 0}</span>
               <span>Clientes Atendidos</span>
               <span className={styles.comparison}>
-                <span className={styles.negative}>▼ 12%</span> em relação a Fevereiro
+                {variacaoClientes !== null ? (
+                  <>
+                    <span className={variacaoClientes >= 0 ? styles.positive : styles.negative}>
+                      {variacaoClientes >= 0 ? "▲" : "▼"} {Math.abs(variacaoClientes).toFixed(1)}%
+                    </span>{" "}
+                    em relação a {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", { month: "long" })}
+                  </>
+                ) : (
+                  "Sem dados para comparação"
+                )}
               </span>
             </div>
             <RankingTable title="Produtos Menos Vendidos" data={(menosVendidos ?? []).slice(0, 5)} />

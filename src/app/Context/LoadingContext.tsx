@@ -1,9 +1,14 @@
-
 import React, { createContext, useContext, useState } from 'react';
 
-const LoadingContext = createContext(null);
+interface LoadingContextType {
+  isLoading: boolean;
+  showLoading: () => void;
+  hideLoading: () => void;
+}
 
-export const LoadingProvider = ({ children }) => {
+const LoadingContext = createContext<LoadingContextType | null>(null);
+
+export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const showLoading = () => setIsLoading(true);

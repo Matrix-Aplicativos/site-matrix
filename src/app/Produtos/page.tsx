@@ -10,17 +10,19 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
+import { useLoading } from "../Context/LoadingContext";
 
 const ITEMS_PER_PAGE = 5;
 
 const ProdutosPage: React.FC = () => {
+  const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const { produtos, loading, error } = useGetProdutos(
     usuario?.empresas[0]?.codEmpresa || 1,
-    1 // Fetch all products, not paginated at this level
+    1 
   );
 
   const [query, setQuery] = useState("");
@@ -39,6 +41,14 @@ const ProdutosPage: React.FC = () => {
       setSortedData(produtos);
     }
   }, [produtos]);
+
+  useEffect(() => {
+      if (loading) {
+        showLoading();
+      } else {
+        hideLoading(); 
+      }
+    }, [loading, showLoading, hideLoading]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));

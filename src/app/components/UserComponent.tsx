@@ -15,8 +15,10 @@ import { FaSort } from "react-icons/fa";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import useInviteRepresentante from "../hooks/useInviteRepresentante";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
+import { useLoading } from "../Context/LoadingContext";
 
 const UserComponent: React.FC = () => {
+   const { showLoading, hideLoading } = useLoading();
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
@@ -57,6 +59,14 @@ const UserComponent: React.FC = () => {
       usuario?.empresas[0].maxUsuarios! - usuarios?.length! || 0
     );
   }, [usuarios]);
+
+  useEffect(() => {
+          if (loading) {
+            showLoading();
+          } else {
+            hideLoading(); 
+          }
+        }, [loading, showLoading, hideLoading]);
 
   const handleSort = (key: keyof UsuarioGet) => {
     const direction =

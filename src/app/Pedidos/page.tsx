@@ -10,14 +10,18 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronsLeft, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
+import { Pedido } from "../utils/types/Pedido";
+import { useLoading } from "../Context/LoadingContext";
 
 const PedidosPage: React.FC = () => {
+  const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
-  const { pedidos } = useGetPedidos(codEmpresa, paginaAtual, 10);
+
+  const { pedidos, isLoading } = useGetPedidos(codEmpresa, paginaAtual, 10);
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(pedidos || []);
@@ -62,6 +66,14 @@ const PedidosPage: React.FC = () => {
       setFilteredData(filtered);
     }
   }, [query, dateRange, pedidos, selectedFilter]);
+
+  useEffect(() => {
+    if (isLoading) {
+      showLoading();
+    } else {
+      hideLoading(); 
+    }
+  }, [isLoading, showLoading, hideLoading]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));

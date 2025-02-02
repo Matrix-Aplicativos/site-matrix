@@ -5,7 +5,7 @@ import { Pedido } from "../utils/types/Pedido";
 
 interface UseGetPedidosHook {
   pedidos: Pedido[];
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
 }
 
@@ -17,7 +17,7 @@ const useGetPedidos = (
   sortDirection?: "asc" | "desc"
 ): UseGetPedidosHook => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPedidos = async () => {
@@ -57,7 +57,7 @@ const useGetPedidos = (
     }
   }, [codEmpresa, pagina, sortKey, sortDirection]);
 
-  return { pedidos, loading, error };
+  return { pedidos, isLoading , error };
 };
 
 export default useGetPedidos;
