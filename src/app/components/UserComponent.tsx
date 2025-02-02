@@ -16,18 +16,23 @@ import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import useInviteRepresentante from "../hooks/useInviteRepresentante";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 import { useLoading } from "../Context/LoadingContext";
+import useConfiguracao from "../hooks/useConfiguracao";
 
 const UserComponent: React.FC = () => {
-   const { showLoading, hideLoading } = useLoading();
+  const { showLoading, hideLoading } = useLoading();
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();
-  const { usuarios, loading, error } = useGetUsuarios(
+  const { usuarios, loading } = useGetUsuarios(
     usuario?.empresas[0].codEmpresa ?? 0,
     1
   );
-
+  const {
+    valorConfiguracao,
+    loading: loadingConfig,
+    error,
+  } = useConfiguracao(usuario?.empresas[0].codEmpresa ?? 0); 
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [emailInput, setEmailInput] = useState("");
   const [modalInviteOpen, setModalInviteOpen] = useState(false);
@@ -52,21 +57,21 @@ const UserComponent: React.FC = () => {
   const { invite } = useInviteRepresentante();
 
   useEffect(() => {
-    if (query === "") {
-      setFilteredData(usuarios || []);
+    if (usuarios && valorConfiguracao) {
+      const maxUsuarios = valorConfiguracao;
+      const totalUsuarios = usuarios?.length ?? 0;
+      setUsuariosDisponiveis(maxUsuarios - totalUsuarios); 
+      setFilteredData(usuarios); 
     }
-    setUsuariosDisponiveis(
-      usuario?.empresas[0].maxUsuarios! - usuarios?.length! || 0
-    );
-  }, [usuarios]);
+  }, [usuarios, valorConfiguracao]);
 
   useEffect(() => {
-          if (loading) {
-            showLoading();
-          } else {
-            hideLoading(); 
-          }
-        }, [loading, showLoading, hideLoading]);
+    if (loading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [loading, showLoading, hideLoading]);
 
   const handleSort = (key: keyof UsuarioGet) => {
     const direction =
@@ -99,7 +104,10 @@ const UserComponent: React.FC = () => {
 
   const handleSaveChanges = () => {
     if (!currentUser) return;
-    updateUsuario({...currentUser,codEmpresa: usuario?.empresas[0].codEmpresa ?? 0});
+    updateUsuario({
+      ...currentUser,
+      codEmpresa: usuario?.empresas[0].codEmpresa ?? 0,
+    });
     closeEditModal();
   };
 
@@ -181,10 +189,12 @@ const UserComponent: React.FC = () => {
                         <div className={styles.additionalInfo}>
                           <button
                             className={styles.editButton}
-                            onClick={() => openEditModal({
-                              ...row,
-                              codEmpresa: 0,
-                            })}
+                            onClick={() =>
+                              openEditModal({
+                                ...row,
+                                codEmpresa: 0,
+                              })
+                            }
                           >
                             ✏️
                           </button>
@@ -270,6 +280,7 @@ const UserComponent: React.FC = () => {
         <button
           className={styles.newUserButton}
           onClick={() => setIsModalOpen(true)}
+          disabled={usuariosDisponiveis <= 0}
         >
           Novo Usuário
         </button>
@@ -339,7 +350,7 @@ const UserComponent: React.FC = () => {
                       setCurrentUser({ ...currentUser, email: e.target.value })
                     }
                   />
-                </label>                
+                </label>
                 <label>
                   CPF:
                   <input
