@@ -2,10 +2,10 @@
 import React from "react";
 import styles from "./Administrativo.module.css";
 import ConfigComponent from "../components/ConfigComponent";
-import UserComponent from "../components/UserComponent";
 import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import DeviceComponent from "../components/DeviceComponent";
 
 const AdmPage: React.FC = () => {
   const token = getCookie("token");
@@ -22,7 +22,7 @@ const AdmPage: React.FC = () => {
 
       <div className={styles.componentsContainer}>
         <div className={styles.component}>
-          <UserComponent />
+          <DeviceComponent />
         </div>
         <div className={styles.component}>
           <ConfigComponent />

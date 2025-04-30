@@ -1,31 +1,36 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
-import { Pedido } from "../utils/types/Pedido";
 
-interface UseGetPedidosHook {
-  pedidos: Pedido[];
-  isLoading: boolean;
+interface Dispositivo {
+  codDispositivo: string;
+  nome: string;
+  codEmpresaApi: number;
+  ativo: boolean;
+}
+
+interface UseGetDispositivosHook {
+  dispositivos: Dispositivo[] | null;
+  loading: boolean;
   error: string | null;
 }
 
-const useGetPedidos = (
+const useGetDispositivos = (
   codEmpresa: number,
   pagina: number,
-  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
-): UseGetPedidosHook => {
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [isLoading, setLoading] = useState(false);
+): UseGetDispositivosHook => {
+  const [dispositivos, setDispositivos] = useState<Dispositivo[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPedidos = async () => {
+  const fetchDispositivos = async () => {
     try {
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=${porPagina}`,
+        `porPagina=10`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -33,19 +38,17 @@ const useGetPedidos = (
         .join("&");
 
       const response = await axiosInstance.get(
-        `/pedido/empresa/${codEmpresa}?${queryParams}`
+        `/dispositivo/${codEmpresa}?${queryParams}`
       );
-
-      setPedidos(response.data);
+      setDispositivos(response.data);
       setError(null);
     } catch (err) {
-      console.error("Erro ao buscar pedidos:", err);
       setError(
         err instanceof AxiosError
           ? err.message
-          : "Ocorreu um erro ao buscar os pedidos."
+          : "Ocorreu um erro ao buscar os dispositivos."
       );
-      setPedidos([]);
+      setDispositivos(null);
     } finally {
       setLoading(false);
     }
@@ -53,11 +56,11 @@ const useGetPedidos = (
 
   useEffect(() => {
     if (codEmpresa) {
-      fetchPedidos();
+      fetchDispositivos();
     }
   }, [codEmpresa, pagina, sortKey, sortDirection]);
 
-  return { pedidos, isLoading , error };
+  return { dispositivos, loading, error };
 };
 
-export default useGetPedidos;
+export default useGetDispositivos;

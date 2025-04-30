@@ -13,7 +13,7 @@ export const useTotalPedidos = (codEmpresa, periodoIni, periodoFim, porPagina) =
     const fetchTotalPedidos = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/pedido/${codEmpresa}`, {
+        const response = await axiosInstance.get(`/pedido/empresa/${codEmpresa}`, {
           params: { periodoIni, periodoFim, porPagina },
         });
         setTotalPedidos(response.data)

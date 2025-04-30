@@ -215,13 +215,13 @@ const PedidosPage: React.FC = () => {
                       <td colSpan={5}>
                         <div className={styles.additionalInfo}>
                           <p>
-                            <strong>Cliente:</strong> {row.codCliente}
+                            <strong>Cliente:</strong> {row.codCliente.razaoSocial}
                           </p>
                           <p>
                             <strong>Status:</strong> {row.status}
                           </p>
                           <p>
-                            <strong>Observação:</strong> {row.observacao}
+                            <strong>Observação:</strong> {row.observacao || "Sem Observação"}
                           </p>
                         </div>
                       </td>

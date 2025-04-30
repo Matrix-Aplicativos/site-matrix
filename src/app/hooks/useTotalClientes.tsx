@@ -13,7 +13,7 @@ export const useTotalClientes = (codEmpresa, periodoIni, periodoFim, porPagina) 
     const fetchTotalClientes = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/pedido/${codEmpresa}`, {
+        const response = await axiosInstance.get(`/pedido/empresa/${codEmpresa}`, {
           params: { periodoIni, periodoFim, porPagina },
         });
 

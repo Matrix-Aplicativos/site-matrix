@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from './axiosInstance';
 
-const useConfiguracao = (codEmpresa) => {
-  const [valorConfiguracao, setValorConfiguracao] = useState(); 
-  const [configuracaoTeste1, setConfiguracaoTeste1] = useState(false); 
-  const [configuracaoTeste2, setConfiguracaoTeste2] = useState(false); 
+interface Configuracao {
+  codEmpresa: number;
+  codConfiguracao: number;
+  descricao: string;
+  valor: string;
+  ativo: boolean;
+}
+
+const useConfiguracao = (codEmpresa: number) => {
+  const [configuracoes, setConfiguracoes] = useState<Configuracao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -12,23 +18,7 @@ const useConfiguracao = (codEmpresa) => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/configuracao/${codEmpresa}`);
-        const configuracoes = response.data;
-
-        const configuracaoMaxUsuarios = configuracoes.find(config => config.descricao === 'maximo-de-usuarios');
-        if (configuracaoMaxUsuarios && configuracaoMaxUsuarios.ativo) {
-          setValorConfiguracao(configuracaoMaxUsuarios.valor);
-        }
-
-        const configuracaoTeste1 = configuracoes.find(config => config.descricao === 'configuracao-teste1');
-        if (configuracaoTeste1) {
-          setConfiguracaoTeste1(configuracaoTeste1.ativo); 
-        }
-
-        const configuracaoTeste2 = configuracoes.find(config => config.descricao === 'configuracao-teste2');
-        if (configuracaoTeste2) {
-          setConfiguracaoTeste2(configuracaoTeste2.ativo);  
-        }
-
+        setConfiguracoes(response.data);
       } catch (err) {
         setError(err);
       } finally {
@@ -41,10 +31,21 @@ const useConfiguracao = (codEmpresa) => {
     }
   }, [codEmpresa]);
 
+  const getConfiguracao = (descricao: string) => {
+    return configuracoes.find(config => config.descricao === descricao);
+  };
+
+  // Get max-dispositivos configuration and parse it to number
+  const maximoDispositivos = parseInt(getConfiguracao('max-dispositivos')?.valor || '0');
+  const configuracaoTeste1 = getConfiguracao('configuracao-teste1')?.ativo || false;
+  const configuracaoTeste2 = getConfiguracao('configuracao-teste2')?.ativo || false;
+
   return { 
-    valorConfiguracao, 
-    configuracaoTeste1, 
-    configuracaoTeste2, 
+    configuracoes,        
+    maximoDispositivos,      
+    configuracaoTeste1,    
+    configuracaoTeste2,     
+    getConfiguracao,       
     loading, 
     error 
   };

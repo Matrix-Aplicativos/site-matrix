@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
-import { Usuario } from "../utils/types/Usuario";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 
 interface UseGetUsuariosHook {
@@ -25,7 +24,7 @@ const useGetUsuarios = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=5`, // Alterado para 5 para consistência com o componente
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -35,15 +34,23 @@ const useGetUsuarios = (
       const response = await axiosInstance.get(
         `/usuario/empresa/${codEmpresa}?${queryParams}`
       );
-      setUsuarios(response.data);
-      console.log(response);
+
+      // Verifica diferentes estruturas de resposta
+      const data = response.data.data || response.data;
+
+      if (!Array.isArray(data)) {
+        throw new Error("Formato de dados inválido da API");
+      }
+
+      setUsuarios(data);
       setError(null);
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof AxiosError
-          ? err.message
-          : "Ocorreu um erro ao buscar os usuários."
-      );
+          ? err.response?.data?.message || err.message
+          : "Ocorreu um erro ao buscar os usuários.";
+
+      setError(errorMessage);
       setUsuarios(null);
     } finally {
       setLoading(false);

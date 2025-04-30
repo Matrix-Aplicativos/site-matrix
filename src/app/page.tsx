@@ -12,13 +12,37 @@ import styles from "./Home.module.css";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
-  
+
   const today = new Date();
-  const firstDayCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
-  const lastDayCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
-  
-  const firstDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split("T")[0];
-  const lastDayPreviousMonth = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
+  const firstDayCurrentMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  )
+    .toISOString()
+    .split("T")[0];
+  const lastDayCurrentMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0
+  )
+    .toISOString()
+    .split("T")[0];
+
+  const firstDayPreviousMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() - 1,
+    1
+  )
+    .toISOString()
+    .split("T")[0];
+  const lastDayPreviousMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    0
+  )
+    .toISOString()
+    .split("T")[0];
 
   const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
   const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
@@ -37,30 +61,36 @@ export default function HomePage() {
     isLoading: isLoadingMenosVendidos,
   } = useRankingItensMenos(codEmpresa, periodoIni, periodoFim);
 
-  const {
-    totalPedidos: pedidosAtual,
-    isLoading: isLoadingPedidosAtual,
-  } = useTotalPedidos(codEmpresa, periodoIni, periodoFim, porPagina);
+  const { totalPedidos: pedidosAtual, isLoading: isLoadingPedidosAtual } =
+    useTotalPedidos(codEmpresa, periodoIni, periodoFim, porPagina);
 
-  const {
-    totalPedidos: pedidosAnterior,
-    isLoading: isLoadingPedidosAnterior,
-  } = useTotalPedidos(codEmpresa, firstDayPreviousMonth, lastDayPreviousMonth, porPagina);
+  const { totalPedidos: pedidosAnterior, isLoading: isLoadingPedidosAnterior } =
+    useTotalPedidos(
+      codEmpresa,
+      firstDayPreviousMonth,
+      lastDayPreviousMonth,
+      porPagina
+    );
 
   const variacaoPedidos =
     pedidosAnterior.length > 0
-      ? ((pedidosAtual.length - pedidosAnterior.length) / pedidosAnterior.length) * 100
+      ? ((pedidosAtual.length - pedidosAnterior.length) /
+          pedidosAnterior.length) *
+        100
       : null;
 
-  const {
-    totalClientes: clientesAtual,
-    isLoading: isLoadingClientesAtual,
-  } = useTotalClientes(codEmpresa, periodoIni, periodoFim, porPagina);
+  const { totalClientes: clientesAtual, isLoading: isLoadingClientesAtual } =
+    useTotalClientes(codEmpresa, periodoIni, periodoFim, porPagina);
 
   const {
     totalClientes: clientesAnterior,
     isLoading: isLoadingClientesAnterior,
-  } = useTotalClientes(codEmpresa, firstDayPreviousMonth, lastDayPreviousMonth, porPagina);
+  } = useTotalClientes(
+    codEmpresa,
+    firstDayPreviousMonth,
+    lastDayPreviousMonth,
+    porPagina
+  );
 
   const variacaoClientes =
     clientesAnterior > 0
@@ -92,7 +122,8 @@ export default function HomePage() {
     hideLoading,
   ]);
 
-  if (errorMaisVendidos || errorMenosVendidos) return <p>Ocorreu um erro ao carregar os dados!</p>;
+  if (errorMaisVendidos || errorMenosVendidos)
+    return <p>Ocorreu um erro ao carregar os dados!</p>;
 
   return (
     <div className={styles.container}>
@@ -109,17 +140,28 @@ export default function HomePage() {
               <span className={styles.comparison}>
                 {variacaoPedidos !== null ? (
                   <>
-                    <span className={variacaoPedidos >= 0 ? styles.positive : styles.negative}>
-                      {variacaoPedidos >= 0 ? "▲" : "▼"} {Math.abs(variacaoPedidos).toFixed(1)}%
+                    <span
+                      className={
+                        variacaoPedidos >= 0 ? styles.positive : styles.negative
+                      }
+                    >
+                      {variacaoPedidos >= 0 ? "▲" : "▼"}{" "}
+                      {Math.abs(variacaoPedidos).toFixed(1)}%
                     </span>{" "}
-                    em relação a {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", { month: "long" })}
+                    em relação a{" "}
+                    {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
+                      month: "long",
+                    })}
                   </>
                 ) : (
                   "Sem dados para comparação"
                 )}
               </span>
             </div>
-            <RankingTable title="Produtos Mais Vendidos" data={(maisVendidos ?? []).slice(0, 5)} />
+            <RankingTable
+              title="Produtos Mais Vendidos"
+              data={(maisVendidos ?? []).slice(0, 5)}
+            />
           </div>
 
           <div className={styles.statWithTable}>
@@ -129,17 +171,30 @@ export default function HomePage() {
               <span className={styles.comparison}>
                 {variacaoClientes !== null ? (
                   <>
-                    <span className={variacaoClientes >= 0 ? styles.positive : styles.negative}>
-                      {variacaoClientes >= 0 ? "▲" : "▼"} {Math.abs(variacaoClientes).toFixed(1)}%
+                    <span
+                      className={
+                        variacaoClientes >= 0
+                          ? styles.positive
+                          : styles.negative
+                      }
+                    >
+                      {variacaoClientes >= 0 ? "▲" : "▼"}{" "}
+                      {Math.abs(variacaoClientes).toFixed(1)}%
                     </span>{" "}
-                    em relação a {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", { month: "long" })}
+                    em relação a{" "}
+                    {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
+                      month: "long",
+                    })}
                   </>
                 ) : (
                   "Sem dados para comparação"
                 )}
               </span>
             </div>
-            <RankingTable title="Produtos Menos Vendidos" data={(menosVendidos ?? []).slice(0, 5)} />
+            <RankingTable
+              title="Produtos Menos Vendidos"
+              data={(menosVendidos ?? []).slice(0, 5)}
+            />
           </div>
         </div>
       </div>

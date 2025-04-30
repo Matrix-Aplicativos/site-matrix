@@ -35,7 +35,7 @@ const ClientesPage: React.FC = () => {
     key: string;
     direction: "asc" | "desc" | null;
   } | null>(null);
-  const [searchTopic, setSearchTopic] = useState<string>("RazaoSocial"); 
+  const [searchTopic, setSearchTopic] = useState<string>("RazaoSocial");
 
   useEffect(() => {
     if (clientes) {
@@ -44,12 +44,12 @@ const ClientesPage: React.FC = () => {
   }, [clientes]);
 
   useEffect(() => {
-        if (loading) {
-          showLoading();
-        } else {
-          hideLoading(); 
-        }
-      }, [loading, showLoading, hideLoading]);
+    if (loading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [loading, showLoading, hideLoading]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -101,13 +101,15 @@ const ClientesPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const paginatedData = sortedData.slice(
-    (paginaAtual - 1) * ITEMS_PER_PAGE,
-    paginaAtual * ITEMS_PER_PAGE
-  );
+  const paginatedData = Array.isArray(sortedData)
+    ? sortedData.slice(
+        (paginaAtual - 1) * ITEMS_PER_PAGE,
+        paginaAtual * ITEMS_PER_PAGE
+      )
+    : [];
 
   const columns = [
-    { key: "codCliente", label: "Código" },
+    { key: "codClienteErp", label: "Código" },
     { key: "razaoSocial", label: "Razão Social" },
     { key: "nomeFantasia", label: "Nome Fantasia" },
     { key: "cnpjcpf", label: "CNPJ/CPF" },
@@ -168,7 +170,7 @@ const ClientesPage: React.FC = () => {
             {paginatedData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr>
-                  <td>{row.codCliente}</td>
+                  <td>{row.codClienteErp}</td>
                   <td>{row.razaoSocial}</td>
                   <td>{row.nomeFantasia}</td>
                   <td>{formatCnpjCpf(row.cnpjcpf)}</td>
@@ -230,7 +232,18 @@ const ClientesPage: React.FC = () => {
                             <strong>Status:</strong> {row.status}
                           </p>
                           <p>
-                            <strong>Território:</strong> {row.territorio}
+                            <strong>Território:</strong> {row.territorio?.descricao ?? "Sem Território"}
+                          </p>
+                          <p>
+                            <strong>Rota:</strong> {row.rota?.descricao ?? "Sem Rota"}
+                          </p>
+                        </div>
+                        <div>
+                          <p>
+                            <strong>Segmento:</strong> {row.segmento?.descricao ?? "Sem Segmento"}
+                          </p>
+                          <p>
+                            <strong>Classificação:</strong> {row.classificacao?.descricao ?? "Sem classificação"} 
                           </p>
                         </div>
                       </div>

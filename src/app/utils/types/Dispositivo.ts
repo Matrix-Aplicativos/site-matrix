@@ -1,8 +1,7 @@
 
 export interface Dispositivo{
-    id:{
     codDispositivo: string,
-    },
-    nomeDispositivo: string,
-    ativo: boolean
+    nome: string,
+    codEmpresaApi: number,
+    ativo: boolean,
 }

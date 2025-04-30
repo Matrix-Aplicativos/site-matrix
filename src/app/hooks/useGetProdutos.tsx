@@ -3,8 +3,10 @@ import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
 
 interface Produto {
-  codItem: number;
-  nome: string;
+  codItemApi: number;
+  codIntegracao: number;
+  codEmpresaApi: number;
+  codItemErp: string;
   descricaoItem: string;
   descricaoMarca: string;
   codBarra: string;
@@ -18,11 +20,18 @@ interface Produto {
   precoVenda: number;
   precoRevenda: number;
   precoPromocao: number;
+  custo: number;
   dataInicioPromocao: string;
   dataFimPromocao: string;
   saldoDisponivel: number;
   porcentagemDescontoMax: number;
-  imagens: string[];
+  imagens: [
+    {
+      codImagem: number;
+      nome: string;
+    }
+  ];
+  ativo: true;
 }
 
 interface UseGetProdutosHook {
@@ -54,7 +63,7 @@ const useGetProdutos = (
         .join("&");
 
       const response = await axiosInstance.get(
-        `/item/${codEmpresa}?${queryParams}`
+        `/item/empresa/${codEmpresa}?${queryParams}`
       );
       setProdutos(response.data);
       setError(null);
