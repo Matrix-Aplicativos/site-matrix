@@ -36,7 +36,7 @@ const useConfiguracao = (codEmpresa: number) => {
   };
 
   // Get max-dispositivos configuration and parse it to number
-  const maximoDispositivos = parseInt(getConfiguracao('max-dispositivos')?.valor || '0');
+  const maximoDispositivos = parseInt(getConfiguracao('maximo-de-dispositivos')?.valor || '0');
   const configuracaoTeste1 = getConfiguracao('configuracao-teste1')?.ativo || false;
   const configuracaoTeste2 = getConfiguracao('configuracao-teste2')?.ativo || false;
 

@@ -7,6 +7,7 @@ import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import useGetDispositivos from "../hooks/useGetDispositivos";
+import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import { Dispositivo } from "../utils/types/Dispositivo";
 import {
   FiChevronsLeft,
@@ -24,15 +25,20 @@ const DeviceComponent: React.FC = () => {
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();
-  const { dispositivos, loading, refetch } = useGetDispositivos(
-    usuario?.empresas[0].codEmpresa ?? 0,
-    1
-  );
+  const codEmpresa = usuario?.empresas[0].codEmpresa ?? 0;
+
+  const { dispositivos, loading, refetch } = useGetDispositivos(codEmpresa, 1);
   const {
     maximoDispositivos,
     loading: loadingConfig,
-    error,
-  } = useConfiguracao(usuario?.empresas[0].codEmpresa ?? 0);
+    error: configError,
+  } = useConfiguracao(codEmpresa);
+
+  const {
+    loading: deleteLoading,
+    error: deleteError,
+    deleteDispositivo,
+  } = useDeleteDispositivo(codEmpresa);
 
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [dispositivosDisponiveis, setDispositivosDisponiveis] = useState(0);
@@ -52,12 +58,21 @@ const DeviceComponent: React.FC = () => {
   }, [dispositivos, maximoDispositivos]);
 
   useEffect(() => {
-    if (loading || loadingConfig) {
+    if (loading || loadingConfig || deleteLoading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, loadingConfig, showLoading, hideLoading]);
+  }, [loading, loadingConfig, deleteLoading, showLoading, hideLoading]);
+
+  useEffect(() => {
+    if (deleteError) {
+      alert(`Erro ao excluir dispositivo: ${deleteError}`);
+    }
+    if (configError) {
+      alert(`Erro ao carregar configurações: ${configError}`);
+    }
+  }, [deleteError, configError]);
 
   const handleSort = (key: keyof Dispositivo) => {
     const direction =
@@ -77,20 +92,11 @@ const DeviceComponent: React.FC = () => {
   const handleDeleteDevice = async (codDispositivo: string) => {
     if (window.confirm("Deseja mesmo excluir esse dispositivo?")) {
       try {
-        showLoading();
-        // TODO: Substituir pela chamada real da API quando o endpoint estiver disponível
-        // await axiosInstance.delete(`/dispositivo/${codDispositivo}`);
-        console.log(`Dispositivo ${codDispositivo} marcado para exclusão`);
-
-        // Atualiza a lista após exclusão
+        await deleteDispositivo(codDispositivo);
         refetch();
-
         alert("Dispositivo excluído com sucesso!");
       } catch (error) {
         console.error("Erro ao excluir dispositivo:", error);
-        alert("Erro ao excluir dispositivo");
-      } finally {
-        hideLoading();
       }
     }
   };
@@ -107,7 +113,7 @@ const DeviceComponent: React.FC = () => {
                   Nome
                   <FaSort
                     className={styles.sortIcon}
-                    onClick={() => handleSort("nome")}
+                    onClick={() => handleSort("nomeDispositivo")}
                   />
                 </th>
                 <th>
@@ -130,7 +136,7 @@ const DeviceComponent: React.FC = () => {
             <tbody>
               {filteredData.map((row, rowIndex) => (
                 <tr key={rowIndex} style={{ opacity: row.ativo ? 1 : 0.5 }}>
-                  <td>{row.nome}</td>
+                  <td>{row.nomeDispositivo}</td>
                   <td>{row.codDispositivo}</td>
                   <td>{row.ativo ? "Ativo" : "Inativo"}</td>
                   <td>
@@ -191,10 +197,6 @@ const DeviceComponent: React.FC = () => {
         <div className={styles.situationItem}>
           <span>Dispositivos Cadastrados:</span>
           <span>{dispositivos?.length || 0}</span>
-        </div>
-        <div className={styles.situationItem}>
-          <span>Limite Total:</span>
-          <span>{maximoDispositivos}</span>
         </div>
       </div>
     </div>
