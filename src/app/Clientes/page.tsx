@@ -14,17 +14,17 @@ import { formatTelefone } from "../utils/functions/formatTelefone";
 import { formatCep } from "../utils/functions/formatCep";
 import { useLoading } from "../Context/LoadingContext";
 
-const ITEMS_PER_PAGE = 5;
-
 const ClientesPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [porPagina, setPorPagina] = useState(20);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const { clientes, loading, error } = useGetClientes(
     usuario?.empresas[0]?.codEmpresa || 1,
-    1 // Fetch all clients, not paginated at this level
+    paginaAtual,
+    porPagina
   );
 
   const [query, setQuery] = useState("");
@@ -102,10 +102,7 @@ const ClientesPage: React.FC = () => {
   };
 
   const paginatedData = Array.isArray(sortedData)
-    ? sortedData.slice(
-        (paginaAtual - 1) * ITEMS_PER_PAGE,
-        paginaAtual * ITEMS_PER_PAGE
-      )
+    ? sortedData.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina)
     : [];
 
   const columns = [
@@ -169,7 +166,7 @@ const ClientesPage: React.FC = () => {
           <tbody>
             {paginatedData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
-                <tr>
+                <tr style={{ position: "relative" }}>
                   <td>{row.codClienteErp}</td>
                   <td>{row.razaoSocial}</td>
                   <td>{row.nomeFantasia}</td>
@@ -186,10 +183,24 @@ const ClientesPage: React.FC = () => {
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
                   </td>
+                  <div
+                    className={`${styles["status-indicator"]} ${
+                      row.status === "A"
+                        ? styles["status-active"]
+                        : styles["status-inactive"]
+                    }`}
+                  />
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
                     <td colSpan={columns.length}>
+                      <div
+                        className={`${styles["status-indicator"]} ${
+                          row.status === "A"
+                            ? styles["status-active"]
+                            : styles["status-inactive"]
+                        }`}
+                      />
                       <div className={styles.additionalInfo}>
                         <div>
                           <p>
@@ -232,18 +243,23 @@ const ClientesPage: React.FC = () => {
                             <strong>Status:</strong> {row.status}
                           </p>
                           <p>
-                            <strong>Território:</strong> {row.territorio?.descricao ?? "Sem Território"}
+                            <strong>Território:</strong>{" "}
+                            {row.territorio?.descricao ?? "Sem Território"}
                           </p>
                           <p>
-                            <strong>Rota:</strong> {row.rota?.descricao ?? "Sem Rota"}
+                            <strong>Rota:</strong>{" "}
+                            {row.rota?.descricao ?? "Sem Rota"}
                           </p>
                         </div>
                         <div>
                           <p>
-                            <strong>Segmento:</strong> {row.segmento?.descricao ?? "Sem Segmento"}
+                            <strong>Segmento:</strong>{" "}
+                            {row.segmento?.descricao ?? "Sem Segmento"}
                           </p>
                           <p>
-                            <strong>Classificação:</strong> {row.classificacao?.descricao ?? "Sem classificação"} 
+                            <strong>Classificação:</strong>{" "}
+                            {row.classificacao?.descricao ??
+                              "Sem classificação"}
                           </p>
                         </div>
                       </div>
@@ -266,11 +282,26 @@ const ClientesPage: React.FC = () => {
             <FiChevronLeft />
           </button>
           <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * ITEMS_PER_PAGE && (
+          {sortedData.length > paginaAtual * porPagina && (
             <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
               <FiChevronRight />
             </button>
           )}
+          <div className={styles.itemsPerPageContainer}>
+            <span>Clientes por página: </span>
+            <select
+              value={porPagina}
+              onChange={(e) => {
+                setPorPagina(Number(e.target.value));
+                setPaginaAtual(1);
+              }}
+              className={styles.itemsPerPageSelect}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

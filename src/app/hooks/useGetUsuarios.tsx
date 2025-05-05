@@ -12,6 +12,7 @@ interface UseGetUsuariosHook {
 const useGetUsuarios = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetUsuariosHook => {
@@ -24,7 +25,7 @@ const useGetUsuarios = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=5`, // Alterado para 5 para consistência com o componente
+        `porPagina=${porPagina}`, 
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -61,7 +62,7 @@ const useGetUsuarios = (
     if (codEmpresa) {
       fetchUsuarios();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { usuarios, loading, error };
 };

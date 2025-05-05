@@ -43,6 +43,7 @@ interface UseGetProdutosHook {
 const useGetProdutos = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetProdutosHook => {
@@ -55,7 +56,7 @@ const useGetProdutos = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -83,7 +84,7 @@ const useGetProdutos = (
     if (codEmpresa) {
       fetchProdutos();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { produtos, loading, error };
 };

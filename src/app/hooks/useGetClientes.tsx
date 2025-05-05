@@ -52,6 +52,7 @@ interface UseGetClientesHook {
 const useGetClientes = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetClientesHook => {
@@ -64,7 +65,7 @@ const useGetClientes = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -92,7 +93,7 @@ const useGetClientes = (
     if (codEmpresa) {
       fetchClientes();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { clientes, loading, error };
 };

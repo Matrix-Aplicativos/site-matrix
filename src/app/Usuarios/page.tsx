@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
-import styles from "./Usuarios.module.css"; // Alterado para Usuarios.module.css
-import useGetUsuarios from "../hooks/useGetUsuarios"; // Hook modificado para usuários
+import styles from "./Usuarios.module.css";
+import useGetUsuarios from "../hooks/useGetUsuarios";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
@@ -12,17 +12,17 @@ import { FaSort } from "react-icons/fa";
 import { useLoading } from "../Context/LoadingContext";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 
-const ITEMS_PER_PAGE = 5;
-
 const UsuariosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20); // Estado para itens por página
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const { usuarios, loading, error } = useGetUsuarios(
     usuario?.empresas[0]?.codEmpresa || 1,
-    paginaAtual
+    paginaAtual,
+    itemsPerPage // Adicionado parâmetro itemsPerPage
   );
 
   const [query, setQuery] = useState("");
@@ -33,7 +33,6 @@ const UsuariosPage: React.FC = () => {
     key: string;
     direction: "asc" | "desc" | null;
   } | null>(null);
-
   const [selectedFilter, setSelectedFilter] = useState<string>("Nome");
 
   useEffect(() => {
@@ -104,8 +103,8 @@ const UsuariosPage: React.FC = () => {
 
   const paginatedData = Array.isArray(sortedData)
     ? sortedData.slice(
-        (paginaAtual - 1) * ITEMS_PER_PAGE,
-        paginaAtual * ITEMS_PER_PAGE
+        (paginaAtual - 1) * itemsPerPage,
+        paginaAtual * itemsPerPage
       )
     : [];
 
@@ -241,11 +240,26 @@ const UsuariosPage: React.FC = () => {
             <FiChevronLeft />
           </button>
           <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * ITEMS_PER_PAGE && (
+          {sortedData.length > paginaAtual * itemsPerPage && (
             <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
               <FiChevronRight />
             </button>
           )}
+          <div className={styles.itemsPerPageContainer}>
+            <span>Usuários por página: </span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setPaginaAtual(1);
+              }}
+              className={styles.itemsPerPageSelect}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

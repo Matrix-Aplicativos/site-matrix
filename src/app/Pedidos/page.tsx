@@ -16,12 +16,17 @@ import { useLoading } from "../Context/LoadingContext";
 const PedidosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [porPagina, setPorPagina] = useState(20);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
 
-  const { pedidos, isLoading } = useGetPedidos(codEmpresa, paginaAtual, 10);
+  const { pedidos, isLoading } = useGetPedidos(
+    codEmpresa,
+    paginaAtual,
+    porPagina
+  );
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState(pedidos || []);
@@ -49,7 +54,10 @@ const PedidosPage: React.FC = () => {
 
       if (query) {
         filtered = filtered.filter((pedido) =>
-          pedido[selectedFilter]?.toString().includes(query)
+          pedido[selectedFilter]
+            ?.toString()
+            .toLowerCase()
+            .includes(query.toLowerCase())
         );
       }
 
@@ -71,7 +79,7 @@ const PedidosPage: React.FC = () => {
     if (isLoading) {
       showLoading();
     } else {
-      hideLoading(); 
+      hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
 
@@ -117,6 +125,28 @@ const PedidosPage: React.FC = () => {
 
     setFilteredData(sortedData);
     setSortConfig({ key, direction });
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "4":
+        return "Faturado";
+      case "5":
+        return "Cancelado";
+      default:
+        return "Outro Status";
+    }
+  };
+
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case "4":
+        return styles["status-invoiced"];
+      case "5":
+        return styles["status-canceled"];
+      default:
+        return "";
+    }
   };
 
   return (
@@ -184,19 +214,13 @@ const PedidosPage: React.FC = () => {
             {filteredData &&
               filteredData.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
-                  <tr>
+                  <tr style={{ position: "relative" }}>
                     <td>{row.codPedido}</td>
                     <td>
                       {new Date(row.dataCadastro).toLocaleDateString("pt-BR")}
                     </td>
                     <td>{formatPreco(row.valorTotal)}</td>
-                    <td>
-                      {row.status === "1"
-                        ? "Recebido"
-                        : row.status === "2"
-                        ? "Transmitido"
-                        : "Cancelado"}
-                    </td>
+                    <td>{getStatusLabel(row.status)}</td>
                     <td>
                       <button
                         onClick={() => toggleExpandRow(rowIndex)}
@@ -209,20 +233,53 @@ const PedidosPage: React.FC = () => {
                         {expandedRow === rowIndex ? "▲" : "▼"}
                       </button>
                     </td>
+                    <div
+                      className={`${
+                        styles["status-indicator"]
+                      } ${getStatusColorClass(row.status)}`}
+                    />
                   </tr>
                   {expandedRow === rowIndex && (
                     <tr className={styles.expandedRow}>
                       <td colSpan={5}>
+                        <div
+                          className={`${
+                            styles["status-indicator"]
+                          } ${getStatusColorClass(row.status)}`}
+                        />
                         <div className={styles.additionalInfo}>
-                          <p>
-                            <strong>Cliente:</strong> {row.codCliente.razaoSocial}
-                          </p>
-                          <p>
-                            <strong>Status:</strong> {row.status}
-                          </p>
-                          <p>
-                            <strong>Observação:</strong> {row.observacao || "Sem Observação"}
-                          </p>
+                          <div>
+                            <p>
+                              <strong>Cliente:</strong>{" "}
+                              {row.codCliente.razaoSocial}
+                            </p>
+                            <p>
+                              <strong>CNPJ/CPF:</strong>{" "}
+                              {row.codCliente.cnpjCpf}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Status:</strong>{" "}
+                              {getStatusLabel(row.status)}
+                            </p>
+                            <p>
+                              <strong>Data:</strong>{" "}
+                              {new Date(row.dataCadastro).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Valor Total:</strong>{" "}
+                              {formatPreco(row.valorTotal)}
+                            </p>
+                            <p>
+                              <strong>Observação:</strong>{" "}
+                              {row.observacao || "Sem Observação"}
+                            </p>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -246,6 +303,21 @@ const PedidosPage: React.FC = () => {
               <FiChevronRight />
             </button>
           )}
+          <div className={styles.itemsPerPageContainer}>
+            <span>Pedidos por página: </span>
+            <select
+              value={porPagina}
+              onChange={(e) => {
+                setPorPagina(Number(e.target.value));
+                setPaginaAtual(1);
+              }}
+              className={styles.itemsPerPageSelect}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

@@ -12,17 +12,17 @@ import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
 import { useLoading } from "../Context/LoadingContext";
 
-const ITEMS_PER_PAGE = 5;
-
 const ProdutosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const { produtos, loading, error } = useGetProdutos(
     usuario?.empresas[0]?.codEmpresa || 1,
-    1
+    paginaAtual,
+    itemsPerPage
   );
 
   const [query, setQuery] = useState("");
@@ -33,7 +33,6 @@ const ProdutosPage: React.FC = () => {
     key: string;
     direction: "asc" | "desc" | null;
   } | null>(null);
-
   const [selectedFilter, setSelectedFilter] = useState<string>("Descricao");
 
   useEffect(() => {
@@ -108,8 +107,8 @@ const ProdutosPage: React.FC = () => {
 
   const paginatedData = Array.isArray(sortedData)
     ? sortedData.slice(
-        (paginaAtual - 1) * ITEMS_PER_PAGE,
-        paginaAtual * ITEMS_PER_PAGE
+        (paginaAtual - 1) * itemsPerPage,
+        paginaAtual * itemsPerPage
       )
     : [];
 
@@ -174,99 +173,131 @@ const ProdutosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                <tr>
-                  <td>{row.descricaoItem}</td>
-                  <td>{row.descricaoMarca}</td>
-                  <td>{row.codItemErp}</td>
-                  <td>{formatPreco(row.precoVenda)}</td>
-                  <td>{row.saldoDisponivel}</td>
-                  <td>{row.unidade}</td>
-                  <td>
-                    <button
-                      onClick={() => toggleExpandRow(rowIndex)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
-                  </td>
-                </tr>
-                {expandedRow === rowIndex && (
-                  <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length}>
-                      <div className={styles.additionalInfo}>
-                        <p>
-                          <strong>Código ERP:</strong> {row.codItemErp}
-                        </p>
-                        <p>
-                          <strong>Cód. de Barras:</strong> {row.codBarra}
-                        </p>
-                        <p>
-                          <strong>Cód. de Referência:</strong>{" "}
-                          {row.codReferencia}
-                        </p>
-                        <p>
-                          <strong>Cód. do Fabricante:</strong>{" "}
-                          {row.codFabricante}
-                        </p>
-                        <p>
-                          <strong>Grupo:</strong> {row.grupo}
-                        </p>
-                        <p>
-                          <strong>Subgrupo:</strong> {row.subGrupo}
-                        </p>
-                        <p>
-                          <strong>Departamento:</strong> {row.departamento}
-                        </p>
-                        <p>
-                          <strong>Família:</strong> {row.familia}
-                        </p>
-                        <p>
-                          <strong>Preço Venda:</strong>{" "}
-                          {formatPreco(row.precoVenda)}
-                        </p>
-                        <p>
-                          <strong>Preço Revenda:</strong>{" "}
-                          {formatPreco(row.precoRevenda)}
-                        </p>
-                        <p>
-                          <strong>Preço Promoção:</strong>{" "}
-                          {formatPreco(row.precoPromocao)}
-                        </p>
-                        <p>
-                          <strong>Desconto Máx (%):</strong>{" "}
-                          {row.porcentagemDescontoMax}%
-                        </p>
-                        <p>
-                          <strong>Início Promoção:</strong>{" "}
-                          {new Date(row.dataInicioPromocao).toLocaleDateString(
-                            "pt-BR"
-                          )}
-                        </p>
-                        <p>
-                          <strong>Fim Promoção:</strong>{" "}
-                          {new Date(row.dataFimPromocao).toLocaleDateString(
-                            "pt-BR"
-                          )}
-                        </p>
-                        <p>
-                          <strong>Saldo Disponível:</strong>{" "}
-                          {row.saldoDisponivel}
-                        </p>
-                        <p>
-                          <strong>Unidade:</strong> {row.unidade}
-                        </p>
-                      </div>
+            {paginatedData.map((row, rowIndex) => {
+              const isSaldoZero = row.saldoDisponivel <= 0;
+              const isEmPromocao = row.precoPromocao > 0 && !isSaldoZero;
+
+              return (
+                <React.Fragment key={rowIndex}>
+                  <tr
+                    className={
+                      isSaldoZero
+                        ? styles.saldoZero
+                        : isEmPromocao
+                        ? styles.emPromocao
+                        : ""
+                    }
+                  >
+                    <td>{row.descricaoItem}</td>
+                    <td>{row.descricaoMarca}</td>
+                    <td>{row.codItemErp}</td>
+                    <td>{formatPreco(row.precoVenda)}</td>
+                    <td>{row.saldoDisponivel}</td>
+                    <td>{row.unidade}</td>
+                    <td>
+                      <button
+                        onClick={() => toggleExpandRow(rowIndex)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {expandedRow === rowIndex ? "▲" : "▼"}
+                      </button>
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
+                  {expandedRow === rowIndex && (
+                    <tr className={styles.expandedRow}>
+                      <td
+                        colSpan={columns.length}
+                        style={{
+                          borderRight: isSaldoZero
+                            ? "5px solid #F44336"
+                            : isEmPromocao
+                            ? "5px solid #4CAF50"
+                            : "none",
+                        }}
+                      >
+                        <div className={styles.additionalInfo}>
+                          <div>
+                            <p>
+                              <strong>Código ERP:</strong> {row.codItemErp}
+                            </p>
+                            <p>
+                              <strong>Cód. de Barras:</strong> {row.codBarra}
+                            </p>
+                            <p>
+                              <strong>Cód. de Referência:</strong>{" "}
+                              {row.codReferencia}
+                            </p>
+                            <p>
+                              <strong>Cód. do Fabricante:</strong>{" "}
+                              {row.codFabricante}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Grupo:</strong> {row.grupo}
+                            </p>
+                            <p>
+                              <strong>Subgrupo:</strong> {row.subGrupo}
+                            </p>
+                            <p>
+                              <strong>Departamento:</strong> {row.departamento}
+                            </p>
+                            <p>
+                              <strong>Família:</strong> {row.familia}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Preço Venda:</strong>{" "}
+                              {formatPreco(row.precoVenda)}
+                            </p>
+                            <p>
+                              <strong>Preço Revenda:</strong>{" "}
+                              {formatPreco(row.precoRevenda)}
+                            </p>
+                            <p>
+                              <strong>Preço Promoção:</strong>{" "}
+                              {formatPreco(row.precoPromocao)}
+                            </p>
+                            <p>
+                              <strong>Desconto Máx (%):</strong>{" "}
+                              {row.porcentagemDescontoMax}%
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Início Promoção:</strong>{" "}
+                              {row.dataInicioPromocao &&
+                                new Date(
+                                  row.dataInicioPromocao
+                                ).toLocaleDateString("pt-BR")}
+                            </p>
+                            <p>
+                              <strong>Fim Promoção:</strong>{" "}
+                              {row.dataFimPromocao &&
+                                new Date(
+                                  row.dataFimPromocao
+                                ).toLocaleDateString("pt-BR")}
+                            </p>
+                            <p>
+                              <strong>Saldo Disponível:</strong>{" "}
+                              {row.saldoDisponivel}
+                            </p>
+                            <p>
+                              <strong>Unidade:</strong> {row.unidade}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
         <div className={styles.paginationContainer}>
@@ -281,11 +312,26 @@ const ProdutosPage: React.FC = () => {
             <FiChevronLeft />
           </button>
           <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * ITEMS_PER_PAGE && (
+          {sortedData.length > paginaAtual * itemsPerPage && (
             <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
               <FiChevronRight />
             </button>
           )}
+          <div className={styles.itemsPerPageContainer}>
+            <span>Produtos por página: </span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setPaginaAtual(1);
+              }}
+              className={styles.itemsPerPageSelect}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

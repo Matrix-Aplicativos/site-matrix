@@ -141,7 +141,7 @@
   .paginationContainer {
     position: fixed;
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     margin-top: 12px;
     align-items: center;
     gap: 8px;
@@ -218,3 +218,18 @@
     color: #555;
   }
   
+
+  .itemsPerPageContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 710px; /* Isso já empurra o container para a direita */
+}
+
+.itemsPerPageSelect {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+}
