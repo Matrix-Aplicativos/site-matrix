@@ -45,8 +45,9 @@
   padding: 10px;
 }
 
-.table tr{
-  transition: all .3s;
+.table tr {
+  transition: all 0.3s;
+  position: relative;
 }
 
 .table th {
@@ -55,7 +56,7 @@
   border-bottom: 1px solid #ddd;
 }
 
-.table tr td{
+.table tr td {
   border-bottom: 1px solid #ddd;
 }
 
@@ -64,6 +65,90 @@
   cursor: pointer;
 }
 
+.table tr.activeRow {
+  position: relative;
+}
+
+.table tr.activeRow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: #4caf50;
+}
+
+.table tr.inactiveRow {
+  position: relative;
+}
+
+.table tr.inactiveRow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: #f44336;
+  opacity: 0.7;
+}
+
+.actionsCell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.actionButton {
+  background: none;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.actionButton:hover {
+  transform: scale(1.05);
+}
+
+.activateButton {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.activateButton:hover {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.activateButton.activeButton {
+  background-color: #f44336; 
+  color: white;
+}
+
+.activateButton.inactiveButton {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.activateButton.inactiveButton:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.deleteButton {
+  color: #f44336;
+
+  padding: 5px;
+}
+
+.deleteButton:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
 
 .rightSection {
   flex: 2.5;
@@ -102,7 +187,7 @@
   margin-top: 5px;
 }
 
-.paginationContainer{
+.paginationContainer {
   display: flex;
   justify-content: left;
   margin-top: 12px;
@@ -110,35 +195,38 @@
   gap: 4px;
 }
 
-.paginationContainer button{
+.paginationContainer button {
   border: 0;
   border-radius: 4px;
   background-color: #fff;
   color: #333;
   cursor: pointer;
-  transition: .2s;
+  transition: 0.2s;
   font-size: 20px;
   display: flex;
   height: 24px;
   align-items: center;
 }
 
-.paginationContainer button:hover{
-  background-color: #1769E3;
+.paginationContainer button:hover {
+  background-color: #1769e3;
   color: #fff;
 }
 
-.paginationContainer p{
+.paginationContainer p {
   font-size: 20px;
   color: #333;
   line-height: 0px;
   user-select: none;
 }
 
-.deleteButton{
-  border: none;
-  background-color: #fff;
-  color: red;
-  margin-left: 3px;
-  font-size: 18px;
+.sortIcon {
+  margin-left: 5px;
+  cursor: pointer;
+  color: #000;
+  transition: all 0.2s;
+}
+
+.sortIcon:hover {
+  color: #333;
 }

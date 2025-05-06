@@ -8,12 +8,14 @@ import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
+import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import { Dispositivo } from "../utils/types/Dispositivo";
 import {
   FiChevronsLeft,
   FiChevronLeft,
   FiChevronRight,
   FiTrash2,
+  FiPlus,
 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../Context/LoadingContext";
@@ -40,6 +42,13 @@ const DeviceComponent: React.FC = () => {
     deleteDispositivo,
   } = useDeleteDispositivo(codEmpresa);
 
+  const {
+    loading: ativarLoading,
+    error: ativarError,
+    success: ativarSuccess,
+    ativarDispositivo,
+  } = useAtivarDispositivo();
+
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [dispositivosDisponiveis, setDispositivosDisponiveis] = useState(0);
   const [filteredData, setFilteredData] = useState<Dispositivo[]>([]);
@@ -58,12 +67,19 @@ const DeviceComponent: React.FC = () => {
   }, [dispositivos, maximoDispositivos]);
 
   useEffect(() => {
-    if (loading || loadingConfig || deleteLoading) {
+    if (loading || loadingConfig || deleteLoading || ativarLoading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, loadingConfig, deleteLoading, showLoading, hideLoading]);
+  }, [
+    loading,
+    loadingConfig,
+    deleteLoading,
+    ativarLoading,
+    showLoading,
+    hideLoading,
+  ]);
 
   useEffect(() => {
     if (deleteError) {
@@ -72,7 +88,16 @@ const DeviceComponent: React.FC = () => {
     if (configError) {
       alert(`Erro ao carregar configurações: ${configError}`);
     }
-  }, [deleteError, configError]);
+    if (ativarError) {
+      alert(`Erro ao ativar dispositivo: ${ativarError}`);
+    }
+  }, [deleteError, configError, ativarError]);
+
+  useEffect(() => {
+    if (ativarSuccess) {
+      refetch();
+    }
+  }, [ativarSuccess, refetch]);
 
   const handleSort = (key: keyof Dispositivo) => {
     const direction =
@@ -101,6 +126,19 @@ const DeviceComponent: React.FC = () => {
     }
   };
 
+  const handleAtivarDispositivo = async (dispositivo: Dispositivo) => {
+    try {
+      await ativarDispositivo({
+        codDispositivo: dispositivo.codDispositivo,
+        nomeDispositivo: dispositivo.nomeDispositivo,
+        codEmpresaApi: codEmpresa,
+        ativo: true,
+      });
+    } catch (error) {
+      console.error("Erro ao ativar dispositivo:", error);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.leftSection}>
@@ -123,27 +161,29 @@ const DeviceComponent: React.FC = () => {
                     onClick={() => handleSort("codDispositivo")}
                   />
                 </th>
-                <th>
-                  Status
-                  <FaSort
-                    className={styles.sortIcon}
-                    onClick={() => handleSort("ativo")}
-                  />
-                </th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.map((row, rowIndex) => (
-                <tr key={rowIndex} style={{ opacity: row.ativo ? 1 : 0.5 }}>
+                <tr
+                  key={rowIndex}
+                  className={row.ativo ? styles.activeRow : styles.inactiveRow}
+                >
                   <td>{row.nomeDispositivo}</td>
                   <td>{row.codDispositivo}</td>
-                  <td>{row.ativo ? "Ativo" : "Inativo"}</td>
-                  <td>
+                  <td className={styles.actionsCell}>
+                    {!row.ativo && (
+                      <button
+                        onClick={() => handleAtivarDispositivo(row)}
+                        className={`${styles.actionButton} ${styles.activateButton}`}
+                      >
+                        Ativar
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteDevice(row.codDispositivo)}
-                      className={styles.deleteButton}
-                      title="Excluir dispositivo"
+                      className={`${styles.actionButton} ${styles.deleteButton}`}
                     >
                       <FiTrash2 />
                     </button>
