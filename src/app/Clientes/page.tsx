@@ -69,9 +69,11 @@ const ClientesPage: React.FC = () => {
           case "RazaoSocial":
             return cliente.razaoSocial.toLowerCase().includes(searchValue);
           case "CnpjCpf":
-            return cliente.cnpjcpf.toLowerCase().includes(searchValue);
+            return cliente.cnpjcpf !== null && cliente.cnpjcpf !== undefined
+              ? cliente.cnpjcpf.toString().toLowerCase().includes(searchValue)
+              : false;
           case "Codigo":
-            return cliente.codCliente.toString().includes(searchValue);
+            return cliente.codClienteErp.toString().includes(searchValue);
           default:
             return false;
         }

@@ -73,7 +73,7 @@ const ProdutosPage: React.FC = () => {
             .includes(searchQuery.toLowerCase());
         }
         if (selectedFilter === "Codigo") {
-          return produto.codItem
+          return (produto.codItemErp || "")
             .toString()
             .toLowerCase()
             .includes(searchQuery.toLowerCase());

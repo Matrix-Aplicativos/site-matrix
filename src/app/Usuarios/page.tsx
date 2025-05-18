@@ -146,7 +146,6 @@ const UsuariosPage: React.FC = () => {
               <option value="Nome">Nome</option>
               <option value="Email">Email</option>
               <option value="CPF">CPF</option>
-              <option value="Login">Login</option>
             </select>
           </div>
         </div>
@@ -255,9 +254,9 @@ const UsuariosPage: React.FC = () => {
               }}
               className={styles.itemsPerPageSelect}
             >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
               <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
             </select>
           </div>
         </div>
