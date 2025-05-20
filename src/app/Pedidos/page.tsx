@@ -303,21 +303,7 @@ const PedidosPage: React.FC = () => {
               <FiChevronRight />
             </button>
           )}
-          <div className={styles.itemsPerPageContainer}>
-            <span>Pedidos por página: </span>
-            <select
-              value={porPagina}
-              onChange={(e) => {
-                setPorPagina(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
+          
         </div>
       </div>
     </div>

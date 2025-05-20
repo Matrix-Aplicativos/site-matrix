@@ -11,24 +11,25 @@ import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../Context/LoadingContext";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
+import useAtivarUsuario from "../hooks/useAtivarUsuario";
 
 const UsuariosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20); // Estado para itens por página
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const { usuarios, loading, error } = useGetUsuarios(
+  const { usuarios, loading, error, refetch } = useGetUsuarios(
     usuario?.empresas[0]?.codEmpresa || 1,
     paginaAtual,
-    itemsPerPage // Adicionado parâmetro itemsPerPage
+    itemsPerPage
   );
+  const { ativarUsuario } = useAtivarUsuario();
 
   const [query, setQuery] = useState("");
   const [sortedData, setSortedData] = useState<UsuarioGet[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc" | null;
@@ -49,12 +50,18 @@ const UsuariosPage: React.FC = () => {
     }
   }, [loading, showLoading, hideLoading]);
 
-  const toggleExpandRow = (index: number) => {
-    setExpandedRow((prevRow) => (prevRow === index ? null : index));
-  };
-
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
+  };
+
+  const handleAtivarUsuario = async (codUsuario: string) => {
+    await ativarUsuario(codUsuario, true, (activatedUserId) => {
+      setSortedData((prevData) =>
+        prevData.map((user) =>
+          user.codUsuario === activatedUserId ? { ...user, ativo: true } : user
+        )
+      );
+    });
   };
 
   const handleSearch = (searchQuery: string) => {
@@ -73,11 +80,7 @@ const UsuariosPage: React.FC = () => {
         if (selectedFilter === "CPF") {
           return usuario.cpf.toLowerCase().includes(searchQuery.toLowerCase());
         }
-        if (selectedFilter === "Login") {
-          return usuario.login
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
-        }
+
         return true;
       });
       setSortedData(filtered);
@@ -113,17 +116,20 @@ const UsuariosPage: React.FC = () => {
     { key: "email", label: "Email" },
     { key: "cpf", label: "CPF" },
     { key: "tipoUsuario.nome", label: "Tipo de Usuário" },
-    { key: "ativo", label: "Status" },
     {
-      key: "actions",
-      render: (_value: any, _row: any, rowIndex: number) => (
-        <button
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-          onClick={() => toggleExpandRow(rowIndex)}
-        >
-          {expandedRow === rowIndex ? "▲" : "▼"}
-        </button>
-      ),
+      key: "ativo",
+      label: "Status",
+      render: (value: boolean, row: UsuarioGet) =>
+        value ? (
+          <span className={styles.statusActive}>Ativo</span>
+        ) : (
+          <button
+            className={`${styles.actionButton} ${styles.activateButton}`}
+            onClick={() => handleAtivarUsuario(row.codUsuario)}
+          >
+            Ativar
+          </button>
+        ),
     },
   ];
 
@@ -169,61 +175,26 @@ const UsuariosPage: React.FC = () => {
           </thead>
           <tbody>
             {paginatedData.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                <tr>
-                  <td>{row.nome}</td>
-                  <td>{row.email}</td>
-                  <td>{row.cpf}</td>
-                  <td>{row.tipoUsuario.nome}</td>
-                  <td>{row.ativo ? "Ativo" : "Inativo"}</td>
-                  <td>
-                    <button
-                      onClick={() => toggleExpandRow(rowIndex)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
+              <tr
+                key={rowIndex}
+                className={row.ativo ? styles.activeRow : styles.inactiveRow}
+              >
+                {columns.map((col) => (
+                  <td key={col.key}>
+                    {col.render
+                      ? col.render(
+                          col.key.includes(".")
+                            ? col.key.split(".").reduce((o, i) => o[i], row)
+                            : row[col.key as keyof UsuarioGet],
+                          row,
+                          rowIndex
+                        )
+                      : col.key.includes(".")
+                      ? col.key.split(".").reduce((o, i) => o[i], row)
+                      : row[col.key as keyof UsuarioGet]}
                   </td>
-                </tr>
-                {expandedRow === rowIndex && (
-                  <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length}>
-                      <div className={styles.additionalInfo}>
-                        <p>
-                          <strong>Código Usuário:</strong> {row.codUsuario}
-                        </p>
-                        <p>
-                          <strong>Código ERP:</strong> {row.codUsuarioErp}
-                        </p>
-                        <p>
-                          <strong>Nome:</strong> {row.nome}
-                        </p>
-                        <p>
-                          <strong>CPF:</strong> {row.cpf}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {row.email}
-                        </p>
-                        <p>
-                          <strong>Login:</strong> {row.login}
-                        </p>
-                        <p>
-                          <strong>Tipo de Usuário:</strong>{" "}
-                          {row.tipoUsuario.nome}
-                        </p>
-                        <p>
-                          <strong>Status:</strong>{" "}
-                          {row.ativo ? "Ativo" : "Inativo"}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
+                ))}
+              </tr>
             ))}
           </tbody>
         </table>
