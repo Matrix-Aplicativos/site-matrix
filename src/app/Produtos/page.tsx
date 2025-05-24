@@ -11,11 +11,13 @@ import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
 import { useLoading } from "../Context/LoadingContext";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const ProdutosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
@@ -26,6 +28,7 @@ const ProdutosPage: React.FC = () => {
   );
 
   const [query, setQuery] = useState("");
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [sortedData, setSortedData] = useState<any[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -37,6 +40,9 @@ const ProdutosPage: React.FC = () => {
 
   useEffect(() => {
     if (produtos) {
+      // Verifica se recebemos dados para saber se há mais páginas
+      setHasMoreData(produtos.length > 0);
+      setFilteredData(produtos);
       setSortedData(produtos);
     }
   }, [produtos]);
@@ -59,6 +65,7 @@ const ProdutosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
 
     if (produtos) {
       const filtered = produtos.filter((produto: any) => {
@@ -80,6 +87,7 @@ const ProdutosPage: React.FC = () => {
         }
         return true;
       });
+      setFilteredData(filtered);
       setSortedData(filtered);
     }
   };
@@ -95,7 +103,7 @@ const ProdutosPage: React.FC = () => {
       direction = "desc";
     }
 
-    const sorted = [...produtos].sort((a: any, b: any) => {
+    const sorted = [...filteredData].sort((a: any, b: any) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
@@ -105,12 +113,13 @@ const ProdutosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const paginatedData = Array.isArray(sortedData)
-    ? sortedData.slice(
-        (paginaAtual - 1) * itemsPerPage,
-        paginaAtual * itemsPerPage
-      )
-    : [];
+  const handleNextPage = () => {
+    setPaginaAtual((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setPaginaAtual((prev) => Math.max(1, prev - 1));
+  };
 
   const columns = [
     { key: "descricaoItem", label: "Descrição" },
@@ -134,6 +143,7 @@ const ProdutosPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <LoadingOverlay />
       <h1 className={styles.title}>PRODUTOS</h1>
       <SearchBar
         placeholder="Qual produto deseja buscar?"
@@ -173,7 +183,7 @@ const ProdutosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, rowIndex) => {
+            {sortedData.map((row, rowIndex) => {
               const isSaldoZero = row.saldoDisponivel <= 0;
               const isEmPromocao = row.precoPromocao > 0 && !isSaldoZero;
 
@@ -301,22 +311,26 @@ const ProdutosPage: React.FC = () => {
           </tbody>
         </table>
         <div className={styles.paginationContainer}>
-          <button onClick={() => setPaginaAtual(1)}>
-            <FiChevronsLeft />
-          </button>
           <button
-            onClick={() => {
-              if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
+            onClick={(e) => {
+              if (paginaAtual >= 2) {
+                e.preventDefault();
+                setPaginaAtual(1);
+              }
             }}
           >
+            <FiChevronsLeft />
+          </button>
+          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
             <FiChevronLeft />
           </button>
-          <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * itemsPerPage && (
-            <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
-              <FiChevronRight />
-            </button>
-          )}
+
+          <span>{paginaAtual}</span>
+
+          <button onClick={handleNextPage} disabled={!hasMoreData}>
+            <FiChevronRight />
+          </button>
+
           <div className={styles.itemsPerPageContainer}>
             <span>Produtos por página: </span>
             <select

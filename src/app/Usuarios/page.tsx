@@ -17,6 +17,7 @@ const UsuariosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
@@ -28,6 +29,7 @@ const UsuariosPage: React.FC = () => {
   const { ativarUsuario } = useAtivarUsuario();
 
   const [query, setQuery] = useState("");
+  const [filteredData, setFilteredData] = useState<UsuarioGet[]>([]);
   const [sortedData, setSortedData] = useState<UsuarioGet[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -39,6 +41,9 @@ const UsuariosPage: React.FC = () => {
 
   useEffect(() => {
     if (usuarios) {
+      // Verifica se recebemos dados para saber se há mais páginas
+      setHasMoreData(usuarios.length > 0);
+      setFilteredData(usuarios);
       setSortedData(usuarios);
     }
   }, [usuarios]);
@@ -68,6 +73,7 @@ const UsuariosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
 
     if (usuarios) {
       const filtered = usuarios.filter((usuario: UsuarioGet) => {
@@ -89,6 +95,7 @@ const UsuariosPage: React.FC = () => {
         }
         return true;
       });
+      setFilteredData(filtered);
       setSortedData(filtered);
     }
   };
@@ -100,7 +107,7 @@ const UsuariosPage: React.FC = () => {
       direction = "desc";
     }
 
-    const sorted = [...sortedData].sort((a: any, b: any) => {
+    const sorted = [...filteredData].sort((a: any, b: any) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
@@ -110,12 +117,13 @@ const UsuariosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const paginatedData = Array.isArray(sortedData)
-    ? sortedData.slice(
-        (paginaAtual - 1) * itemsPerPage,
-        paginaAtual * itemsPerPage
-      )
-    : [];
+  const handleNextPage = () => {
+    setPaginaAtual((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setPaginaAtual((prev) => Math.max(1, prev - 1));
+  };
 
   const columns = [
     { key: "nome", label: "Nome" },
@@ -192,7 +200,7 @@ const UsuariosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, rowIndex) => (
+            {sortedData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr
                   className={row.ativo ? styles.activeRow : styles.inactiveRow}
@@ -252,22 +260,27 @@ const UsuariosPage: React.FC = () => {
           </tbody>
         </table>
         <div className={styles.paginationContainer}>
-          <button onClick={() => setPaginaAtual(1)}>
-            <FiChevronsLeft />
-          </button>
           <button
-            onClick={() => {
-              if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
+            onClick={(e) => {
+              if (paginaAtual >= 2) {
+                e.preventDefault();
+                setPaginaAtual(1);
+              }
             }}
           >
+            <FiChevronsLeft />
+          </button>
+
+          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
             <FiChevronLeft />
           </button>
-          <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * itemsPerPage && (
-            <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
-              <FiChevronRight />
-            </button>
-          )}
+
+          <span>{paginaAtual}</span>
+
+          <button onClick={handleNextPage} disabled={!hasMoreData}>
+            <FiChevronRight />
+          </button>
+
           <div className={styles.itemsPerPageContainer}>
             <span>Usuários por página: </span>
             <select

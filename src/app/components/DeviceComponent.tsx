@@ -10,13 +10,7 @@ import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import { Dispositivo } from "../utils/types/Dispositivo";
-import {
-  FiChevronsLeft,
-  FiChevronLeft,
-  FiChevronRight,
-  FiTrash2,
-  FiPlus,
-} from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiTrash2 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../Context/LoadingContext";
 import useConfiguracao from "../hooks/useConfiguracao";
@@ -29,7 +23,16 @@ const DeviceComponent: React.FC = () => {
   const router = useRouter();
   const codEmpresa = usuario?.empresas[0].codEmpresa ?? 0;
 
-  const { dispositivos, loading, refetch } = useGetDispositivos(codEmpresa, 1);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itemsPerPage] = useState(5); // Definindo 5 itens por página como padrão
+  const [hasMoreData, setHasMoreData] = useState(true);
+
+  const { dispositivos, loading, refetch } = useGetDispositivos(
+    codEmpresa,
+    paginaAtual,
+    itemsPerPage
+  );
+
   const {
     maximoDispositivos,
     loading: loadingConfig,
@@ -49,7 +52,6 @@ const DeviceComponent: React.FC = () => {
     ativarDispositivo,
   } = useAtivarDispositivo();
 
-  const [paginaAtual, setPaginaAtual] = useState(1);
   const [dispositivosDisponiveis, setDispositivosDisponiveis] = useState(0);
   const [filteredData, setFilteredData] = useState<Dispositivo[]>([]);
   const [sortConfig, setSortConfig] = useState<{
@@ -63,8 +65,10 @@ const DeviceComponent: React.FC = () => {
       const disponiveis = Math.max(0, maximoDispositivos - totalDispositivos);
       setDispositivosDisponiveis(disponiveis);
       setFilteredData(dispositivos);
+      // Verifica se há mais dados para mostrar
+      setHasMoreData(dispositivos.length === itemsPerPage);
     }
-  }, [dispositivos, maximoDispositivos]);
+  }, [dispositivos, maximoDispositivos, itemsPerPage]);
 
   useEffect(() => {
     if (loading || loadingConfig || deleteLoading || ativarLoading) {
@@ -139,6 +143,14 @@ const DeviceComponent: React.FC = () => {
     }
   };
 
+  const handleNextPage = () => {
+    setPaginaAtual((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setPaginaAtual((prev) => Math.max(1, prev - 1));
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.leftSection}>
@@ -203,27 +215,15 @@ const DeviceComponent: React.FC = () => {
             >
               <FiChevronsLeft />
             </button>
-            <button
-              onClick={(e) => {
-                if (paginaAtual >= 2) {
-                  e.preventDefault();
-                  setPaginaAtual(paginaAtual - 1);
-                }
-              }}
-            >
+            <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
               <FiChevronLeft />
             </button>
-            <p>{paginaAtual}</p>
-            {dispositivos && dispositivos.length === 5 ? (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPaginaAtual(paginaAtual + 1);
-                }}
-              >
-                <FiChevronRight />
-              </button>
-            ) : null}
+
+            <span>{paginaAtual}</span>
+
+            <button onClick={handleNextPage} disabled={!hasMoreData}>
+              <FiChevronRight />
+            </button>
           </div>
         </div>
       </div>

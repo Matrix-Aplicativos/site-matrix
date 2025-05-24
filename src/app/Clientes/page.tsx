@@ -13,11 +13,13 @@ import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import { formatTelefone } from "../utils/functions/formatTelefone";
 import { formatCep } from "../utils/functions/formatCep";
 import { useLoading } from "../Context/LoadingContext";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const ClientesPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
+  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
@@ -28,6 +30,7 @@ const ClientesPage: React.FC = () => {
   );
 
   const [query, setQuery] = useState("");
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [sortedData, setSortedData] = useState<any[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -39,6 +42,9 @@ const ClientesPage: React.FC = () => {
 
   useEffect(() => {
     if (clientes) {
+      // Verifica se recebemos dados para saber se há mais páginas
+      setHasMoreData(clientes.length > 0);
+      setFilteredData(clientes);
       setSortedData(clientes);
     }
   }, [clientes]);
@@ -61,6 +67,7 @@ const ClientesPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
 
     if (clientes) {
       const filtered = clientes.filter((cliente: any) => {
@@ -78,6 +85,7 @@ const ClientesPage: React.FC = () => {
             return false;
         }
       });
+      setFilteredData(filtered);
       setSortedData(filtered);
     }
   };
@@ -93,7 +101,7 @@ const ClientesPage: React.FC = () => {
       direction = "desc";
     }
 
-    const sorted = [...clientes].sort((a: any, b: any) => {
+    const sorted = [...filteredData].sort((a: any, b: any) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
@@ -103,9 +111,13 @@ const ClientesPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const paginatedData = Array.isArray(sortedData)
-    ? sortedData.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina)
-    : [];
+  const handleNextPage = () => {
+    setPaginaAtual((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setPaginaAtual((prev) => Math.max(1, prev - 1));
+  };
 
   const columns = [
     { key: "codClienteErp", label: "Código" },
@@ -127,6 +139,7 @@ const ClientesPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <LoadingOverlay />
       <h1 className={styles.title}>CLIENTES</h1>
       <SearchBar
         placeholder="Qual cliente deseja buscar?"
@@ -166,7 +179,7 @@ const ClientesPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, rowIndex) => (
+            {sortedData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr style={{ position: "relative" }}>
                   <td>{row.codClienteErp}</td>
@@ -273,22 +286,26 @@ const ClientesPage: React.FC = () => {
           </tbody>
         </table>
         <div className={styles.paginationContainer}>
-          <button onClick={() => setPaginaAtual(1)}>
-            <FiChevronsLeft />
-          </button>
           <button
-            onClick={() => {
-              if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
+            onClick={(e) => {
+              if (paginaAtual >= 2) {
+                e.preventDefault();
+                setPaginaAtual(1);
+              }
             }}
           >
+            <FiChevronsLeft />
+          </button>
+          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
             <FiChevronLeft />
           </button>
-          <p>{paginaAtual}</p>
-          {sortedData.length > paginaAtual * porPagina && (
-            <button onClick={() => setPaginaAtual(paginaAtual + 1)}>
-              <FiChevronRight />
-            </button>
-          )}
+
+          <span>{paginaAtual}</span>
+
+          <button onClick={handleNextPage} disabled={!hasMoreData}>
+            <FiChevronRight />
+          </button>
+
           <div className={styles.itemsPerPageContainer}>
             <span>Clientes por página: </span>
             <select

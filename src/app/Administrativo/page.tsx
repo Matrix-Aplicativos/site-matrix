@@ -6,6 +6,7 @@ import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import DeviceComponent from "../components/DeviceComponent";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const AdmPage: React.FC = () => {
   const token = getCookie("token");
@@ -14,6 +15,7 @@ const AdmPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <LoadingOverlay />
       <h1 className={styles.title}>
         ADMINISTRATIVO -{" "}
         {usuario?.empresas?.[0]?.nomeFantasia?.toUpperCase() ??

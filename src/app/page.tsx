@@ -9,6 +9,7 @@ import { useTotalPedidos } from "./hooks/useTotalPedidos";
 import { useTotalClientes } from "./hooks/useTotalClientes";
 import { useLoading } from "./Context/LoadingContext";
 import styles from "./Home.module.css";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
@@ -127,6 +128,7 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
+      <LoadingOverlay />
       <h1 className={styles.title}>PAINEL DE CONTROLE</h1>
       <div className={styles.border}>
         <RelatorioPedidos />
