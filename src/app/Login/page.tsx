@@ -198,7 +198,7 @@ export default function LoginPage() {
         <Link href="/" className="back-button">
           Voltar ao site
         </Link>
-        <p>© 2024 Todos direitos reservados</p>
+        <p>© {new Date().getFullYear()} Todos direitos reservados</p>
       </footer>
     </div>
   );

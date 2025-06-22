@@ -10,7 +10,12 @@ import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import { Dispositivo } from "../utils/types/Dispositivo";
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiTrash2 } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiTrash2,
+} from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../Context/LoadingContext";
 import useConfiguracao from "../hooks/useConfiguracao";
@@ -21,7 +26,7 @@ const DeviceComponent: React.FC = () => {
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const router = useRouter();
-  const codEmpresa = usuario?.empresas[0].codEmpresa ?? 0;
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa ?? 0;
 
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itemsPerPage] = useState(5); // Definindo 5 itens por página como padrão
@@ -29,8 +34,7 @@ const DeviceComponent: React.FC = () => {
 
   const { dispositivos, loading, refetch } = useGetDispositivos(
     codEmpresa,
-    paginaAtual,
-    itemsPerPage
+    paginaAtual
   );
 
   const {
