@@ -1,34 +1,46 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
-
-interface Municipio {
-  codMunicipio: string;
-  uf: string;
-  nome: string;
-  dataCadastro: string;
-  dataUltimaAlteracao: string;
-}
+import { Rota } from "../utils/types/Rota";
+import { Segmento } from "../utils/types/Segmento";
+import { Classificacao } from "../utils/types/Classificacao";
 
 interface Cliente {
-  codEmpresa: number;
-  codCliente: number;
+  codIntegracao: number;
+  codEmpresaApi: number;
+  codClienteApi: number;
+  codClienteErp: string;
   razaoSocial: string;
   nomeFantasia: string;
   cnpjcpf: string;
   fone1: string;
-  fone2: string | null;
+  fone2: string;
   email: string;
-  municipio: Municipio;
   bairro: string;
   endereco: string;
-  complemento: string | null;
+  complemento: string;
   cep: string;
   limiteCredito: number;
-  status: string | null;
-  territorio: number;
-  vendedorResponsavel: string | null;
-  areceber: any[];
+  status: string;
+  tipo: number;
+  rota: Rota;
+  segmento: Segmento;
+  classificacao: Classificacao;
+  areceber: [
+    {
+      id: {
+        numDocumento: number;
+        numParcela: number;
+      };
+      observacao: string;
+      dataLancamento: string;
+      dataVencimento: string;
+      valor: number;
+      dataCadastro: string;
+      dataUltimaAlteracao: string;
+    }
+  ];
+  ativo: true;
 }
 
 interface UseGetClientesHook {
@@ -40,6 +52,7 @@ interface UseGetClientesHook {
 const useGetClientes = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetClientesHook => {
@@ -52,7 +65,7 @@ const useGetClientes = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -60,7 +73,7 @@ const useGetClientes = (
         .join("&");
 
       const response = await axiosInstance.get(
-        `/cliente/${codEmpresa}?${queryParams}`
+        `/cliente/empresa/${codEmpresa}?${queryParams}`
       );
       setClientes(response.data);
       setError(null);
@@ -80,7 +93,7 @@ const useGetClientes = (
     if (codEmpresa) {
       fetchClientes();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { clientes, loading, error };
 };

@@ -1,7 +1,7 @@
 
 export interface Dispositivo{
-    imei1 : string,
-    imei2: string,
+    codDispositivo: string,
     nomeDispositivo: string,
-    ativo: boolean
+    codEmpresaApi: number,
+    ativo: boolean,
 }

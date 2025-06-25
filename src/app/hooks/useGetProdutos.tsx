@@ -3,8 +3,10 @@ import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
 
 interface Produto {
-  codItem: number;
-  nome: string;
+  codItemApi: number;
+  codIntegracao: number;
+  codEmpresaApi: number;
+  codItemErp: string;
   descricaoItem: string;
   descricaoMarca: string;
   codBarra: string;
@@ -18,11 +20,18 @@ interface Produto {
   precoVenda: number;
   precoRevenda: number;
   precoPromocao: number;
+  custo: number;
   dataInicioPromocao: string;
   dataFimPromocao: string;
   saldoDisponivel: number;
   porcentagemDescontoMax: number;
-  imagens: string[];
+  imagens: [
+    {
+      codImagem: number;
+      nome: string;
+    }
+  ];
+  ativo: true;
 }
 
 interface UseGetProdutosHook {
@@ -34,6 +43,7 @@ interface UseGetProdutosHook {
 const useGetProdutos = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetProdutosHook => {
@@ -46,7 +56,7 @@ const useGetProdutos = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -54,7 +64,7 @@ const useGetProdutos = (
         .join("&");
 
       const response = await axiosInstance.get(
-        `/item/${codEmpresa}?${queryParams}`
+        `/item/empresa/${codEmpresa}?${queryParams}`
       );
       setProdutos(response.data);
       setError(null);
@@ -74,7 +84,7 @@ const useGetProdutos = (
     if (codEmpresa) {
       fetchProdutos();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { produtos, loading, error };
 };

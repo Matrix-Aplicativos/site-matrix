@@ -3,13 +3,17 @@ import { Dispositivo } from "./Dispositivo";
 import { Empresa } from "./Empresa";
 
 export interface Usuario {
-  codUsuario: number;
-    nome: string;
-    cnpjcpf: string;
-    email: string;
-    login: string;
-    cargo: Cargo;
-    ativo: boolean,
-    dispositivos : Dispositivo[],
-    empresas: Empresa[]
-  }
+  primeiroAcesso: any;
+  codUsuario: number,
+  codUsuarioErp: string,
+  nome: string,
+  cpf: string,
+  email: string,
+  login: string,
+  tipoUsuario: {
+    codTipoUsuario: number,
+    nome: string,
+    ativo: true
+  },
+  ativo: true;
+}

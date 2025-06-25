@@ -8,8 +8,6 @@ interface LoginCredenciais {
   senha: string;
 }
 
-
-
 interface UseLoginHook {
   loginUsuario: (credenciais: LoginCredenciais) => Promise<string | null>;
   definirPrimeiraSenhaUsuario(credenciais: LoginCredenciais) : Promise<{status : number, id: string, message: string} | null>;

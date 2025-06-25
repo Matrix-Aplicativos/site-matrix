@@ -1,30 +1,38 @@
 "use client";
 
-import Sidebar from './components/Sidebar';
-import {Roboto} from 'next/font/google';
-import './globals.css';
-import { usePathname } from 'next/navigation';
+import Sidebar from "./components/Sidebar";
+import { Roboto } from "next/font/google";
+import "./globals.css";
+import { usePathname } from "next/navigation";
+import { LoadingProvider } from "./Context/LoadingContext";
+import LoadingOverlay from "./components/LoadingOverlay";
 
-const roboto = Roboto({weight: "300",subsets:['latin']})
+const roboto = Roboto({ weight: "300", subsets: ["latin"] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-
-  const hideSidebar = pathname === '/Login' || pathname === '/RedefinirSenha';
+  const hideSidebar = pathname === "/Login" || pathname === "/RedefinirSenha";
 
   return (
     <html lang="en">
-      <body style={{ display: 'flex' }} className={roboto.className}>
-        {!hideSidebar && <Sidebar />}
-        <main
-          style={{
-            marginLeft: hideSidebar ? '0' : '260px',
-            padding: '20px',
-            width: '100%',
-          }}
-        >
-          {children}
-        </main>
+      <body style={{ display: "flex" }} className={roboto.className}>
+        <LoadingProvider>
+          {!hideSidebar && <Sidebar />}
+          <main
+            style={{
+              marginLeft: hideSidebar ? "0" : "260px",
+              padding: "20px",
+              width: "100%",
+            }}
+          >
+            {children}
+          </main>
+          <LoadingOverlay />
+        </LoadingProvider>
       </body>
     </html>
   );

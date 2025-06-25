@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
 import { AxiosError } from "axios";
-import { Usuario } from "../utils/types/Usuario";
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 
 interface UseGetUsuariosHook {
-  usuarios: Usuario[] | null;
+  usuarios: UsuarioGet[] | null;
   loading: boolean;
   error: string | null;
 }
@@ -12,10 +12,11 @@ interface UseGetUsuariosHook {
 const useGetUsuarios = (
   codEmpresa: number,
   pagina: number,
+  porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc"
 ): UseGetUsuariosHook => {
-  const [usuarios, setUsuarios] = useState<Usuario[] | null>(null);
+  const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +25,7 @@ const useGetUsuarios = (
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=10`,
+        `porPagina=${porPagina}`, 
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -34,14 +35,23 @@ const useGetUsuarios = (
       const response = await axiosInstance.get(
         `/usuario/empresa/${codEmpresa}?${queryParams}`
       );
-      setUsuarios(response.data);
+
+      // Verifica diferentes estruturas de resposta
+      const data = response.data.data || response.data;
+
+      if (!Array.isArray(data)) {
+        throw new Error("Formato de dados inválido da API");
+      }
+
+      setUsuarios(data);
       setError(null);
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof AxiosError
-          ? err.message
-          : "Ocorreu um erro ao buscar os usuários."
-      );
+          ? err.response?.data?.message || err.message
+          : "Ocorreu um erro ao buscar os usuários.";
+
+      setError(errorMessage);
       setUsuarios(null);
     } finally {
       setLoading(false);
@@ -52,7 +62,7 @@ const useGetUsuarios = (
     if (codEmpresa) {
       fetchUsuarios();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
 
   return { usuarios, loading, error };
 };

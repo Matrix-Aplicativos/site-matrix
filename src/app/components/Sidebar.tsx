@@ -7,7 +7,7 @@ import './Sidebar.css';
 import Link from 'next/link';
 import useGetLoggedUser from '../hooks/useGetLoggedUser';
 import { getUserFromToken } from '../utils/functions/getUserFromToken';
-import { FiBox, FiClipboard, FiHome, FiLogOut, FiPackage, FiSettings, FiUser } from 'react-icons/fi';
+import { FiBox, FiClipboard, FiHome, FiLogOut, FiPackage, FiSettings, FiTarget, FiUser, FiUsers } from 'react-icons/fi';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function Sidebar() {
         </li>
         <li>
           <Link href="/Clientes" className="menu-item">
-            <FiUser size={24} />
+            <FiTarget size={24} />
             Clientes
           </Link>
         </li>
@@ -50,6 +50,12 @@ export default function Sidebar() {
           <Link href="/Produtos" className="menu-item">
             <FiPackage size={24} />
             Produtos
+          </Link>
+        </li>
+        <li>
+          <Link href="/Usuarios" className="menu-item">
+            <FiUsers size={24} />
+            Usuários
           </Link>
         </li>
       </ul>
