@@ -23,7 +23,7 @@ export default function RedefinirSenhaPage() {
             <input 
               key={index} 
               type="text" 
-              maxLength="1" 
+              maxLength={1}
               className="token-input-box" 
               inputMode="numeric" 
             />
