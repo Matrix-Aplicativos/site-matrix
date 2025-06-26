@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from './axiosInstance';
+import axiosInstance from './axiosInstanceFDV';
 
 interface Configuracao {
   codEmpresa: number;

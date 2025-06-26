@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import axiosInstance from "./axiosInstance";
+import axiosInstance from "./axiosInstanceFDV";
 import { AxiosError } from "axios";
 
 interface Dispositivo {

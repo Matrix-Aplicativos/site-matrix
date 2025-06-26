@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axiosInstance from "./axiosInstance";
+import axiosInstance from "./axiosInstanceFDV";
 
 interface NovoUsuario {
   nome: string;

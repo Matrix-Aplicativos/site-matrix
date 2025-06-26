@@ -10,7 +10,7 @@ import Link from "next/link";
 import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "../hooks/axiosInstance";
+import axiosInstance from "../hooks/axiosInstanceFDV";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
