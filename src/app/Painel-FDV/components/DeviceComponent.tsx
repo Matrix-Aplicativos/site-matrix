@@ -17,7 +17,7 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
-import { useLoading } from "@/shared/Context/LoadingContext";
+import { useLoading } from "../../shared/Context/LoadingContext";
 import useConfiguracao from "../hooks/useConfiguracao";
 
 const DeviceComponent: React.FC = () => {

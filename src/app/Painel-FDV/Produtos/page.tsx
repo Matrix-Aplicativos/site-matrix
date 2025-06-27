@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "@/shared/components/SearchBar";
+import SearchBar from "../../shared/components/SearchBar";
 import styles from "./Produtos.module.css";
 import useGetProdutos from "../hooks/useGetProdutos";
 import { getCookie } from "cookies-next";
@@ -10,8 +10,8 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
-import { useLoading } from "@/shared/Context/LoadingContext";
-import LoadingOverlay from "@/shared/components/LoadingOverlay";
+import { useLoading } from "../../shared/Context/LoadingContext";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 
 const ProdutosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();

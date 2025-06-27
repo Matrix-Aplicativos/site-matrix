@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "../Painel-FDV/components/";
+import Sidebar from "../Painel-FDV/components/Sidebar";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { usePathname } from "next/navigation";

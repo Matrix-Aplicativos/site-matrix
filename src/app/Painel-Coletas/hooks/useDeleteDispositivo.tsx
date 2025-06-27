@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axiosInstance from "@/shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
 interface UseDeleteDispositivoHook {

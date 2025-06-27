@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import RelatorioColetas from "./components/RelatorioColetas";
-import { useLoading } from "@/shared/Context/LoadingContext";
-import LoadingOverlay from "@/shared/components/LoadingOverlay";
+import { useLoading } from "../shared/Context/LoadingContext";
+import LoadingOverlay from "../shared/components/LoadingOverlay";
 import styles from "./Home.module.css";
 import useGetColetas from "./hooks/useGetColetas"; // Assumindo que você já criou
 

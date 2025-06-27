@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "@/shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import {deleteCookie} from 'cookies-next';
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";

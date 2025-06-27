@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "@/shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 

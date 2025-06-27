@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "@/shared/components/SearchBar";
+import SearchBar from "../../shared/components/SearchBar";
 import styles from "./Coletas.module.css";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
-import { useLoading } from "@/shared/Context/LoadingContext";
-import LoadingOverlay from "@/shared/components/LoadingOverlay";
+import { useLoading } from "../../shared/Context/LoadingContext";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas"; 
 
 const codEmpresa = 1; 

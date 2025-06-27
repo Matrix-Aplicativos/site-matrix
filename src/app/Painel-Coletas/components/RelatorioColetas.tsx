@@ -14,7 +14,7 @@ import {
 
 import useGetColetas from "../hooks/useGetColetas";
 import useGraficoColetas from "../hooks/useGraficoColetas";
-import LoadingOverlay from "@/shared/components/LoadingOverlay";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 
 ChartJS.register(
   CategoryScale,

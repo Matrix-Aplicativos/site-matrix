@@ -1,8 +1,8 @@
-// middleware.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import axios from 'axios';
-import { getUserFromToken } from '../utils/functions/getUserFromToken';
+import { getUserFromToken } from './getUserFromToken';
 
 const baseApiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -10,8 +10,8 @@ const publicRoutes = ['/Login', '/Esqueceu-a-senha'];
 
 // Rotas públicas por painel (se necessário)
 const publicRoutesPorPainel = {
-  fdv: ['/fdv/Login', '/fdv/Esqueceu-a-senha'],
-  coletas: ['/coletas/Login'],
+  fdv: ['/Painel-FDV/Login', '/fdv/Esqueceu-a-senha'],
+  coletas: ['/Painel-Coletas/Login'],
 };
 
 export default async function middleware(req: NextRequest) {

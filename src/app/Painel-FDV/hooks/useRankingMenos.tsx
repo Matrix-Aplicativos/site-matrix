@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "@/shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 
 export const useRankingItensMenos = (codEmpresa, periodoIni, periodoFim) => {
   const [data, setData] = useState([]);

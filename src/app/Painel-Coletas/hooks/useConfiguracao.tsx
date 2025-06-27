@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from "@/shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 
 interface Configuracao {
   codEmpresa: number;

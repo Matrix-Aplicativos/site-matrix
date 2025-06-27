@@ -7,10 +7,8 @@ import Logo from "@/app/img/Logo.png";
 import "./Login.css";
 import useLogin from "../hooks/useLogin";
 import Link from "next/link";
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "@/shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
