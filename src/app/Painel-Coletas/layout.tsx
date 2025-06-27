@@ -2,7 +2,7 @@
 
 import Sidebar from "../Painel-Coletas/components/Sidebar";
 import { Roboto } from "next/font/google";
-import "./globals.css";
+import "./globals.css" ;
 import { usePathname } from "next/navigation";
 import { LoadingProvider } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
@@ -15,7 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideSidebar = pathname === "/Login" || pathname === "/RedefinirSenha";
+  const hideSidebar = pathname?.includes("/Painel-Coletas/Login") || pathname?.includes("/Painel-Coletas/RedefinirSenha");
+
 
   return (
     <html lang="en">

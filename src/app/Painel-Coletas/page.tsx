@@ -5,13 +5,13 @@ import RelatorioColetas from "./components/RelatorioColetas";
 import { useLoading } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
 import styles from "./Home.module.css";
-import useGetColetas from "./hooks/useGetColetas"; // Assumindo que você já criou
+import useGetColetas from "./hooks/useGetColetas"; 
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
 
-  const codEmpresa = 1; // substitua se for dinâmico
+  const codEmpresa = 1; 
   const { coletas, loading } = useGetColetas(codEmpresa, 1);
 
   const {

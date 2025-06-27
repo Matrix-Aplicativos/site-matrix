@@ -1,12 +1,12 @@
 
 html, body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden; 
+    height: 100% !important; 
+    margin: 0 !important;
+    overflow: hidden !important; 
   }
   
   body {
-    font-family: Arial, sans-serif;
-    overflow-y: auto; 
+    font-family: Arial, sans-serif !important;
+    overflow-y: auto !important; 
   }
   

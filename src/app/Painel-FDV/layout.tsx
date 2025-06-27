@@ -15,7 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideSidebar = pathname === "/Login" || pathname === "/RedefinirSenha";
+  const hideSidebar =
+    pathname?.includes("/Painel-FDV/Login") ||
+    pathname?.includes("/Painel-FDV/RedefinirSenha");
 
   return (
     <html lang="en">

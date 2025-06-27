@@ -16,7 +16,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    router.push("/Login");
+    router.push("/Painel-Coletas/Login");
     deleteCookie("token");
     deleteCookie("user");
     deleteCookie("refreshToken");
@@ -26,23 +26,23 @@ export default function Sidebar() {
     <div className="sidebar">
       <ul className="menu">
         <li className="user-info">
-          <span>{usuario?.nome || 'USUARIO GENERICO'}</span>
+          <span>{usuario?.nome || "USUARIO GENERICO"}</span>
         </li>
         <li>
-          <Link href="/" className="menu-item">
+          <Link href="/Painel-Coletas" className="menu-item">
             <FiHome size={24} />
             Home
           </Link>
         </li>
         <li>
-          <Link href="/Coletas" className="menu-item">
-            <FiBarChart2 size={24} /> {/* Ícone de código de barras */}
+          <Link href="/Painel-Coletas/Coletas" className="menu-item">
+            <FiBarChart2 size={24} />
             Coletas
           </Link>
         </li>
         <li>
-          <Link href="/Dispositivos" className="menu-item">
-            <FiSmartphone size={24} /> {/* Ícone de celular */}
+          <Link href="/Painel-Coletas/Dispositivos" className="menu-item">
+            <FiSmartphone size={24} />
             Dispositivos
           </Link>
         </li>

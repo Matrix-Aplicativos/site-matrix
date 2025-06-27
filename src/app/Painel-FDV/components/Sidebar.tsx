@@ -26,7 +26,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    router.push("/Login");
+    router.push("/Painel-FDV/Login");
     deleteCookie("token");
     deleteCookie("user");
     deleteCookie("refreshToken");
@@ -39,38 +39,38 @@ export default function Sidebar() {
           <span>{usuario?.nome || ""}</span>
         </li>
         <li>
-          <Link href="/" className="menu-item">
+          <Link href="/Painel-FDV" className="menu-item">
             <FiHome size={24} />
             Home
           </Link>
         </li>
         <li>
-          <Link href="/Pedidos" className="menu-item">
+          <Link href="/Painel-FDV/Pedidos" className="menu-item">
             <FiClipboard size={24} />
             Pedidos
           </Link>
         </li>
         <li>
-          <Link href="/Clientes" className="menu-item">
+          <Link href="/Painel-FDV/Clientes" className="menu-item">
             <FiTarget size={24} />
             Clientes
           </Link>
         </li>
         <li>
-          <Link href="/Produtos" className="menu-item">
+          <Link href="/Painel-FDV/Produtos" className="menu-item">
             <FiPackage size={24} />
             Produtos
           </Link>
         </li>
         <li>
-          <Link href="/Usuarios" className="menu-item">
+          <Link href="/Painel-FDV/Usuarios" className="menu-item">
             <FiUsers size={24} />
             Usuários
           </Link>
         </li>
       </ul>
       <div className="bottom-section">
-        <Link href="/Administrativo" className="menu-item">
+        <Link href="/Painel-FDV/Administrativo" className="menu-item">
           <FiSettings size={24} />
           Administrativo
         </Link>
