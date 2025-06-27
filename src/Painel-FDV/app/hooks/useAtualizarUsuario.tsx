@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Usuario } from "../utils/types/Usuario";
-import axiosInstance from "./axiosInstanceFDV";
+import axiosInstance from "@/shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
 
 interface UseAtualizarUsuarioHook {

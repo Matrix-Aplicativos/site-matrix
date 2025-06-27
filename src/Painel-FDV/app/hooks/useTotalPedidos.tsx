@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "./axiosInstanceFDV";
+import axiosInstance from "@/shared/axios/axiosInstanceFDV";
 import { Pedido } from "../utils/types/Pedido";
 
 export const useTotalPedidos = (codEmpresa, periodoIni, periodoFim, porPagina) => {

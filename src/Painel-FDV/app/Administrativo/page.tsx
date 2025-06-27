@@ -6,7 +6,7 @@ import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import DeviceComponent from "../components/DeviceComponent";
-import LoadingOverlay from "../components/LoadingOverlay";
+import LoadingOverlay from "@/shared/components/LoadingOverlay";
 
 const AdmPage: React.FC = () => {
   const token = getCookie("token");

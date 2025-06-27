@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "@/shared/components/SearchBar";
 import styles from "./Clientes.module.css";
 import useGetClientes from "../hooks/useGetClientes";
 import { getCookie } from "cookies-next";
@@ -12,8 +12,8 @@ import { FaSort } from "react-icons/fa";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import { formatTelefone } from "../utils/functions/formatTelefone";
 import { formatCep } from "../utils/functions/formatCep";
-import { useLoading } from "../Context/LoadingContext";
-import LoadingOverlay from "../components/LoadingOverlay";
+import { useLoading } from "@/shared/Context/LoadingContext";
+import LoadingOverlay from "@/shared/components/LoadingOverlay";
 
 const ClientesPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();

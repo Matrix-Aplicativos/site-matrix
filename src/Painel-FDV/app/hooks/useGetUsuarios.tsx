@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "./axiosInstanceFDV";
+import axiosInstance from "@/shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 

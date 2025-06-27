@@ -7,9 +7,9 @@ import { useRankingItensMais } from "./hooks/useRankingMais";
 import { useRankingItensMenos } from "./hooks/useRankingMenos";
 import { useTotalPedidos } from "./hooks/useTotalPedidos";
 import { useTotalClientes } from "./hooks/useTotalClientes";
-import { useLoading } from "./Context/LoadingContext";
+import { useLoading } from "@/shared/Context/LoadingContext";
 import styles from "./Home.module.css";
-import LoadingOverlay from "./components/LoadingOverlay";
+import LoadingOverlay from "@/shared/components/LoadingOverlay";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
