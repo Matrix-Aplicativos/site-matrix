@@ -1,11 +1,11 @@
 "use client";
 
-import Sidebar from "@/shared/components/Sidebar";
+import Sidebar from "../Painel-FDV/components/";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { usePathname } from "next/navigation";
-import { LoadingProvider } from "@/shared/Context/LoadingContext";
-import LoadingOverlay from "@/shared/components/LoadingOverlay";
+import { LoadingProvider } from "../shared/Context/LoadingContext";
+import LoadingOverlay from "../shared/components/LoadingOverlay";
 
 const roboto = Roboto({ weight: "300", subsets: ["latin"] });
 
