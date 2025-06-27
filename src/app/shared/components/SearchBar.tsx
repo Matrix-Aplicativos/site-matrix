@@ -32,7 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       />
       <FaFilter
         className={styles.icon}
-        onClick={onFilterClick} // Aciona a expansão do filtro
+        onClick={onFilterClick} 
       />
       
     </div>
