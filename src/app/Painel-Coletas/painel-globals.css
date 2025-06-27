@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, .painel-body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.painel-body {
+  font-family: Arial, sans-serif;
+  overflow-y: auto;
+}
