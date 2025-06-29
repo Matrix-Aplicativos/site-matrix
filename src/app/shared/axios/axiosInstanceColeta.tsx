@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { deleteCookie, getCookie, setCookie } from 'cookies-next';
+import axios from "axios";
+import { deleteCookie, getCookie, setCookie } from "cookies-next";
 
 let isRefreshing = false;
 let failedQueue: { resolve: Function; reject: Function }[] = [];
@@ -25,10 +25,10 @@ const axiosInstanceColeta = axios.create({
 
 axiosInstanceColeta.interceptors.request.use(
   (config) => {
-    const token = getCookie('token_coleta'); // cookies separados para evitar conflitos
+    const token = getCookie("token_coleta");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.headers['Content-Type'] = 'application/json';
+      config.headers["Content-Type"] = "application/json";
       config.withCredentials = true;
     }
     return config;
@@ -39,7 +39,10 @@ axiosInstanceColeta.interceptors.request.use(
 axiosInstanceColeta.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.error('Erro na resposta da API Coleta:', error.response || error.message);
+    console.error(
+      "Erro na resposta da API Coleta:",
+      error.response || error.message
+    );
     const originalRequest = error.config;
 
     if (error.response?.status === 403 && !originalRequest._retry) {
@@ -58,25 +61,29 @@ axiosInstanceColeta.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const rt = getCookie('refreshToken_coleta');
-        if (!rt) throw new Error('Refresh token Coleta não encontrado.');
+        const rt = getCookie("refreshToken_coleta");
+        if (!rt) throw new Error("Refresh token Coleta não encontrado.");
 
-        const response = await axios.post(`${baseUrl}/auth/refresh`, { refreshToken: rt }, {
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await axios.post(
+          `${baseUrl}/auth/refresh`,
+          { refreshToken: rt },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
         const { token, refreshToken } = response.data;
 
         setCookie("token_coleta", token, {
           maxAge: Number(tokenExpiration),
           secure: process.env.NODE_ENV === "production",
-          sameSite: 'Strict',
+          sameSite: "strict", 
         });
 
         setCookie("refreshToken_coleta", refreshToken, {
           maxAge: Number(refreshTokenExpiration),
           secure: process.env.NODE_ENV === "production",
-          sameSite: 'Strict',
+          sameSite: "strict", 
         });
 
         processQueue(null, token);

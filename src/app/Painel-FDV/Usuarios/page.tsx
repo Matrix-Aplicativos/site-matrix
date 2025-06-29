@@ -12,6 +12,13 @@ import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 import useAtivarUsuario from "../hooks/useAtivarUsuario";
+import { toast } from "react-toastify";
+
+interface ColumnDefinition {
+  key: string;
+  label: string;
+  render?: (value: any, row: UsuarioGet, rowIndex: number) => React.ReactNode;
+}
 
 const UsuariosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
@@ -21,32 +28,34 @@ const UsuariosPage: React.FC = () => {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const { usuarios, loading, error, refetch } = useGetUsuarios(
+
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const { usuarios, loading, error } = useGetUsuarios(
     usuario?.empresas[0]?.codEmpresa || 1,
     paginaAtual,
-    itemsPerPage
+    itemsPerPage,
+    sortConfig?.key,
+    sortConfig?.direction
   );
-  const { ativarUsuario } = useAtivarUsuario();
+
+  const { ativarUsuario, error: activationError } = useAtivarUsuario();
 
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState<UsuarioGet[]>([]);
-  const [sortedData, setSortedData] = useState<UsuarioGet[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "asc" | "desc" | null;
-  } | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>("Nome");
 
   useEffect(() => {
     if (usuarios) {
-      // Verifica se recebemos dados para saber se há mais páginas
-      setHasMoreData(usuarios.length > 0);
+      setHasMoreData(usuarios.length >= itemsPerPage);
       setFilteredData(usuarios);
-      setSortedData(usuarios);
     }
-  }, [usuarios]);
+  }, [usuarios, itemsPerPage]);
 
   useEffect(() => {
     if (loading) {
@@ -56,6 +65,12 @@ const UsuariosPage: React.FC = () => {
     }
   }, [loading, showLoading, hideLoading]);
 
+  useEffect(() => {
+    if (activationError) {
+      toast.error(activationError);
+    }
+  }, [activationError]);
+
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
   };
@@ -64,57 +79,44 @@ const UsuariosPage: React.FC = () => {
     setIsFilterExpanded((prev) => !prev);
   };
 
-  const handleAtivarUsuario = async (codUsuario: string) => {
-    const { success } = await ativarUsuario(codUsuario, true);
-    if (success && refetch) {
-      refetch();
-    }
+  const handleAtivarUsuario = async (codUsuario: string | number) => {
+    await ativarUsuario(String(codUsuario), true, () => {
+      toast.success("Usuário ativado com sucesso!");
+      setPaginaAtual((prev) => (prev === 1 ? 2 : 1));
+    });
   };
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
+    setPaginaAtual(1);
 
     if (usuarios) {
-      const filtered = usuarios.filter((usuario: UsuarioGet) => {
-        if (selectedFilter === "Nome") {
-          return usuario.nome.toLowerCase().includes(searchQuery.toLowerCase());
+      const filtered = usuarios.filter((usuario) => {
+        const searchValue = searchQuery.toLowerCase();
+        switch (selectedFilter) {
+          case "Nome":
+            return usuario.nome.toLowerCase().includes(searchValue);
+          case "Email":
+            return usuario.email.toLowerCase().includes(searchValue);
+          case "CPF":
+            return usuario.cpf.toLowerCase().includes(searchValue);
+          case "Login":
+            return usuario.login.toLowerCase().includes(searchValue);
+          default:
+            return true;
         }
-        if (selectedFilter === "Email") {
-          return usuario.email
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
-        }
-        if (selectedFilter === "CPF") {
-          return usuario.cpf.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        if (selectedFilter === "Login") {
-          return usuario.login
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
-        }
-        return true;
       });
       setFilteredData(filtered);
-      setSortedData(filtered);
     }
   };
 
   const handleSort = (key: string) => {
-    let direction: "asc" | "desc" | null = "asc";
-
+    let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
       direction = "desc";
     }
-
-    const sorted = [...filteredData].sort((a: any, b: any) => {
-      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    setSortedData(sorted);
     setSortConfig({ key, direction });
+    setPaginaAtual(1);
   };
 
   const handleNextPage = () => {
@@ -125,11 +127,27 @@ const UsuariosPage: React.FC = () => {
     setPaginaAtual((prev) => Math.max(1, prev - 1));
   };
 
-  const columns = [
-    { key: "nome", label: "Nome" },
-    { key: "email", label: "Email" },
-    { key: "cpf", label: "CPF" },
-    { key: "tipoUsuario.nome", label: "Tipo de Usuário" },
+  const columns: ColumnDefinition[] = [
+    {
+      key: "nome",
+      label: "Nome",
+      render: (value) => <>{value}</>,
+    },
+    {
+      key: "email",
+      label: "Email",
+      render: (value) => <>{value}</>,
+    },
+    {
+      key: "cpf",
+      label: "CPF",
+      render: (value) => <>{value}</>,
+    },
+    {
+      key: "tipoUsuario.nome",
+      label: "Tipo de Usuário",
+      render: (value) => <>{value}</>,
+    },
     {
       key: "ativo",
       label: "Status",
@@ -147,7 +165,8 @@ const UsuariosPage: React.FC = () => {
     },
     {
       key: "actions",
-      render: (_value: any, _row: any, rowIndex: number) => (
+      label: "Ações",
+      render: (_value: any, _row: UsuarioGet, rowIndex: number) => (
         <button
           style={{ background: "none", border: "none", cursor: "pointer" }}
           onClick={() => toggleExpandRow(rowIndex)}
@@ -157,6 +176,17 @@ const UsuariosPage: React.FC = () => {
       ),
     },
   ];
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>USUÁRIOS</h1>
+        <div className={styles.errorMessage}>
+          <p>Erro ao carregar usuários: {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -200,7 +230,7 @@ const UsuariosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, rowIndex) => (
+            {filteredData.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 <tr
                   className={row.ativo ? styles.activeRow : styles.inactiveRow}
@@ -210,13 +240,15 @@ const UsuariosPage: React.FC = () => {
                       {col.render
                         ? col.render(
                             col.key.includes(".")
-                              ? col.key.split(".").reduce((o, i) => o[i], row)
+                              ? col.key
+                                  .split(".")
+                                  .reduce((o: any, i) => o?.[i], row)
                               : row[col.key as keyof UsuarioGet],
                             row,
                             rowIndex
                           )
                         : col.key.includes(".")
-                        ? col.key.split(".").reduce((o, i) => o[i], row)
+                        ? col.key.split(".").reduce((o: any, i) => o?.[i], row)
                         : row[col.key as keyof UsuarioGet]}
                     </td>
                   ))}
@@ -261,12 +293,8 @@ const UsuariosPage: React.FC = () => {
         </table>
         <div className={styles.paginationContainer}>
           <button
-            onClick={(e) => {
-              if (paginaAtual >= 2) {
-                e.preventDefault();
-                setPaginaAtual(1);
-              }
-            }}
+            onClick={() => setPaginaAtual(1)}
+            disabled={paginaAtual === 1}
           >
             <FiChevronsLeft />
           </button>

@@ -77,13 +77,13 @@ axiosInstanceFDV.interceptors.response.use(
         setCookie("token_fdv", token, {
           maxAge: Number(tokenExpiration),
           secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
+          sameSite: "strict",
         });
 
         setCookie("refreshToken_fdv", refreshToken, {
           maxAge: Number(refreshTokenExpiration),
           secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
+          sameSite: "strict",
         });
 
         processQueue(null, token);

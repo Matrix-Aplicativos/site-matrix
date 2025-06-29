@@ -68,9 +68,9 @@ export default function SiteMatrix() {
   }, [lastScrollY]);
 
   useEffect(() => {
-    const handleSmoothScroll = (e: MouseEvent) => {
+    const handleSmoothScroll = (e: Event) => {
       e.preventDefault();
-      const target = e.target as HTMLAnchorElement;
+      const target = e.currentTarget as HTMLAnchorElement;
       const targetId = target.getAttribute("href")?.replace("#", "");
       if (!targetId) return;
 
@@ -81,13 +81,15 @@ export default function SiteMatrix() {
       setMobileMenuOpen(false);
     };
 
-    const links = document.querySelectorAll("a[href^='#']");
-    links.forEach((link) => link.addEventListener("click", handleSmoothScroll));
+    const links = document.querySelectorAll<HTMLAnchorElement>("a[href^='#']");
+    links.forEach((link) => {
+      link.addEventListener("click", handleSmoothScroll);
+    });
 
     return () => {
-      links.forEach((link) =>
-        link.removeEventListener("click", handleSmoothScroll)
-      );
+      links.forEach((link) => {
+        link.removeEventListener("click", handleSmoothScroll);
+      });
     };
   }, []);
 
@@ -270,7 +272,7 @@ export default function SiteMatrix() {
             >
               Contato
             </Link>
-            
+
             <Link
               href={
                 activeTab === "vendas"
