@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiTrash2, FiPower } from "react-icons/fi";
+import {
+  FiTrash2,
+  FiPower,
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+} from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import styles from "./Dispositivos.module.css";
 import useGetDispositivos from "../hooks/useGetDispositivos";
@@ -10,7 +16,8 @@ import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 
 const DispositivosPage: React.FC = () => {
   const codEmpresa = 1; // Substituir pelo valor real conforme o contexto da aplicação
-  const [pagina, setPagina] = useState(1);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [porPagina, setPorPagina] = useState(20); // Estado para itens por página
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
@@ -18,13 +25,15 @@ const DispositivosPage: React.FC = () => {
 
   const { dispositivos, loading, error, refetch } = useGetDispositivos(
     codEmpresa,
-    pagina,
+    paginaAtual,
     sortConfig?.key,
     sortConfig?.direction
   );
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
+
+  const hasMoreData = dispositivos ? dispositivos.length >= porPagina : false;
 
   const handleSort = (key: string) => {
     const direction =
@@ -55,9 +64,18 @@ const DispositivosPage: React.FC = () => {
     await refetch();
   };
 
+  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
+  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
   const dispositivosInativos =
     dispositivos?.filter((d) => !d.ativo).length ?? 0;
+
+  const columns = [
+    { key: "nomeDispositivo", label: "Nome" },
+    { key: "codDispositivo", label: "Código" },
+    { key: "ativo", label: "Status" },
+  ];
 
   return (
     <div className={styles.container}>
@@ -74,15 +92,11 @@ const DispositivosPage: React.FC = () => {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th onClick={() => handleSort("nomeDispositivo")}>
-                    Nome <FaSort />
-                  </th>
-                  <th onClick={() => handleSort("codDispositivo")}>
-                    Código <FaSort />
-                  </th>
-                  <th onClick={() => handleSort("ativo")}>
-                    Status <FaSort />
-                  </th>
+                  {columns.map((col) => (
+                    <th key={col.key} onClick={() => handleSort(col.key)}>
+                      {col.label} <FaSort style={{ marginLeft: "0.5em" }} />
+                    </th>
+                  ))}
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -129,6 +143,52 @@ const DispositivosPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
+              {/* *** MODIFICATION START *** */}
+              <tfoot>
+                <tr>
+                  <td colSpan={columns.length + 1}>
+                    <div className={styles.paginationContainer}>
+                      <div className={styles.paginationControls}>
+                        <button
+                          onClick={() => setPaginaAtual(1)}
+                          disabled={paginaAtual === 1}
+                        >
+                          <FiChevronsLeft />
+                        </button>
+                        <button
+                          onClick={handlePrevPage}
+                          disabled={paginaAtual === 1}
+                        >
+                          <FiChevronLeft />
+                        </button>
+                        <span>{paginaAtual}</span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={!hasMoreData}
+                        >
+                          <FiChevronRight />
+                        </button>
+                      </div>
+                      <div className={styles.itemsPerPageContainer}>
+                        <span>Dispositivos por página: </span>
+                        <select
+                          value={porPagina}
+                          onChange={(e) => {
+                            setPorPagina(Number(e.target.value));
+                            setPaginaAtual(1);
+                          }}
+                          className={styles.itemsPerPageSelect}
+                        >
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+              {/* *** MODIFICATION END *** */}
             </table>
           )}
         </div>

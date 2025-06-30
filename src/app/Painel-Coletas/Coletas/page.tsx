@@ -7,9 +7,9 @@ import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import useGetColetas from "../hooks/useGetColetas"; 
+import useGetColetas from "../hooks/useGetColetas";
 
-const codEmpresa = 1; 
+const codEmpresa = 1;
 
 interface ColetaExibida {
   id: number;
@@ -42,6 +42,8 @@ const ColetasPage: React.FC = () => {
     sortConfig?.key,
     sortConfig?.direction
   );
+
+  const hasMoreData = coletas ? coletas.length >= porPagina : false;
 
   // Converte os dados da API para o formato de exibição
   const convertColetas = (): ColetaExibida[] => {
@@ -122,10 +124,15 @@ const ColetasPage: React.FC = () => {
   };
 
   const handleNextPage = () => {
-    if (coletas && coletas.length >= porPagina) {
-      setPaginaAtual((prev) => prev + 1);
-    }
+    setPaginaAtual((prev) => prev + 1);
   };
+
+  const columns = [
+    { key: "descricao", label: "Descrição" },
+    { key: "data", label: "Data" },
+    { key: "origem", label: "Origem" },
+    { key: "tipoMovimento", label: "Tipo de Movimento" },
+  ];
 
   return (
     <div className={styles.container}>
@@ -174,18 +181,14 @@ const ColetasPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th onClick={() => sortData("descricao")}>
-                Descrição <FaSort />
-              </th>
-              <th onClick={() => sortData("data")}>
-                Data <FaSort />
-              </th>
-              <th onClick={() => sortData("origem")}>
-                Origem <FaSort />
-              </th>
-              <th onClick={() => sortData("tipoMovimento")}>
-                Tipo de Movimento <FaSort />
-              </th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={() => sortData(col.key as keyof ColetaExibida)}
+                >
+                  {col.label} <FaSort style={{ marginLeft: "0.5em" }} />
+                </th>
+              ))}
               <th></th>
             </tr>
           </thead>
@@ -199,12 +202,8 @@ const ColetasPage: React.FC = () => {
                   <td>{row.tipoMovimento}</td>
                   <td>
                     <button
+                      className={styles.expandButton}
                       onClick={() => toggleExpandRow(rowIndex)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
                     >
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
@@ -212,7 +211,7 @@ const ColetasPage: React.FC = () => {
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    <td colSpan={5}>
+                    <td colSpan={columns.length + 1}>
                       <div className={styles.additionalInfo}>
                         <div>
                           <p>
@@ -239,41 +238,50 @@ const ColetasPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
+          {/* *** MODIFICATION START *** */}
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length + 1}>
+                <div className={styles.paginationContainer}>
+                  <div className={styles.paginationControls}>
+                    <button
+                      onClick={() => setPaginaAtual(1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronsLeft />
+                    </button>
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>{paginaAtual}</span>
+                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                  <div className={styles.itemsPerPageContainer}>
+                    <span>Coletas por página: </span>
+                    <select
+                      value={porPagina}
+                      onChange={(e) => {
+                        setPorPagina(Number(e.target.value));
+                        setPaginaAtual(1);
+                      }}
+                      className={styles.itemsPerPageSelect}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+          {/* *** MODIFICATION END *** */}
         </table>
-
-        <div className={styles.paginationContainer}>
-          <button onClick={() => setPaginaAtual(1)}>
-            <FiChevronsLeft />
-          </button>
-          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
-            <FiChevronLeft />
-          </button>
-
-          <span>{paginaAtual}</span>
-
-          <button
-            onClick={handleNextPage}
-            disabled={!coletas || coletas.length < porPagina}
-          >
-            <FiChevronRight />
-          </button>
-
-          <div className={styles.itemsPerPageContainer}>
-            <span>Coletas por página: </span>
-            <select
-              value={porPagina}
-              onChange={(e) => {
-                setPorPagina(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
   );

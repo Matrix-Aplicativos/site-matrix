@@ -50,15 +50,7 @@ export default function LoginPage() {
         );
         const usuario: Usuario = response.data;
 
-        const codTipo = usuario.tipoUsuario?.codTipoUsuario;
-
-        if (codTipo !== 1 && codTipo !== 5) {
-          setError(
-            "Acesso negado. Seu perfil de usuário não tem permissão para acessar o painel."
-          );
-          return;
-        }
-
+        // REMOVEU VERIFICAÇÃO DE TIPO DE USUÁRIO
         if (usuario.primeiroAcesso) {
           setDefinirPrimeiraSenha(true);
           setSenha("");
@@ -67,7 +59,7 @@ export default function LoginPage() {
           router.push("/Painel-FDV");
         }
       } catch (err) {
-        setError("Erro ao validar o tipo de usuário.");
+        alert("Erro ao validar usuário.");
       }
     }
   };
@@ -75,13 +67,9 @@ export default function LoginPage() {
   const verificarForcaSenha = () => {
     let pontuacao = 0;
     if (senha.length >= 8) pontuacao++;
-
     if (/[A-Z]/.test(senha)) pontuacao++;
-
     if (/[a-z]/.test(senha)) pontuacao++;
-
     if (/\d/.test(senha)) pontuacao++;
-
     if (/[!@#$%^&*(),.?":{}|<>]/.test(senha)) pontuacao++;
     if (pontuacao === 0) return 0; // Muito Fraco
     if (pontuacao <= 2) return 1; // Fraco
@@ -201,7 +189,3 @@ export default function LoginPage() {
     </div>
   );
 }
-function setError(arg0: string) {
-  alert("Esse tipo de usuário nao tem acesso ao painel.");
-}
-
