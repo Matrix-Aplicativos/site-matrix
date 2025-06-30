@@ -93,7 +93,7 @@ export default function LoginPage() {
     <div className="container">
       <div className="content">
         <div className="logo-container">
-          <Image src={Logo} alt="Logo" width={250} height={220} priority />
+          <Image src={Logo} alt="Logo" width={220} height={200} priority />
         </div>
 
         <h5 className="heading">Área do Cliente</h5>

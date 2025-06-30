@@ -40,7 +40,6 @@ const ProdutosPage: React.FC = () => {
 
   useEffect(() => {
     if (produtos) {
-      // Verifica se recebemos dados para saber se há mais páginas
       setHasMoreData(produtos.length > 0);
       setFilteredData(produtos);
       setSortedData(produtos);
@@ -65,7 +64,7 @@ const ProdutosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
+    setPaginaAtual(1); // Reset to the first page on search
 
     if (produtos) {
       const filtered = produtos.filter((produto: any) => {
@@ -94,7 +93,6 @@ const ProdutosPage: React.FC = () => {
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" | null = "asc";
-
     if (
       sortConfig &&
       sortConfig.key === key &&
@@ -102,13 +100,11 @@ const ProdutosPage: React.FC = () => {
     ) {
       direction = "desc";
     }
-
     const sorted = [...filteredData].sort((a: any, b: any) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
     });
-
     setSortedData(sorted);
     setSortConfig({ key, direction });
   };
@@ -186,7 +182,6 @@ const ProdutosPage: React.FC = () => {
             {sortedData.map((row, rowIndex) => {
               const isSaldoZero = row.saldoDisponivel <= 0;
               const isEmPromocao = row.precoPromocao > 0 && !isSaldoZero;
-
               return (
                 <React.Fragment key={rowIndex}>
                   <tr
@@ -309,44 +304,53 @@ const ProdutosPage: React.FC = () => {
               );
             })}
           </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length}>
+                <div className={styles.paginationContainer}>
+                  <div className={styles.paginationControls}>
+                    <button
+                      onClick={(e) => {
+                        if (paginaAtual >= 2) {
+                          e.preventDefault();
+                          setPaginaAtual(1);
+                        }
+                      }}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronsLeft />
+                    </button>
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>{paginaAtual}</span>
+                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                  <div className={styles.itemsPerPageContainer}>
+                    <span>Produtos por página: </span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setPaginaAtual(1);
+                      }}
+                      className={styles.itemsPerPageSelect}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
         </table>
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={(e) => {
-              if (paginaAtual >= 2) {
-                e.preventDefault();
-                setPaginaAtual(1);
-              }
-            }}
-          >
-            <FiChevronsLeft />
-          </button>
-          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
-            <FiChevronLeft />
-          </button>
-
-          <span>{paginaAtual}</span>
-
-          <button onClick={handleNextPage} disabled={!hasMoreData}>
-            <FiChevronRight />
-          </button>
-
-          <div className={styles.itemsPerPageContainer}>
-            <span>Produtos por página: </span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
   );

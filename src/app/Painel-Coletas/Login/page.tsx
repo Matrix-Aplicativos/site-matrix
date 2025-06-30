@@ -8,7 +8,7 @@ import "./Login.css";
 import useLogin from "../hooks/useLogin";
 import Link from "next/link";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
@@ -64,7 +64,7 @@ export default function LoginPage() {
           setSenha("");
           setTextoIdentificacao("Defina sua senha");
         } else {
-          router.push("/Painel-Coletas");
+          router.push("/Painel-FDV");
         }
       } catch (err) {
         setError("Erro ao validar o tipo de usuário.");
@@ -93,7 +93,7 @@ export default function LoginPage() {
     <div className="container">
       <div className="content">
         <div className="logo-container">
-          <Image src={Logo} alt="Logo" width={250} height={220} priority />
+          <Image src={Logo} alt="Logo" width={220} height={200} priority />
         </div>
 
         <h5 className="heading">Área do Cliente</h5>
