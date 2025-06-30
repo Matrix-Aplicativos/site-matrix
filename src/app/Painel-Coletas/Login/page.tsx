@@ -64,7 +64,7 @@ export default function LoginPage() {
           setSenha("");
           setTextoIdentificacao("Defina sua senha");
         } else {
-          router.push("/");
+          router.push("/Painel-Coletas");
         }
       } catch (err) {
         setError("Erro ao validar o tipo de usuário.");

@@ -1,31 +1,36 @@
 body {
   margin: 0;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
-  height: 100vh; 
+  height: 100vh;
   background-color: #ffffff;
   text-align: center;
-  padding: 20px; 
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: -40px; 
+  margin-top: -40px;
 }
 
 .heading {
   font-size: 18px;
   font-weight: bold;
   color: #333333;
-  margin-bottom: 30px; 
+  margin-bottom: 30px;
   margin-top: -2px;
 }
 
@@ -51,8 +56,6 @@ body {
   color: #000;
 }
 
-
-
 .input-field input:focus {
   border-bottom: 2px solid #1565c0;
 }
@@ -62,10 +65,10 @@ body {
   top: -20px;
   left: 0;
   font-size: 12px;
-  color: #AAAAAA;
+  color: #aaaaaa;
 }
 
-.input-field input:disabled{
+.input-field input:disabled {
   color: #aaa;
 }
 
@@ -92,8 +95,7 @@ body {
   background-color: #0d47a1;
 }
 
-.voltar-button{
-
+.voltar-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,10 +113,9 @@ body {
   transition: background-color 0.3s;
 }
 
-
 .footer {
-  width: 98%; 
-  height: 60px; 
+  width: 98%;
+  height: 60px;
   background-color: #1565c0;
   color: white;
   display: flex;
@@ -135,8 +136,7 @@ body {
   text-decoration: underline;
 }
 
-
-.forca-senha{
+.forca-senha {
   width: 240px;
   height: 6px;
   position: relative;
@@ -144,7 +144,7 @@ body {
   transition: 0.2s;
 }
 
-.texto-forca-senha{
+.texto-forca-senha {
   position: absolute;
   left: 0;
   top: 30px;

@@ -52,6 +52,17 @@ export default function SiteMatrix() {
   const [carouselImages] = useState([Capa, Home, Produtos, Clientes, Pedidos]);
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasReloaded = urlParams.get("reloaded") === "true";
+
+    if (!hasReloaded) {
+      urlParams.set("reloaded", "true");
+      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+      window.location.replace(newUrl); 
+    }
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
