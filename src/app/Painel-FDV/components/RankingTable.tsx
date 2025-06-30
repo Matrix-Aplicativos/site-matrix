@@ -2,7 +2,20 @@
 
 import styles from "./RankingTable.module.css";
 
-export default function RankingTable({ title, data }) {
+interface RankingItem {
+  item: {
+    descricaoItem: string;
+    descricaoMarca: string;
+  };
+  qtdItem: number;
+}
+
+interface RankingTableProps {
+  title: string;
+  data: RankingItem[];
+}
+
+export default function RankingTable({ title, data }: RankingTableProps) {
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <div className={styles.tableContainer}>
@@ -14,9 +27,9 @@ export default function RankingTable({ title, data }) {
 
   const sortedData = [...data].sort((a, b) => {
     if (title.includes("Mais Vendidos")) {
-      return b.qtdItem - a.qtdItem; 
+      return b.qtdItem - a.qtdItem;
     } else {
-      return a.qtdItem - b.qtdItem; 
+      return a.qtdItem - b.qtdItem;
     }
   });
 

@@ -1,4 +1,4 @@
-import { Cargo } from "./Cargo";
+
 import { Empresa } from "./Empresa";
 
 export type UsuarioGet = {

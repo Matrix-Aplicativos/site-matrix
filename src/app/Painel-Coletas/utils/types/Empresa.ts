@@ -1,4 +1,3 @@
-import { Configuracao } from "./Configuracao";
 
 export interface Empresa {
   codEmpresa: number;

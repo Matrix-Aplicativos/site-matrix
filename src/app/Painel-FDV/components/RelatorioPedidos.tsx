@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import type { ChartOptions } from "chart.js";
 import { useTotalPedidos } from "../hooks/useTotalPedidos";
 import useGraficoPedidos from "../hooks/useGraficoPedidos";
 
@@ -57,11 +58,16 @@ export default function RelatorioPedidos() {
   );
   const chartData = useGraficoPedidos(totalPedidos, view);
 
-  const options = {
+  const options: ChartOptions<"bar"> = {
     responsive: true,
     plugins: {
-      legend: { position: "top" },
-      title: { display: true, text: "Relatório de Pedidos" },
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Relatório de Pedidos",
+      },
     },
     maintainAspectRatio: false,
   };
@@ -118,7 +124,7 @@ export default function RelatorioPedidos() {
         {isLoading ? (
           <p>Carregando...</p>
         ) : error ? (
-          <p>{error}</p>
+          <p>{error.message}</p>
         ) : (
           <Bar data={chartData} options={options} />
         )}

@@ -2,7 +2,7 @@ import { Cargo } from "./Cargo";
 import { Empresa } from "./Empresa";
 
 export type UsuarioGet = {
-  codUsuario: number;
+  codUsuario: string;
   codUsuarioErp: string;
   nome: string;
   cpf: string;

@@ -2,10 +2,15 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Pedido } from "../utils/types/Pedido";
 
-export const useTotalClientes = (codEmpresa, periodoIni, periodoFim, porPagina) => {
-  const [totalClientes, setTotalClientes] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+export const useTotalClientes = (
+  codEmpresa: number | string,
+  periodoIni: string,
+  periodoFim: string,
+  porPagina: number
+) => {
+  const [totalClientes, setTotalClientes] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!codEmpresa || !periodoIni || !periodoFim) return;
@@ -13,17 +18,21 @@ export const useTotalClientes = (codEmpresa, periodoIni, periodoFim, porPagina) 
     const fetchTotalClientes = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/pedido/empresa/${codEmpresa}`, {
-          params: { periodoIni, periodoFim, porPagina },
-        });
+        const response = await axiosInstance.get<Pedido[]>(
+          `/pedido/empresa/${codEmpresa}`,
+          {
+            params: { periodoIni, periodoFim, porPagina },
+          }
+        );
 
-        // Criar um conjunto (Set) para armazenar apenas IDs únicos de clientes
-        const clientesUnicos = new Set(response.data.map((pedido: Pedido) => pedido.codCliente));
+        const clientesUnicos = new Set(
+          response.data.map((pedido: Pedido) => pedido.codCliente)
+        );
 
         setTotalClientes(clientesUnicos.size);
       } catch (err) {
         console.error("Erro ao buscar clientes:", err);
-        setError(err);
+        setError(err instanceof Error ? err : new Error(String(err)));
         setTotalClientes(0);
       } finally {
         setIsLoading(false);
@@ -31,7 +40,7 @@ export const useTotalClientes = (codEmpresa, periodoIni, periodoFim, porPagina) 
     };
 
     fetchTotalClientes();
-  }, [codEmpresa, periodoIni, periodoFim]);
+  }, [codEmpresa, periodoIni, periodoFim, porPagina]);
 
   return { totalClientes, isLoading, error };
 };

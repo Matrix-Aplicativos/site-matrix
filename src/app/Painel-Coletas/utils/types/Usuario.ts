@@ -1,4 +1,3 @@
-import { Cargo } from "./Cargo";
 import { Dispositivo } from "./Dispositivo";
 import { Empresa } from "./Empresa";
 
