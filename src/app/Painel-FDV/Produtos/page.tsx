@@ -118,9 +118,9 @@ const ProdutosPage: React.FC = () => {
   };
 
   const columns = [
+    { key: "codItemErp", label: "Código" },
     { key: "descricaoItem", label: "Descrição" },
     { key: "descricaoMarca", label: "Marca" },
-    { key: "codItemErp", label: "Código" },
     { key: "precoVenda", label: "Preço" },
     { key: "saldoDisponivel", label: "Saldo" },
     { key: "unidade", label: "Unidade" },
@@ -193,9 +193,9 @@ const ProdutosPage: React.FC = () => {
                         : ""
                     }
                   >
-                    <td>{row.descricaoItem}</td>
-                    <td>{row.descricaoMarca}</td>
                     <td>{row.codItemErp}</td>
+                    <td>{row.descricaoItem}</td>
+                    <td>{row.descricaoMarca}</td>  
                     <td>{formatPreco(row.precoVenda)}</td>
                     <td>{row.saldoDisponivel}</td>
                     <td>{row.unidade}</td>

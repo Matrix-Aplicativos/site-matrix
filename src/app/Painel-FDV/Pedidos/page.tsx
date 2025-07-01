@@ -137,7 +137,7 @@ const PedidosPage: React.FC = () => {
       : "";
 
   const columns = [
-    { key: "codPedido", label: "Código do Pedido" },
+    { key: "codPedido", label: "Código " },
     { key: "dataCadastro", label: "Data" },
     { key: "valorTotal", label: "Valor Total" },
     { key: "status", label: "Status" },

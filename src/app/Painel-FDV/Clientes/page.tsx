@@ -74,6 +74,8 @@ const ClientesPage: React.FC = () => {
         switch (searchTopic) {
           case "RazaoSocial":
             return cliente.razaoSocial.toLowerCase().includes(searchValue);
+          case "NomeFantasia":
+            return cliente.nomeFantasia.toLowerCase().includes(searchValue);
           case "CnpjCpf":
             return (
               cliente.cnpjcpf?.toString().toLowerCase().includes(searchValue) ??
@@ -136,6 +138,7 @@ const ClientesPage: React.FC = () => {
               onChange={(e) => setSearchTopic(e.target.value)}
             >
               <option value="RazaoSocial">Razão Social</option>
+              <option value="NomeFantasia">Nome Fantasia</option>
               <option value="CnpjCpf">CNPJ/CPF</option>
               <option value="Codigo">Código</option>
             </select>
