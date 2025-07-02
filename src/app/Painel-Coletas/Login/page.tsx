@@ -8,7 +8,7 @@ import "./Login.css";
 import useLogin from "../hooks/useLogin";
 import Link from "next/link";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "../../shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
@@ -64,7 +64,7 @@ export default function LoginPage() {
           setSenha("");
           setTextoIdentificacao("Defina sua senha");
         } else {
-          router.push("/Painel-FDV");
+          router.push("/Painel-Coletas");
         }
       } catch (err) {
         setError("Erro ao validar o tipo de usuário.");

@@ -528,11 +528,11 @@ export default function SiteMatrix() {
               <p className="text-[#666666] font-semibold text-3xl lg:text-[32px] mb-4">
                 Telefone
               </p>
-              <div className="space-y-2 mb-4 text-xl">
+              <div className="space-y-2 mb-4 text-xl text-[#666666]">
                 <p>+55 65 99223-3566</p>
                 <p>+55 65 99604-4321</p>
               </div>
-              <p className="mb-4">Ou</p>
+              <p className="mb-4 text-[#666666]">Ou</p>
               <div className="flex justify-center lg:justify-center">
                 <Link
                   href="https://wa.me/5565992233566"
