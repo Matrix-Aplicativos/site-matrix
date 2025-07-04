@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiTrash2,
   FiPower,
@@ -13,11 +13,14 @@ import styles from "./Dispositivos.module.css";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
+import useConfiguracao from "../hooks/useConfiguracao";
+import { useLoading } from "@/app/shared/Context/LoadingContext";
 
 const DispositivosPage: React.FC = () => {
-  const codEmpresa = 1; // Substituir pelo valor real conforme o contexto da aplicação
+  const codEmpresa = 1;
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [porPagina, setPorPagina] = useState(20); // Estado para itens por página
+  const [porPagina, setPorPagina] = useState(20);
+  const { showLoading, hideLoading } = useLoading();
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
@@ -32,6 +35,8 @@ const DispositivosPage: React.FC = () => {
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
+  const { maximoDispositivos, loading: loadingConfig } =
+    useConfiguracao(codEmpresa);
 
   const hasMoreData = dispositivos ? dispositivos.length >= porPagina : false;
 
@@ -66,6 +71,14 @@ const DispositivosPage: React.FC = () => {
 
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
   const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+
+  useEffect(() => {
+    if (loading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [loading, showLoading, hideLoading]);
 
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
   const dispositivosInativos =
@@ -115,22 +128,31 @@ const DispositivosPage: React.FC = () => {
                       </span>
                     </td>
                     <td className={styles.actionsCell}>
-                      <button
-                        onClick={() =>
-                          toggleStatus(
-                            dispositivo.codDispositivo,
-                            dispositivo.nomeDispositivo,
+                      <div className={styles.statusIndicatorContainer}>
+                        <div
+                          className={`${styles.statusIndicator} ${
                             dispositivo.ativo
-                          )
-                        }
-                        className={`${styles.actionButton} ${
-                          dispositivo.ativo
-                            ? styles.deactivateButton
-                            : styles.activateButton
-                        }`}
-                      >
-                        <FiPower />
-                      </button>
+                              ? styles.statusActive
+                              : styles.statusInactive
+                          }`}
+                        >
+                          {!dispositivo.ativo && <FiPower />}
+                        </div>
+                      </div>
+                      {!dispositivo.ativo && (
+                        <button
+                          onClick={() =>
+                            toggleStatus(
+                              dispositivo.codDispositivo,
+                              dispositivo.nomeDispositivo,
+                              dispositivo.ativo
+                            )
+                          }
+                          className={`${styles.actionButton} ${styles.activateButton}`}
+                        >
+                          <FiPower />
+                        </button>
+                      )}
                       <button
                         onClick={() =>
                           handleDeleteDevice(dispositivo.codDispositivo)
@@ -143,7 +165,6 @@ const DispositivosPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
-              {/* *** MODIFICATION START *** */}
               <tfoot>
                 <tr>
                   <td colSpan={columns.length + 1}>
@@ -188,7 +209,6 @@ const DispositivosPage: React.FC = () => {
                   </td>
                 </tr>
               </tfoot>
-              {/* *** MODIFICATION END *** */}
             </table>
           )}
         </div>
@@ -199,16 +219,21 @@ const DispositivosPage: React.FC = () => {
             <p>Dispositivos Ativos:</p>
             <span className={styles.situacaoValue}>{dispositivosAtivos}</span>
           </div>
-          <div className={styles.situacaoItem}>
-            <p>Dispositivos Inativos:</p>
-            <span className={styles.situacaoValue}>{dispositivosInativos}</span>
-          </div>
+
           <div className={styles.situacaoItem}>
             <p>Total de Dispositivos:</p>
             <span className={styles.situacaoValue}>
               {dispositivos?.length ?? 0}
             </span>
           </div>
+          {!loadingConfig && (
+            <div className={styles.situacaoItem}>
+              <p>Dispositivos Disponiveis:</p>
+              <span className={styles.situacaoValue}>
+                {maximoDispositivos - dispositivosAtivos}{" "}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

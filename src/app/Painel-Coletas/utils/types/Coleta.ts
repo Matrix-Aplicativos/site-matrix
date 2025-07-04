@@ -8,7 +8,9 @@ interface Coleta {
   tipo: number;
   descricao: string;
   codUsuario: number;
-  dataInicio: string;
+  dataInicio?: string | null;
+  datacadastrocoleta: string;
+  dataultimaalteracaocoleta: string;
   dataFim: string;
   alocOrigem: Alocacao;
   alocDestino: Alocacao;

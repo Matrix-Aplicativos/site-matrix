@@ -19,11 +19,11 @@ import Logo from "./img/Logo.svg";
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
-import Home from "./img/home-fdv.png";
-import Capa from "./img/capa-fdv.png";
-import Produtos from "./img/produtos-fdv.png";
-import Clientes from "./img/clientes-fdv.png";
-import Pedidos from "./img/pedidos-fdv.png";
+import HomeFDV from "./img/home-fdv.png";
+import CapaFDV from "./img/capa-fdv.png";
+import ProdutosFDV from "./img/produtos-fdv.png";
+import ClientesFDV from "./img/clientes-fdv.png";
+import PedidosFDV from "./img/pedidos-fdv.png";
 import Scanner from "./img/scaneamento.jpg";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -49,7 +49,11 @@ export default function SiteMatrix() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("vendas");
 
-  const [carouselImages] = useState([Capa, Home, Produtos, Clientes, Pedidos]);
+  const [carouselImages] = useState([CapaFDV, HomeFDV, ProdutosFDV, ClientesFDV, PedidosFDV]);
+  const [carouselImagesColetas] = useState([
+  Coleta, 
+  Scanner,
+]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -58,7 +62,7 @@ export default function SiteMatrix() {
     if (!hasReloaded) {
       urlParams.set("reloaded", "true");
       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-      window.location.replace(newUrl); 
+      window.location.replace(newUrl);
     }
   }, []);
 
@@ -493,10 +497,12 @@ export default function SiteMatrix() {
               modules={[Autoplay, Pagination, Navigation]}
               className="mySwiper rounded-lg shadow-xl"
             >
-              {carouselImages.map((image, index) => (
+              {(activeTab === "vendas"
+                ? carouselImages
+                : carouselImagesColetas
+              ).map((image, index) => (
                 <SwiperSlide key={index}>
                   <div className="flex justify-center items-center h-200">
-                    {" "}
                     <Image
                       src={image}
                       alt={`Demonstração ${index + 1}`}

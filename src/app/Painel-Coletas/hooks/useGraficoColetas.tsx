@@ -2,9 +2,8 @@ import { useMemo } from "react";
 import { ChartData } from "chart.js";
 
 interface Coleta {
-  dataInicio: string;
-  status: string;
-  tipo: number; // 1 = avulsa, 2 = sob demanda (ajuste conforme necessário)
+  dataCadastro: string; // Changed from Date | null to string to match the API
+  tipo: number; // 1 = Sob Demanda, 2 = Avulsa
 }
 
 export default function useGraficoColetas(
@@ -26,41 +25,54 @@ export default function useGraficoColetas(
 
     const labels =
       view === "mensal"
-        ? Array.from({ length: diasNoMes }, (_, i) => `Dia ${i + 1}`)
+        ? Array.from({ length: diasNoMes }, (_, i) => (i + 1).toString())
         : [
-            "Janeiro",
-            "Fevereiro",
-            "Março",
-            "Abril",
-            "Maio",
-            "Junho",
-            "Julho",
-            "Agosto",
-            "Setembro",
-            "Outubro",
-            "Novembro",
-            "Dezembro",
+            "Jan",
+            "Fev",
+            "Mar",
+            "Abr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Ago",
+            "Set",
+            "Out",
+            "Nov",
+            "Dez",
           ];
 
-    // Inicializa contadores
-    const totais: number[] = Array(view === "mensal" ? diasNoMes : 12).fill(0);
-    const avulsas: number[] = Array(view === "mensal" ? diasNoMes : 12).fill(0);
-    const sobDemanda: number[] = Array(view === "mensal" ? diasNoMes : 12).fill(
-      0
-    );
+    const totais = Array(labels.length).fill(0);
+    const avulsas = Array(labels.length).fill(0);
+    const sobDemanda = Array(labels.length).fill(0);
 
     coletas.forEach((coleta) => {
-      if (!coleta.dataInicio) return;
-      const data = new Date(coleta.dataInicio);
-      if (isNaN(data.getTime())) return;
+      try {
+        if (!coleta.dataCadastro) return;
 
-      const index = view === "mensal" ? data.getDate() - 1 : data.getMonth();
-      totais[index]++;
+        const data = new Date(coleta.dataCadastro);
+        if (isNaN(data.getTime())) return;
 
-      if (coleta.tipo === 1) {
-        avulsas[index]++;
-      } else if (coleta.tipo === 2) {
-        sobDemanda[index]++;
+        // Filtra apenas coletas do ano atual para o gráfico
+        if (data.getFullYear() !== anoAtual) return;
+
+        const index =
+          view === "mensal"
+            ? data.getMonth() === mesAtual
+              ? data.getDate() - 1
+              : -1
+            : data.getMonth();
+
+        if (index >= 0 && index < labels.length) {
+          totais[index]++;
+
+          if (coleta.tipo === 2) {
+            avulsas[index]++;
+          } else if (coleta.tipo === 1) {
+            sobDemanda[index]++;
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao processar coleta:", error);
       }
     });
 
@@ -68,24 +80,24 @@ export default function useGraficoColetas(
       labels,
       datasets: [
         {
-          label: "Total de Coletas",
+          label: "Total",
           data: totais,
-          backgroundColor: "rgba(54, 162, 235, 0.5)", // azul
+          backgroundColor: "rgba(54, 162, 235, 0.7)",
           borderColor: "rgba(54, 162, 235, 1)",
           borderWidth: 1,
         },
         {
-          label: "Coletas Avulsas",
+          label: "Avulsas",
           data: avulsas,
-          backgroundColor: "rgba(255, 206, 86, 0.5)", // amarelo
+          backgroundColor: "rgba(255, 206, 86, 0.7)",
           borderColor: "rgba(255, 206, 86, 1)",
           borderWidth: 1,
         },
         {
-          label: "Coletas Sob Demanda",
+          label: "Sob Demanda",
           data: sobDemanda,
-          backgroundColor: "rgba(255, 99, 132, 0.5)", // vermelho
-          borderColor: "rgba(255, 99, 132, 1)",
+          backgroundColor: "rgba(75, 192, 192, 0.7)",
+          borderColor: "rgba(75, 192, 192, 1)",
           borderWidth: 1,
         },
       ],

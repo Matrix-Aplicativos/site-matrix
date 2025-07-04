@@ -13,13 +13,32 @@ const codEmpresa = 1;
 
 interface ColetaExibida {
   id: number;
+  codConferenciaErp: string;
   descricao: string;
   data: string;
   origem: string;
   tipoMovimento: string;
   usuario: string;
   quantidade: number;
+  status: string;
+  alocOrigem: string;
+  alocDestino: string;
+  itens: {
+    descricaoItem: string;
+    qtdConferida: number;
+    codBarra: string;
+  }[];
 }
+
+const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
+  descricao: 1,
+  data: 2,
+  origem: 3,
+  tipoMovimento: 4,
+  status: 5,
+  usuario: 6,
+  quantidade: 7,
+};
 
 const ColetasPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
@@ -39,37 +58,86 @@ const ColetasPage: React.FC = () => {
   const { coletas, loading, error } = useGetColetas(
     codEmpresa,
     paginaAtual,
-    sortConfig?.key,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, 
     sortConfig?.direction
   );
-
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
 
-  // Converte os dados da API para o formato de exibição
+  const getOrigemText = (origem: string) => {
+    switch (origem) {
+      case "1":
+        return "Sob Demanda";
+      case "2":
+        return "Avulsa";
+      default:
+        return origem;
+    }
+  };
+
+  const getTipoMovimentoText = (tipoMovimento: string) => {
+    switch (tipoMovimento) {
+      case "1":
+        return "Transferência";
+      case "2":
+        return "Inventário";
+      default:
+        return tipoMovimento;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "1":
+        return "Pendente";
+      case "2":
+        return "Em Andamento";
+      case "3":
+        return "Concluída";
+      default:
+        return status;
+    }
+  };
+
   const convertColetas = (): ColetaExibida[] => {
     if (!coletas) return [];
     return coletas.map((c) => ({
       id: c.codConferencia,
+      codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
-      data: c.dataInicio,
-      origem: c.origem,
+      data: c.dataCadastro, // Changed from dataInicio to dataCadastro
+      origem: String(c.origem),
       tipoMovimento: String(c.tipo),
-      usuario: String(c.codUsuario),
+      usuario: c.usuario?.nome || "Usuário não informado",
       quantidade: c.itens.length,
+      status: c.status,
+      alocOrigem: c.alocOrigem?.descricao || "Não informada",
+      alocDestino: c.alocDestino?.descricao || "Não informada",
+      itens: c.itens.map((item) => ({
+        descricaoItem: item.descricaoItem,
+        qtdConferida: item.qtdConferida,
+        codBarra: item.codBarra,
+      })),
     }));
   };
 
-  // Atualiza dados filtrados
   useEffect(() => {
     let data = convertColetas();
 
     if (query) {
-      data = data.filter((coleta) =>
-        coleta[selectedFilter as keyof ColetaExibida]
-          ?.toString()
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      );
+      data = data.filter((coleta) => {
+        let fieldValue =
+          coleta[selectedFilter as keyof ColetaExibida]?.toString();
+
+        if (selectedFilter === "origem") {
+          fieldValue = getOrigemText(fieldValue);
+        } else if (selectedFilter === "tipoMovimento") {
+          fieldValue = getTipoMovimentoText(fieldValue);
+        } else if (selectedFilter === "status") {
+          fieldValue = getStatusText(fieldValue);
+        }
+
+        return fieldValue.toLowerCase().includes(query.toLowerCase());
+      });
     }
 
     if (dateRange.startDate && dateRange.endDate) {
@@ -127,6 +195,14 @@ const ColetasPage: React.FC = () => {
     setPaginaAtual((prev) => prev + 1);
   };
 
+  useEffect(() => {
+    if (loading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [loading, showLoading, hideLoading]);
+
   const columns = [
     { key: "descricao", label: "Descrição" },
     { key: "data", label: "Data" },
@@ -139,7 +215,7 @@ const ColetasPage: React.FC = () => {
       {loading && <LoadingOverlay />}
       <h1 className={styles.title}>COLETAS</h1>
       <SearchBar
-        placeholder="Qual coleta deseja buscar?"
+        placeholder="Qual conferência deseja buscar?"
         onSearch={handleSearch}
         onFilterClick={toggleFilterExpansion}
       />
@@ -154,7 +230,7 @@ const ColetasPage: React.FC = () => {
               <option value="descricao">Descrição</option>
               <option value="origem">Origem</option>
               <option value="tipoMovimento">Tipo de Movimento</option>
-              <option value="usuario">Usuário</option>
+              <option value="status">Status</option>
             </select>
           </div>
           <div className={styles.filterSection}>
@@ -198,8 +274,8 @@ const ColetasPage: React.FC = () => {
                 <tr>
                   <td>{row.descricao}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
-                  <td>{row.origem}</td>
-                  <td>{row.tipoMovimento}</td>
+                  <td>{getOrigemText(row.origem)}</td>
+                  <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>
                     <button
                       className={styles.expandButton}
@@ -213,23 +289,53 @@ const ColetasPage: React.FC = () => {
                   <tr className={styles.expandedRow}>
                     <td colSpan={columns.length + 1}>
                       <div className={styles.additionalInfo}>
-                        <div>
+                        <div className={styles.infoSection}>
+                          <h3>Informações Gerais</h3>
                           <p>
-                            <strong>Usuário:</strong> {row.usuario}
+                            <strong>Código ERP:</strong> {row.codConferenciaErp}
                           </p>
                           <p>
-                            <strong>Quantidade:</strong> {row.quantidade}
+                            <strong>Status:</strong> {getStatusText(row.status)}
+                          </p>
+                          <p>
+                            <strong>Alocação Origem:</strong> {row.alocOrigem}
+                          </p>
+                          <p>
+                            <strong>Alocação Destino:</strong> {row.alocDestino}
                           </p>
                         </div>
-                        <div>
+                        <div className={styles.infoSection}>
+                          <h3>Responsável</h3>
+                          <p>
+                            <strong>Nome:</strong> {row.usuario}
+                          </p>
                           <p>
                             <strong>Data:</strong>{" "}
-                            {new Date(row.data).toLocaleDateString("pt-BR")}
+                            {new Date(row.data).toLocaleString("pt-BR")}
                           </p>
-                          <p>
-                            <strong>Tipo de Movimento:</strong>{" "}
-                            {row.tipoMovimento}
-                          </p>
+                        </div>
+                        <div className={styles.infoSection}>
+                          <h3>Itens ({row.quantidade})</h3>
+                          <div className={styles.itemsContainer}>
+                            {row.itens.slice(0, 3).map((item, index) => (
+                              <div key={index} className={styles.itemCard}>
+                                <p>
+                                  <strong>Item:</strong> {item.descricaoItem}
+                                </p>
+                                <p>
+                                  <strong>Cód. Barras:</strong> {item.codBarra}
+                                </p>
+                                <p>
+                                  <strong>Qtd.:</strong> {item.qtdConferida}
+                                </p>
+                              </div>
+                            ))}
+                            {row.itens.length > 3 && (
+                              <div className={styles.moreItems}>
+                                +{row.itens.length - 3} itens...
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -238,7 +344,6 @@ const ColetasPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
-          {/* *** MODIFICATION START *** */}
           <tfoot>
             <tr>
               <td colSpan={columns.length + 1}>
@@ -262,7 +367,7 @@ const ColetasPage: React.FC = () => {
                     </button>
                   </div>
                   <div className={styles.itemsPerPageContainer}>
-                    <span>Coletas por página: </span>
+                    <span>Itens por página: </span>
                     <select
                       value={porPagina}
                       onChange={(e) => {
@@ -280,7 +385,6 @@ const ColetasPage: React.FC = () => {
               </td>
             </tr>
           </tfoot>
-          {/* *** MODIFICATION END *** */}
         </table>
       </div>
     </div>

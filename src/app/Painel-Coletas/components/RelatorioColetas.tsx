@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -34,28 +34,20 @@ export default function RelatorioColetas({
   view,
   onViewChange,
 }: RelatorioColetasProps) {
-  const codEmpresa = 1; // Substitua conforme necessário
-  const { coletas, loading } = useGetColetas(codEmpresa, 1); // página 1, sem ordenação
+  const codEmpresa = 1;
+
+  const { coletas, loading } = useGetColetas(
+    codEmpresa, 
+    1, 
+    undefined, 
+    undefined, 
+    undefined, 
+  );
   const chartData = useGraficoColetas(coletas, view);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
-
-  const monthlyLabels = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
+  const currentMonth = currentDate.toLocaleString("pt-BR", { month: "long" });
 
   const options = {
     responsive: true,
@@ -67,13 +59,14 @@ export default function RelatorioColetas({
         display: true,
         text:
           view === "mensal"
-            ? `Coletas por Dia - ${monthlyLabels[currentMonth]} ${currentYear}`
-            : `Coletas por Mês - Ano ${currentYear}`,
+            ? `Coletas por Dia - ${currentMonth} ${currentYear}`
+            : `Coletas por Mês - ${currentYear}`,
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
-            return `${context.dataset.label}: ${context.raw}`;
+          label: (context: any) => {
+            const label = context.dataset.label || "";
+            return `${label}: ${context.raw}`;
           },
         },
       },
@@ -82,52 +75,108 @@ export default function RelatorioColetas({
       x: {
         title: {
           display: true,
-          text: view === "mensal" ? "Dias do Mês" : "Meses do Ano",
+          text: view === "mensal" ? "Dias do Mês" : "Meses",
         },
       },
       y: {
         title: {
           display: true,
-          text: "Quantidade de Coletas",
+          text: "Quantidade",
         },
         beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
       },
     },
     maintainAspectRatio: false,
   };
 
-  return (
-    <div className="border">
-      <div style={{ padding: "20px" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
-          <h2>Relatório de Coletas</h2>
-          <div>
-            <button
-              className={`view-button ${view === "mensal" ? "active" : ""}`}
-              onClick={() => onViewChange("mensal")}
-            >
-              Mensal
-            </button>
-            <button
-              className={`view-button ${view === "anual" ? "active" : ""}`}
-              onClick={() => onViewChange("anual")}
-            >
-              Anual
-            </button>
-          </div>
-        </div>
 
-        <div style={{ height: "400px", position: "relative" }}>
-          {loading && <LoadingOverlay />}
-          {!loading && <Bar data={chartData} options={options} />}
+  const placeholderStyle: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    color: "#666",
+    textAlign: "center",
+  };
+
+  const renderChartContent = () => {
+    // Se estiver carregando, mostra o overlay e a mensagem
+    if (loading) {
+      return (
+        <>
+          <LoadingOverlay />
+          <div style={placeholderStyle}>Carregando...</div>
+        </>
+      );
+    }
+
+    // Após carregar, se não houver dados no gráfico, mostra a mensagem
+    if (!chartData?.labels?.length) {
+      return (
+        <div style={placeholderStyle}>
+          Nenhum dado disponível para gerar o relatório.
         </div>
+      );
+    }
+
+    // Se tudo estiver certo, renderiza o gráfico
+    return <Bar data={chartData} options={options} />;
+  };
+
+  return (
+    <div style={{ padding: "20px 0", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Relatório de Coletas</h2>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            style={{
+              padding: "8px 16px",
+              background: view === "mensal" ? "#007BFF" : "#f0f0f0",
+              color: view === "mensal" ? "white" : "#333",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+            onClick={() => onViewChange("mensal")}
+          >
+            Mensal
+          </button>
+          <button
+            style={{
+              padding: "8px 16px",
+              background: view === "anual" ? "#007BFF" : "#f0f0f0",
+              color: view === "anual" ? "white" : "#333",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+            onClick={() => onViewChange("anual")}
+          >
+            Anual
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          height: "400px",
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {renderChartContent()}
       </div>
     </div>
   );
