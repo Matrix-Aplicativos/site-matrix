@@ -159,97 +159,98 @@ const ClientesPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, rowIndex) => (
-              <React.Fragment key={row.codClienteErp}>
-                <tr
-                  className={
-                    row.status === "A"
-                      ? styles.statusActive
-                      : styles.statusInactive
-                  }
-                >
-                  <td>{row.codClienteErp}</td>
-                  <td>{row.razaoSocial}</td>
-                  <td>{row.nomeFantasia}</td>
-                  <td>{formatCnpjCpf(row.cnpjcpf)}</td>
-                  <td>
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleExpandRow(rowIndex)}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
-                  </td>
-                </tr>
-                {expandedRow === rowIndex && (
-                  <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length + 1}>
-                      <div className={styles.additionalInfo}>
-                        <div>
-                          <p>
-                            <strong>Razão Social:</strong> {row.razaoSocial}
-                          </p>
-                          <p>
-                            <strong>Nome Fantasia:</strong> {row.nomeFantasia}
-                          </p>
-                          <p>
-                            <strong>CNPJ/CPF:</strong>{" "}
-                            {formatCnpjCpf(row.cnpjcpf)}
-                          </p>
-                          <p>
-                            <strong>Telefone:</strong>{" "}
-                            {formatTelefone(row.fone1)}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Email:</strong> {row.email}
-                          </p>
-                          <p>
-                            <strong>Endereço:</strong> {row.endereco}
-                          </p>
-                          <p>
-                            <strong>Complemento:</strong>{" "}
-                            {row.complemento || "Nenhum"}
-                          </p>
-                          <p>
-                            <strong>CEP:</strong>{" "}
-                            {formatCep(row.cep) || "Não informado"}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Município (IBGE):</strong>{" "}
-                            {row.municipio.codMunicipio}
-                          </p>
-                          <p>
-                            <strong>Status:</strong> {row.status}
-                          </p>
-                          <p>
-                            <strong>Território:</strong>{" "}
-                            {row.territorio?.descricao ?? "N/A"}
-                          </p>
-                          <p>
-                            <strong>Rota:</strong>{" "}
-                            {row.rota?.descricao ?? "N/A"}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Segmento:</strong>{" "}
-                            {row.segmento?.descricao ?? "N/A"}
-                          </p>
-                          <p>
-                            <strong>Classificação:</strong>{" "}
-                            {row.classificacao?.descricao ?? "N/A"}
-                          </p>
-                        </div>
-                      </div>
+            {Array.isArray(sortedData) &&
+              sortedData.map((row, rowIndex) => (
+                <React.Fragment key={row.codClienteErp}>
+                  <tr
+                    className={
+                      row.status === "A"
+                        ? styles.statusActive
+                        : styles.statusInactive
+                    }
+                  >
+                    <td>{row.codClienteErp}</td>
+                    <td>{row.razaoSocial}</td>
+                    <td>{row.nomeFantasia}</td>
+                    <td>{formatCnpjCpf(row.cnpjcpf)}</td>
+                    <td>
+                      <button
+                        className={styles.expandButton}
+                        onClick={() => toggleExpandRow(rowIndex)}
+                      >
+                        {expandedRow === rowIndex ? "▲" : "▼"}
+                      </button>
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
+                  {expandedRow === rowIndex && (
+                    <tr className={styles.expandedRow}>
+                      <td colSpan={columns.length + 1}>
+                        <div className={styles.additionalInfo}>
+                          <div>
+                            <p>
+                              <strong>Razão Social:</strong> {row.razaoSocial}
+                            </p>
+                            <p>
+                              <strong>Nome Fantasia:</strong> {row.nomeFantasia}
+                            </p>
+                            <p>
+                              <strong>CNPJ/CPF:</strong>{" "}
+                              {formatCnpjCpf(row.cnpjcpf)}
+                            </p>
+                            <p>
+                              <strong>Telefone:</strong>{" "}
+                              {formatTelefone(row.fone1)}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Email:</strong> {row.email}
+                            </p>
+                            <p>
+                              <strong>Endereço:</strong> {row.endereco}
+                            </p>
+                            <p>
+                              <strong>Complemento:</strong>{" "}
+                              {row.complemento || "Nenhum"}
+                            </p>
+                            <p>
+                              <strong>CEP:</strong>{" "}
+                              {formatCep(row.cep) || "Não informado"}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Município (IBGE):</strong>{" "}
+                              {row.municipio.codMunicipio}
+                            </p>
+                            <p>
+                              <strong>Status:</strong> {row.status}
+                            </p>
+                            <p>
+                              <strong>Território:</strong>{" "}
+                              {row.territorio?.descricao ?? "N/A"}
+                            </p>
+                            <p>
+                              <strong>Rota:</strong>{" "}
+                              {row.rota?.descricao ?? "N/A"}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Segmento:</strong>{" "}
+                              {row.segmento?.descricao ?? "N/A"}
+                            </p>
+                            <p>
+                              <strong>Classificação:</strong>{" "}
+                              {row.classificacao?.descricao ?? "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
           </tbody>
           {/* *** MODIFICATION START *** */}
           <tfoot>

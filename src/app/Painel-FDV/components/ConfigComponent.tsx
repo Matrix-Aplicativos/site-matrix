@@ -11,7 +11,7 @@ const ConfigComponent = () => {
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>DISPOSITIVOS</h3>
+      <h3 className={styles.title}>CONFIGURAÇÕES</h3>
 
       <div className={styles.fieldGroup}>
         <label htmlFor="allowSalesWithDebts" className={styles.label}>
