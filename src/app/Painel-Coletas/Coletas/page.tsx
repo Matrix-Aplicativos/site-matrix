@@ -88,9 +88,9 @@ const ColetasPage: React.FC = () => {
   const getTipoMovimentoText = (tipoMovimento: string) => {
     switch (tipoMovimento) {
       case "1":
-        return "Transferência";
-      case "2":
         return "Inventário";
+      case "2":
+        return "Transferência";
       default:
         return tipoMovimento;
     }
