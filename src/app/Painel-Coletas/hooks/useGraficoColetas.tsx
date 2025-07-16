@@ -65,9 +65,9 @@ export default function useGraficoColetas(
         if (index >= 0 && index < labels.length) {
           totais[index]++;
 
-          if (coleta.tipo === 2) {
+          if (coleta.tipo === 1) {
             avulsas[index]++;
-          } else if (coleta.tipo === 1) {
+          } else if (coleta.tipo === 2) {
             sobDemanda[index]++;
           }
         }

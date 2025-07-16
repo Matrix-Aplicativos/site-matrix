@@ -3,11 +3,17 @@
 import React, { useEffect, useState } from "react";
 import SearchBar from "../../shared/components/SearchBar";
 import styles from "./Coletas.module.css";
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiTrash2,
+} from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
+import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
 
 const codEmpresa = 1;
 
@@ -58,9 +64,14 @@ const ColetasPage: React.FC = () => {
   const { coletas, loading, error } = useGetColetas(
     codEmpresa,
     paginaAtual,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, 
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction
   );
+  const {
+    deletarColeta,
+    loading: deleting,
+    error: deleteError,
+  } = deleteColetaAvulsaHook();
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
 
   const getOrigemText = (origem: string) => {
@@ -104,7 +115,7 @@ const ColetasPage: React.FC = () => {
       id: c.codConferencia,
       codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
-      data: c.dataCadastro, // Changed from dataInicio to dataCadastro
+      data: c.dataCadastro,
       origem: String(c.origem),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
@@ -118,6 +129,17 @@ const ColetasPage: React.FC = () => {
         codBarra: item.codBarra,
       })),
     }));
+  };
+
+  const handleDeleteColeta = async (codColeta: number) => {
+    if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
+      try {
+        await deletarColeta(codEmpresa, codColeta);
+        alert("Coleta excluída com sucesso!");
+      } catch (error) {
+        alert(`Erro ao excluir coleta`);
+      }
+    }
   };
 
   useEffect(() => {
@@ -265,6 +287,7 @@ const ColetasPage: React.FC = () => {
                   {col.label} <FaSort style={{ marginLeft: "0.5em" }} />
                 </th>
               ))}
+              <th>Ações</th>
               <th></th>
             </tr>
           </thead>
@@ -276,6 +299,20 @@ const ColetasPage: React.FC = () => {
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
+                  <td className={styles.actionsCell}>
+                    {row.origem === "2" && (
+                      <button
+                        className={styles.deleteButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteColeta(row.id);
+                        }}
+                        title="Excluir coleta avulsa"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    )}
+                  </td>
                   <td>
                     <button
                       className={styles.expandButton}
@@ -287,7 +324,7 @@ const ColetasPage: React.FC = () => {
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length + 1}>
+                    <td colSpan={columns.length + 2}>
                       <div className={styles.additionalInfo}>
                         <div className={styles.infoSection}>
                           <h3>Informações Gerais</h3>
@@ -346,7 +383,7 @@ const ColetasPage: React.FC = () => {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={columns.length + 1}>
+              <td colSpan={columns.length + 2}>
                 <div className={styles.paginationContainer}>
                   <div className={styles.paginationControls}>
                     <button

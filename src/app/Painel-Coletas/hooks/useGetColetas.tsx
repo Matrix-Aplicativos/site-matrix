@@ -109,7 +109,7 @@ const useGetColetas = (
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
-        orderBy: orderBy || "codColeta", // Updated from codColeta to codConferencia
+        orderBy: orderBy || "codColeta", 
         sortDirection: sortDirection || "desc",
       });
 

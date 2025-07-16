@@ -19,6 +19,10 @@ import Logo from "./img/Logo.svg";
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
+import HomeColeta from "./img/home-coleta.png";
+import CapaColeta from "./img/capa-coleta.png";
+import DemandasColeta from "./img/demandas-coleta.png";
+import ColetasColeta from "./img/coletas-coleta.png";
 import HomeFDV from "./img/home-fdv.png";
 import CapaFDV from "./img/capa-fdv.png";
 import ProdutosFDV from "./img/produtos-fdv.png";
@@ -49,11 +53,19 @@ export default function SiteMatrix() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("vendas");
 
-  const [carouselImages] = useState([CapaFDV, HomeFDV, ProdutosFDV, ClientesFDV, PedidosFDV]);
+  const [carouselImages] = useState([
+    CapaFDV,
+    HomeFDV,
+    ProdutosFDV,
+    ClientesFDV,
+    PedidosFDV,
+  ]);
   const [carouselImagesColetas] = useState([
-  Coleta, 
-  Scanner,
-]);
+    CapaColeta,
+    HomeColeta,
+    DemandasColeta,
+    ColetasColeta,
+  ]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -650,7 +662,10 @@ export default function SiteMatrix() {
               <Link href="https://www.instagram.com/matrixxapp" target="_blank">
                 <FaInstagram className="text-2xl hover:text-gray-400" />
               </Link>
-              <Link href="https://www.linkedin.com" target="_blank">
+              <Link
+                href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
+                target="_blank"
+              >
                 <FaLinkedin className="text-2xl hover:text-gray-400" />
               </Link>
               <Link href="https://wa.me/5565992233566" target="_blank">

@@ -47,8 +47,9 @@ export default function HomePage() {
 
         if (data.getFullYear() === anoAtual && data.getMonth() === mesAtual) {
           totalAtual++;
-          if (c.tipo === 2) avulsas++; // Avulsas
-          if (c.tipo === 1) sobDemanda++; // Sob Demanda
+          if (c.tipo === 1) avulsas++; // Avulsas
+          if (c.tipo === 2
+          ) sobDemanda++; // Sob Demanda
         } else if (
           data.getFullYear() === anoAtual &&
           data.getMonth() === mesAtual - 1
