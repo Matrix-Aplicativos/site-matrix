@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "../../shared/components/SearchBar";
+import SearchBar from "../components/SearchBar";
 import styles from "./Coletas.module.css";
 import {
   FiChevronLeft,
