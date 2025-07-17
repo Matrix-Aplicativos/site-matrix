@@ -8,6 +8,7 @@ import {
   FiChevronRight,
   FiChevronsLeft,
   FiTrash2,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
@@ -22,6 +23,7 @@ interface ColetaExibida {
   codConferenciaErp: string;
   descricao: string;
   data: string;
+  dataFim: string;
   origem: string;
   tipoMovimento: string;
   usuario: string;
@@ -61,7 +63,7 @@ const ColetasPage: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  const { coletas, loading, error } = useGetColetas(
+  const { coletas, loading, error, refetch } = useGetColetas(
     codEmpresa,
     paginaAtual,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -116,6 +118,7 @@ const ColetasPage: React.FC = () => {
       codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
       data: c.dataCadastro,
+      dataFim: c.dataFim,
       origem: String(c.origem),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
@@ -136,6 +139,7 @@ const ColetasPage: React.FC = () => {
       try {
         await deletarColeta(codEmpresa, codColeta);
         alert("Coleta excluída com sucesso!");
+        refetch();
       } catch (error) {
         alert(`Erro ao excluir coleta`);
       }
@@ -236,11 +240,24 @@ const ColetasPage: React.FC = () => {
     <div className={styles.container}>
       {loading && <LoadingOverlay />}
       <h1 className={styles.title}>COLETAS</h1>
-      <SearchBar
-        placeholder="Qual conferência deseja buscar?"
-        onSearch={handleSearch}
-        onFilterClick={toggleFilterExpansion}
-      />
+      <div className={styles.searchContainer}>
+        <SearchBar
+          placeholder="Qual conferência deseja buscar?"
+          onSearch={handleSearch}
+          onFilterClick={toggleFilterExpansion}
+        />
+        <button
+          className={styles.refreshButton}
+          onClick={() => refetch()}
+          disabled={loading}
+          title="Atualizar coletas"
+        >
+          <FiRefreshCw
+            style={{ color: "#1769e3" }}
+            className={loading ? styles.spinning : ""}
+          />
+        </button>
+      </div>
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -300,7 +317,8 @@ const ColetasPage: React.FC = () => {
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td className={styles.actionsCell}>
-                    {row.origem === "2" && (
+                    {/* 👇 AJUSTE A CONDIÇÃO AQUI 👇 */}
+                    {row.origem === "2" && !row.dataFim && (
                       <button
                         className={styles.deleteButton}
                         onClick={(e) => {

@@ -216,16 +216,12 @@ const DispositivosPage: React.FC = () => {
         <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
-            <p>Dispositivos Ativos:</p>
-            <span className={styles.situacaoValue}>{dispositivosAtivos}</span>
-          </div>
-
-          <div className={styles.situacaoItem}>
             <p>Total de Dispositivos:</p>
             <span className={styles.situacaoValue}>
               {dispositivos?.length ?? 0}
             </span>
           </div>
+
           {!loadingConfig && (
             <div className={styles.situacaoItem}>
               <p>Dispositivos Disponiveis:</p>
@@ -234,6 +230,10 @@ const DispositivosPage: React.FC = () => {
               </span>
             </div>
           )}
+          <div className={styles.situacaoItem}>
+            <p>Máximo de Dispositivos:</p>
+            <span className={styles.situacaoValue}>{maximoDispositivos}</span>
+          </div>
         </div>
       </div>
     </div>
