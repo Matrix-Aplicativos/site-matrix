@@ -15,9 +15,14 @@ import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
+import { getCookie } from "cookies-next";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import { getUserFromToken } from "@/app/getUserFromToken";
 
 const DispositivosPage: React.FC = () => {
-  const codEmpresa = 1;
+  const token = getCookie("token");
+  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1;
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const { showLoading, hideLoading } = useLoading();
