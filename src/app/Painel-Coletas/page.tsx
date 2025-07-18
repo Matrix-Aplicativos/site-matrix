@@ -6,11 +6,16 @@ import { useLoading } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
 import styles from "./Home.module.css";
 import useGetColetas from "./hooks/useGetColetas";
+import { getCookie } from "cookies-next";
+import useGetLoggedUser from "./hooks/useGetLoggedUser";
+import { getUserFromToken } from "../getUserFromToken";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
-  const codEmpresa = 1;
+  const token = getCookie("token");
+  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1; 
   const { coletas, loading } = useGetColetas(codEmpresa, 1);
 
   const {

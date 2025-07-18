@@ -15,8 +15,9 @@ import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
 import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
-
-const codEmpresa = 1;
+import { getCookie } from "cookies-next";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
 
 interface ColetaExibida {
   id: number;
@@ -62,6 +63,9 @@ const ColetasPage: React.FC = () => {
   const [filteredData, setFilteredData] = useState<ColetaExibida[]>([]);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const token = getCookie("token");
+  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1; 
 
   const { coletas, loading, error, refetch } = useGetColetas(
     codEmpresa,
