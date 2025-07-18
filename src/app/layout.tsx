@@ -70,7 +70,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      {" "}
       <head>
         <link
           rel="apple-touch-icon"
@@ -115,7 +114,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-white text-gray-800 antialiased">
+      <body className="min-h-screen bg-white text-gray-800 antialiased" style={{background: 'white'}}>
         {children}
 
         <noscript>

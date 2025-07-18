@@ -244,7 +244,7 @@ export default function SiteMatrix() {
   return (
     <div className="font-roboto">
       <header
-        className={`bg-blue-600 text-white py-4 fixed w-full top-0 z-50 transition-transform duration-300 ${
+        className={`bg-[#1769E3] text-white py-4 fixed w-full top-0 z-50 transition-transform duration-300 ${
           showHeader ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -268,7 +268,7 @@ export default function SiteMatrix() {
               Sobre nós
             </Link>
 
-            <div className="flex space-x-2 bg-blue-500 p-1 rounded-lg">
+            <div className="flex space-x-2 bg-blue-600 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("vendas")}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
@@ -346,7 +346,7 @@ export default function SiteMatrix() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-2 rounded-lg ${
-                  activeTab === "vendas" ? "bg-blue-700" : "bg-blue-500"
+                  activeTab === "vendas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
                 <FaShoppingCart className="inline mr-2" />
@@ -358,7 +358,7 @@ export default function SiteMatrix() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-2 rounded-lg ${
-                  activeTab === "coletas" ? "bg-blue-700" : "bg-blue-500"
+                  activeTab === "coletas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
                 <FaBarcode className="inline mr-2" />
@@ -400,7 +400,7 @@ export default function SiteMatrix() {
       {/* Seção Sobre Nós (comum a ambos) */}
       <section
         id="sobre-nos"
-        className="bg-gradient-to-t from-blue-900 to-blue-400 text-white pt-24 pb-8"
+        className="bg-gradient-to-t from-[#0C48ED] to-[#1769E3] text-white pt-24 pb-8"
       >
         <div className="container mx-auto flex flex-col lg:flex-row items-center px-4">
           <div className="lg:w-1/2">
@@ -645,7 +645,7 @@ export default function SiteMatrix() {
         </div>
       </section>
 
-      <footer className="bg-blue-600 text-white py-4">
+      <footer className="bg-[#1769E3] text-white py-4">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4 gap-4">
           <div className="flex items-center">
             <Image

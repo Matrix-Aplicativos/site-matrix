@@ -20,8 +20,7 @@ export default function PainelLayout({
     pathname === "/Painel-Coletas/RedefinirSenha";
 
   return (
-    <html lang="pt-br">
-      <body
+      <div
         className={`painel-body ${roboto.className}`}
         style={{ display: "flex" }}
       >
@@ -38,7 +37,6 @@ export default function PainelLayout({
           </main>
           <LoadingOverlay />
         </LoadingProvider>
-      </body>
-    </html>
+      </div>
   );
 }

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-html, .painel-body {
+.painel-body {
   height: 100%;
   margin: 0;
   overflow: hidden;
