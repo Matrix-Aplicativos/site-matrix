@@ -11,10 +11,10 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-
 import useGetColetas from "../hooks/useGetColetas";
 import useGraficoColetas from "../hooks/useGraficoColetas";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
+import useCurrentCompany from "../hooks/useCurrentCompany";
 
 ChartJS.register(
   CategoryScale,
@@ -34,21 +34,25 @@ export default function RelatorioColetas({
   view,
   onViewChange,
 }: RelatorioColetasProps) {
-  const codEmpresa = 1;
+  // Carrega a empresa dinamicamente
+  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
 
-  const { coletas, loading } = useGetColetas(
-    codEmpresa, 
-    1, 
-    undefined, 
-    undefined, 
-    undefined, 
+  // Busca as coletas apenas quando a empresa estiver carregada
+  const { coletas, loading: coletasLoading } = useGetColetas(
+    codEmpresa || 0, // Usa 0 como fallback
+    1
   );
+
+  // Gera os dados do gráfico
   const chartData = useGraficoColetas(coletas, view);
 
+  // Estados combinados
+  const isLoading = companyLoading || coletasLoading;
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.toLocaleString("pt-BR", { month: "long" });
 
+  // Opções do gráfico
   const options = {
     responsive: true,
     plugins: {
@@ -92,7 +96,6 @@ export default function RelatorioColetas({
     maintainAspectRatio: false,
   };
 
-
   const placeholderStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "center",
@@ -103,17 +106,26 @@ export default function RelatorioColetas({
   };
 
   const renderChartContent = () => {
-    // Se estiver carregando, mostra o overlay e a mensagem
-    if (loading) {
+    // Estado de carregamento
+    if (isLoading) {
       return (
         <>
           <LoadingOverlay />
-          <div style={placeholderStyle}>Carregando...</div>
+          <div style={placeholderStyle}>Carregando dados...</div>
         </>
       );
     }
 
-    // Após carregar, se não houver dados no gráfico, mostra a mensagem
+    // Sem empresa vinculada
+    if (!codEmpresa) {
+      return (
+        <div style={placeholderStyle}>
+          Nenhuma empresa vinculada ao usuário.
+        </div>
+      );
+    }
+
+    // Sem dados para exibir
     if (!chartData?.labels?.length) {
       return (
         <div style={placeholderStyle}>
@@ -122,7 +134,7 @@ export default function RelatorioColetas({
       );
     }
 
-    // Se tudo estiver certo, renderiza o gráfico
+    // Renderiza o gráfico
     return <Bar data={chartData} options={options} />;
   };
 

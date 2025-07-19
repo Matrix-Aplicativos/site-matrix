@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import SearchBar from "../components/SearchBar";
 import styles from "./Coletas.module.css";
 import {
@@ -15,9 +15,7 @@ import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
 import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useCurrentCompany from "../hooks/useCurrentCompany";
 
 interface ColetaExibida {
   id: number;
@@ -50,7 +48,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
 };
 
 const ColetasPage: React.FC = () => {
-  const { showLoading, hideLoading } = useLoading();
+  // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -60,26 +58,109 @@ const ColetasPage: React.FC = () => {
     key: keyof ColetaExibida;
     direction: "asc" | "desc";
   } | null>(null);
-  const [filteredData, setFilteredData] = useState<ColetaExibida[]>([]);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const token = getCookie("token");
-  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
-  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1; 
 
-  const { coletas, loading, error, refetch } = useGetColetas(
+  // Contexto e hooks
+  const { showLoading, hideLoading } = useLoading();
+  const {
     codEmpresa,
+    loading: companyLoading,
+  } = useCurrentCompany();
+
+  // Busca de coletas
+  const {
+    coletas,
+    loading: coletasLoading,
+    error: coletasError,
+    refetch,
+  } = useGetColetas(
+    codEmpresa || 0,
     paginaAtual,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction
   );
+
+  // Hook para deletar coletas
   const {
     deletarColeta,
     loading: deleting,
     error: deleteError,
   } = deleteColetaAvulsaHook();
+
+  // Estados combinados
+  const isLoading = companyLoading || coletasLoading || deleting;
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
 
+  // Filtragem e ordenação
+  const filteredData = useMemo(() => {
+    if (!coletas) return [];
+
+    const convertedData = coletas.map((c) => ({
+      id: c.codConferencia,
+      codConferenciaErp: c.codConferenciaErp,
+      descricao: c.descricao,
+      data: c.dataCadastro,
+      dataFim: c.dataFim,
+      origem: String(c.origem),
+      tipoMovimento: String(c.tipo),
+      usuario: c.usuario?.nome || "Usuário não informado",
+      quantidade: c.itens.length,
+      status: c.status,
+      alocOrigem: c.alocOrigem?.descricao || "Não informada",
+      alocDestino: c.alocDestino?.descricao || "Não informada",
+      itens: c.itens.map((item) => ({
+        descricaoItem: item.descricaoItem,
+        qtdConferida: item.qtdConferida,
+        codBarra: item.codBarra,
+      })),
+    }));
+
+    let result = [...convertedData];
+
+    // Filtro por texto
+    if (query) {
+      result = result.filter((coleta) => {
+        let fieldValue =
+          coleta[selectedFilter as keyof ColetaExibida]?.toString();
+
+        if (selectedFilter === "origem") fieldValue = getOrigemText(fieldValue);
+        else if (selectedFilter === "tipoMovimento")
+          fieldValue = getTipoMovimentoText(fieldValue);
+        else if (selectedFilter === "status")
+          fieldValue = getStatusText(fieldValue);
+
+        return fieldValue.toLowerCase().includes(query.toLowerCase());
+      });
+    }
+
+    // Filtro por data
+    if (dateRange.startDate && dateRange.endDate) {
+      result = result.filter((coleta) => {
+        const coletaDate = new Date(coleta.data);
+        return (
+          coletaDate >= new Date(dateRange.startDate) &&
+          coletaDate <= new Date(dateRange.endDate)
+        );
+      });
+    }
+
+    // Ordenação
+    if (sortConfig) {
+      result.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [coletas, query, dateRange, selectedFilter, sortConfig]);
+
+  // Funções auxiliares
   const getOrigemText = (origem: string) => {
     switch (origem) {
       case "1":
@@ -115,74 +196,19 @@ const ColetasPage: React.FC = () => {
     }
   };
 
-  const convertColetas = (): ColetaExibida[] => {
-    if (!coletas) return [];
-    return coletas.map((c) => ({
-      id: c.codConferencia,
-      codConferenciaErp: c.codConferenciaErp,
-      descricao: c.descricao,
-      data: c.dataCadastro,
-      dataFim: c.dataFim,
-      origem: String(c.origem),
-      tipoMovimento: String(c.tipo),
-      usuario: c.usuario?.nome || "Usuário não informado",
-      quantidade: c.itens.length,
-      status: c.status,
-      alocOrigem: c.alocOrigem?.descricao || "Não informada",
-      alocDestino: c.alocDestino?.descricao || "Não informada",
-      itens: c.itens.map((item) => ({
-        descricaoItem: item.descricaoItem,
-        qtdConferida: item.qtdConferida,
-        codBarra: item.codBarra,
-      })),
-    }));
-  };
-
   const handleDeleteColeta = async (codColeta: number) => {
     if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
       try {
-        await deletarColeta(codEmpresa, codColeta);
+        await deletarColeta(codEmpresa || 0, codColeta);
         alert("Coleta excluída com sucesso!");
         refetch();
       } catch (error) {
-        alert(`Erro ao excluir coleta`);
+        alert("Erro ao excluir coleta");
       }
     }
   };
 
-  useEffect(() => {
-    let data = convertColetas();
-
-    if (query) {
-      data = data.filter((coleta) => {
-        let fieldValue =
-          coleta[selectedFilter as keyof ColetaExibida]?.toString();
-
-        if (selectedFilter === "origem") {
-          fieldValue = getOrigemText(fieldValue);
-        } else if (selectedFilter === "tipoMovimento") {
-          fieldValue = getTipoMovimentoText(fieldValue);
-        } else if (selectedFilter === "status") {
-          fieldValue = getStatusText(fieldValue);
-        }
-
-        return fieldValue.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-
-    if (dateRange.startDate && dateRange.endDate) {
-      data = data.filter((coleta) => {
-        const coletaDate = new Date(coleta.data);
-        return (
-          coletaDate >= new Date(dateRange.startDate) &&
-          coletaDate <= new Date(dateRange.endDate)
-        );
-      });
-    }
-
-    setFilteredData(data);
-  }, [coletas, query, dateRange, selectedFilter]);
-
+  // Handlers
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -190,27 +216,20 @@ const ColetasPage: React.FC = () => {
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setDateRange((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
   };
 
   const sortData = (key: keyof ColetaExibida) => {
     let direction: "asc" | "desc" = "asc";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "asc"
-    ) {
+    if (sortConfig?.key === key && sortConfig.direction === "asc") {
       direction = "desc";
     }
     setSortConfig({ key, direction });
   };
 
   const toggleExpandRow = (index: number) => {
-    setExpandedRow((prevRow) => (prevRow === index ? null : index));
+    setExpandedRow((prev) => (prev === index ? null : index));
   };
 
   const toggleFilterExpansion = () => {
@@ -225,14 +244,31 @@ const ColetasPage: React.FC = () => {
     setPaginaAtual((prev) => prev + 1);
   };
 
+  // Efeitos
   useEffect(() => {
-    if (loading) {
+    if (isLoading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]);
+  }, [isLoading, showLoading, hideLoading]);
 
+  
+  if (coletasError) {
+    return (
+      <div className={styles.container}>
+        <h2>Erro ao Carregar Coletas</h2>
+        <button onClick={refetch}>Tentar novamente</button>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading || !codEmpresa) {
+    return <div className={styles.container}>Carregando dados...</div>;
+  }
+
+  // Colunas da tabela
   const columns = [
     { key: "descricao", label: "Descrição" },
     { key: "data", label: "Data" },
@@ -242,8 +278,9 @@ const ColetasPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {loading && <LoadingOverlay />}
+      <LoadingOverlay />
       <h1 className={styles.title}>COLETAS</h1>
+
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual conferência deseja buscar?"
@@ -252,16 +289,13 @@ const ColetasPage: React.FC = () => {
         />
         <button
           className={styles.refreshButton}
-          onClick={() => refetch()}
-          disabled={loading}
+          onClick={refetch}
           title="Atualizar coletas"
         >
-          <FiRefreshCw
-            style={{ color: "#1769e3" }}
-            className={loading ? styles.spinning : ""}
-          />
+          <FiRefreshCw className={isLoading ? styles.spinning : ""} />
         </button>
       </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -321,7 +355,6 @@ const ColetasPage: React.FC = () => {
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td className={styles.actionsCell}>
-                    {/* 👇 AJUSTE A CONDIÇÃO AQUI 👇 */}
                     {row.origem === "2" && !row.dataFim && (
                       <button
                         className={styles.deleteButton}

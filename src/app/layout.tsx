@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientLayoutWrapper from "./clienteLayoutWrapper"; // 1. IMPORTE o novo componente
 
 export const metadata: Metadata = {
   title: {
     default: "Matrix Apps - Soluções em Aplicativos para Vendas e Logística",
-    template: "%s | Matrix Apps", 
+    template: "%s | Matrix Apps",
   },
   description:
     "Aplicativo de força de vendas offline e gestão de coletas para empresas. Aumente produtividade, controle pedidos e otimize logística com tecnologia integrada ao seu ERP.",
+  // ... (o resto do seu objeto metadata continua igual)
   keywords: [
     "força de vendas",
     "aplicativo de vendas",
@@ -32,11 +34,11 @@ export const metadata: Metadata = {
     title: "Matrix Apps - Transforme suas Vendas e Coletas",
     description:
       "Soluções em aplicativos móveis para equipes de vendas e gestão logística.",
-    url: "https://www.matrixapps.com.br", 
+    url: "https://www.matrixapps.com.br",
     siteName: "Matrix Apps",
     images: [
       {
-        url: "https://www.matrixapps.com.br/img", 
+        url: "https://www.matrixapps.com.br/img",
         width: 1200,
         height: 630,
         alt: "Matrix Apps - Soluções em Aplicativos",
@@ -50,16 +52,16 @@ export const metadata: Metadata = {
     title: "Matrix Apps - Soluções em Aplicativos para Vendas e Logística",
     description:
       "Aplicativo de força de vendas offline e gestão de coletas para empresas.",
-    images: ["https://www.matrixapps.com.br/images/twitter-card.jpg"], 
+    images: ["https://www.matrixapps.com.br/images/twitter-card.jpg"],
   },
   verification: {
-    google: "SEU_GOOGLE_VERIFICATION_CODE", // Para Google Search Console
+    google: "SEU_GOOGLE_VERIFICATION_CODE",
     other: {
-      "msvalidate.01": "SEU_BING_VERIFICATION_CODE", 
+      "msvalidate.01": "SEU_BING_VERIFICATION_CODE",
     },
   },
   alternates: {
-    canonical: "https://www.matrixapps.com.br", 
+    canonical: "https://www.matrixapps.com.br",
   },
 };
 
@@ -114,8 +116,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-white text-gray-800 antialiased" style={{background: 'white'}}>
-        {children}
+      <body
+        className="min-h-screen bg-white text-gray-800 antialiased"
+        style={{ background: "white" }}
+      >
+        {/* 2. USE o wrapper em volta dos children */}
+        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 
         <noscript>
           <iframe

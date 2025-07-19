@@ -6,18 +6,34 @@ import { useLoading } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
 import styles from "./Home.module.css";
 import useGetColetas from "./hooks/useGetColetas";
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "./hooks/useGetLoggedUser";
-import { getUserFromToken } from "../getUserFromToken";
+import useCurrentCompany from "./hooks/useCurrentCompany";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
-  const token = getCookie("token");
-  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
-  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1; 
-  const { coletas, loading } = useGetColetas(codEmpresa, 1);
 
+  // Get company data
+  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+
+  // Get collection data only when company is available
+  const { coletas, loading: coletasLoading } = useGetColetas(
+    codEmpresa || 0,
+    1
+  );
+
+  // Combined loading state
+  const isLoading = companyLoading || coletasLoading;
+
+  // Loading effect
+  useEffect(() => {
+    if (isLoading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [isLoading, showLoading, hideLoading]);
+
+  // Calculate statistics
   const {
     totalColetas,
     coletasAvulsas,
@@ -25,6 +41,7 @@ export default function HomePage() {
     coletasAnterior,
     variacaoColetas,
   } = useMemo(() => {
+    // Default empty state
     if (!coletas || coletas.length === 0) {
       return {
         totalColetas: 0,
@@ -50,22 +67,25 @@ export default function HomePage() {
         const data = new Date(c.dataCadastro);
         if (isNaN(data.getTime())) return;
 
+        // Current month collections
         if (data.getFullYear() === anoAtual && data.getMonth() === mesAtual) {
           totalAtual++;
-          if (c.tipo === 1) avulsas++; // Avulsas
-          if (c.tipo === 2
-          ) sobDemanda++; // Sob Demanda
-        } else if (
+          if (c.tipo === 1) avulsas++;
+          if (c.tipo === 2) sobDemanda++;
+        }
+        // Previous month collections (for comparison)
+        else if (
           data.getFullYear() === anoAtual &&
           data.getMonth() === mesAtual - 1
         ) {
           totalAnterior++;
         }
       } catch (error) {
-        console.error("Erro ao processar data:", error);
+        console.error("Date processing error:", error);
       }
     });
 
+    // Calculate variation
     const variacao =
       totalAnterior > 0
         ? ((totalAtual - totalAnterior) / totalAnterior) * 100
@@ -82,27 +102,34 @@ export default function HomePage() {
     };
   }, [coletas]);
 
-  useEffect(() => {
-    if (loading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
-  }, [loading, showLoading, hideLoading]);
+  // Loading state
+  if (isLoading) {
+    return <div className={styles.container}>Loading dashboard...</div>;
+  }
+
+  // No company assigned
+  if (!codEmpresa) {
+    return (
+      <div className={styles.container}>
+        <h2>No Company Assigned</h2>
+        <p>Your account is not associated with any company.</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>PAINEL DE CONTROLE</h1>
+      <h1 className={styles.title}>SEU PAINEL DE CONTROLE</h1>
 
       <div className={styles.border}>
         <RelatorioColetas view={view} onViewChange={setView} />
       </div>
 
-      {/* Estatísticas */}
+      {/* Statistics Section */}
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
-          {/* Total de Coletas */}
+          {/* Total Collections */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{totalColetas}</span>
@@ -120,12 +147,12 @@ export default function HomePage() {
                   vs mês anterior
                 </span>
               ) : (
-                <span className={styles.comparison}>Sem dados anteriores</span>
+                <span className={styles.comparison}>No previous data</span>
               )}
             </div>
           </div>
 
-          {/* Coletas Avulsas */}
+          {/* Spontaneous Collections */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{coletasAvulsas}</span>
@@ -140,7 +167,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Coletas Sob Demanda */}
+          {/* On-Demand Collections */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{coletasSobDemanda}</span>

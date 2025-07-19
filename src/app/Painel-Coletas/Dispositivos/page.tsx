@@ -15,36 +15,60 @@ import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { getUserFromToken } from "@/app/getUserFromToken";
+import useCurrentCompany from "../hooks/useCurrentCompany";
 
 const DispositivosPage: React.FC = () => {
-  const token = getCookie("token");
-  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
-  const codEmpresa = usuario?.empresas[0]?.codEmpresa || 1;
+  // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
-  const { showLoading, hideLoading } = useLoading();
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
 
-  const { dispositivos, loading, error, refetch } = useGetDispositivos(
-    codEmpresa,
+  // Carrega empresa dinamicamente
+  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+
+  // Contexto de loading
+  const { showLoading, hideLoading } = useLoading();
+
+  // Busca de dados
+  const {
+    dispositivos,
+    loading: dispositivosLoading,
+    error: dispositivosError,
+    refetch,
+  } = useGetDispositivos(
+    codEmpresa || 0, // Fallback para 0 se não houver empresa
     paginaAtual,
     sortConfig?.key,
     sortConfig?.direction
   );
 
-  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
+  // Hooks de ações
+  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
-  const { maximoDispositivos, loading: loadingConfig } =
-    useConfiguracao(codEmpresa);
+  const { maximoDispositivos, loading: loadingConfig } = useConfiguracao(
+    codEmpresa || 0
+  );
 
+  // Estados combinados
+  const isLoading = companyLoading || dispositivosLoading || loadingConfig;
   const hasMoreData = dispositivos ? dispositivos.length >= porPagina : false;
 
+  // Contadores de status
+  const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
+  const dispositivosInativos =
+    dispositivos?.filter((d) => !d.ativo).length ?? 0;
+
+  // Colunas da tabela
+  const columns = [
+    { key: "nomeDispositivo", label: "Nome" },
+    { key: "codDispositivo", label: "Código" },
+    { key: "ativo", label: "Status" },
+  ];
+
+  // Handlers
   const handleSort = (key: string) => {
     const direction =
       sortConfig?.key === key && sortConfig.direction === "asc"
@@ -68,7 +92,7 @@ const DispositivosPage: React.FC = () => {
     await ativarDispositivo({
       codDispositivo,
       nomeDispositivo,
-      codEmpresaApi: codEmpresa,
+      codEmpresaApi: codEmpresa || 0,
       ativo: !statusAtual,
     });
     await refetch();
@@ -77,23 +101,46 @@ const DispositivosPage: React.FC = () => {
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
   const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
 
+  // Efeitos
   useEffect(() => {
-    if (loading) {
+    if (isLoading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]);
+  }, [isLoading, showLoading, hideLoading]);
 
-  const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
-  const dispositivosInativos =
-    dispositivos?.filter((d) => !d.ativo).length ?? 0;
+  if (dispositivosError) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>DISPOSITIVOS</h1>
+        </div>
+        <div className={styles.errorContainer}>
+          <p className={styles.error}>
+            Erro ao carregar dispositivos: {dispositivosError}
+          </p>
+          <button onClick={refetch} className={styles.refreshButton}>
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const columns = [
-    { key: "nomeDispositivo", label: "Nome" },
-    { key: "codDispositivo", label: "Código" },
-    { key: "ativo", label: "Status" },
-  ];
+  // Sem empresa vinculada
+  if (!codEmpresa && !companyLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>DISPOSITIVOS</h1>
+        </div>
+        <div className={styles.errorContainer}>
+          <p>Nenhuma empresa vinculada ao usuário.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -103,10 +150,9 @@ const DispositivosPage: React.FC = () => {
 
       <div className={styles.mainContent}>
         <div className={styles.tableContainer}>
-          {loading && <p>Carregando dispositivos...</p>}
-          {error && <p className={styles.error}>{error}</p>}
+          {isLoading && <p>Carregando dispositivos...</p>}
 
-          {!loading && dispositivos && (
+          {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -229,7 +275,7 @@ const DispositivosPage: React.FC = () => {
 
           {!loadingConfig && (
             <div className={styles.situacaoItem}>
-              <p>Dispositivos Disponiveis:</p>
+              <p>Dispositivos Disponíveis:</p>
               <span className={styles.situacaoValue}>
                 {maximoDispositivos - dispositivosAtivos}{" "}
               </span>
