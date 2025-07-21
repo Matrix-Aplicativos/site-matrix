@@ -148,7 +148,7 @@ export default function RelatorioColetas({
           marginBottom: "20px",
         }}
       >
-        <h2 style={{ margin: 0 }}>Relatório de Coletas</h2>
+        <h2 style={{ marginLeft: 20, color: "#000" }}>Relatório de Coletas</h2>
         <div style={{ display: "flex", gap: "10px" }}>
           <button
             style={{

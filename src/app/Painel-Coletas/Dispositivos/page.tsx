@@ -7,6 +7,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronsLeft,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import styles from "./Dispositivos.module.css";
@@ -42,7 +43,8 @@ const DispositivosPage: React.FC = () => {
     codEmpresa || 0, // Fallback para 0 se não houver empresa
     paginaAtual,
     sortConfig?.key,
-    sortConfig?.direction
+    sortConfig?.direction,
+    !!codEmpresa
   );
 
   // Hooks de ações
@@ -147,7 +149,16 @@ const DispositivosPage: React.FC = () => {
       <div className={styles.header}>
         <h1 className={styles.title}>DISPOSITIVOS</h1>
       </div>
-
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          className={styles.refreshButton}
+          onClick={refetch}
+          title="Atualizar dispositivos"
+        >
+          <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+          <FiRefreshCw className={isLoading ? styles.spinning : ""} />
+        </button>
+      </div>
       <div className={styles.mainContent}>
         <div className={styles.tableContainer}>
           {isLoading && <p>Carregando dispositivos...</p>}
@@ -187,7 +198,7 @@ const DispositivosPage: React.FC = () => {
                               : styles.statusInactive
                           }`}
                         >
-                          {!dispositivo.ativo && <FiPower />}
+                          
                         </div>
                       </div>
                       {!dispositivo.ativo && (

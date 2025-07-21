@@ -209,3 +209,145 @@
   background-color: white;
   cursor: pointer;
 }
+
+.refreshButton {
+  padding: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.refreshButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.refreshButton svg {
+  font-size: 1.2rem;
+  color: #1769e3;
+}
+
+/* ANIMAÇÃO DE ROTAÇÃO */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+  color: #1769e3;
+}
+
+/* Modo Escuro - Textos Pretos */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: #ffffff;
+  }
+
+  .title,
+  .situacaoContainer h2,
+  .situacaoValue {
+    color: #000000;
+  }
+
+  .header,
+  .mainContent {
+    background-color: #ffffff;
+  }
+
+  .tableContainer {
+  }
+
+  .table th,
+  .table td {
+    color: #000000;
+  }
+
+  .table th {
+    background-color: #ffffff;
+  }
+
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+
+  .table tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+
+  /* Status Badges */
+  .statusBadge.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .statusBadge.inactive {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  /* Action Buttons */
+  .actionButton {
+    background-color: #ffffff;
+  }
+
+  .activateButton {
+    background-color: #e8f5e9;
+    color: #000000;
+  }
+
+  .deactivateButton {
+    background-color: #ffebee;
+    color: #000000;
+  }
+
+  .deleteButton {
+    color: #ff0000; /* Mantém vermelho para destaque */
+  }
+
+  /* Situação Container */
+  .situacaoContainer {
+    background-color: #ffffff;
+  }
+
+  .situacaoItem p {
+    color: #000000;
+  }
+
+  /* Paginação */
+  .paginationControls button {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .paginationControls button:hover:not(:disabled) {
+    background-color: #1769e3;
+    color: #ffffff;
+  }
+
+  .itemsPerPageSelect {
+    background-color: #ffffff;
+
+    color: #000000;
+  }
+
+  /* Refresh Button */
+  .refreshButton svg {
+    color: #1769e3; /* Mantém azul para consistência */
+  }
+
+  /* Manutenção de cores semânticas */
+  .positive {
+    color: #008000 !important;
+  }
+
+  .negative {
+    color: #ff0000 !important;
+  }
+}

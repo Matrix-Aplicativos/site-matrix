@@ -63,12 +63,11 @@ const ColetasPage: React.FC = () => {
 
   // Contexto e hooks
   const { showLoading, hideLoading } = useLoading();
-  const {
-    codEmpresa,
-    loading: companyLoading,
-  } = useCurrentCompany();
+  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+  const [currentItemPages, setCurrentItemPages] = useState<{
+    [key: number]: number;
+  }>({});
 
-  // Busca de coletas
   const {
     coletas,
     loading: coletasLoading,
@@ -77,8 +76,10 @@ const ColetasPage: React.FC = () => {
   } = useGetColetas(
     codEmpresa || 0,
     paginaAtual,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
-    sortConfig?.direction
+    100,
+    sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
+    sortConfig?.direction,
+    !!codEmpresa
   );
 
   // Hook para deletar coletas
@@ -91,6 +92,42 @@ const ColetasPage: React.FC = () => {
   // Estados combinados
   const isLoading = companyLoading || coletasLoading || deleting;
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
+
+  // Funções auxiliares
+  const getOrigemText = (origem: string) => {
+    switch (origem) {
+      case "1":
+        return "Sob Demanda";
+      case "2":
+        return "Avulsa";
+      default:
+        return origem;
+    }
+  };
+
+  const getTipoMovimentoText = (tipoMovimento: string) => {
+    switch (tipoMovimento) {
+      case "1":
+        return "Inventário";
+      case "2":
+        return "Transferência";
+      default:
+        return tipoMovimento;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "1":
+        return "Pendente";
+      case "2":
+        return "Em Andamento";
+      case "3":
+        return "Concluída";
+      default:
+        return status;
+    }
+  };
 
   // Filtragem e ordenação
   const filteredData = useMemo(() => {
@@ -160,42 +197,6 @@ const ColetasPage: React.FC = () => {
     return result;
   }, [coletas, query, dateRange, selectedFilter, sortConfig]);
 
-  // Funções auxiliares
-  const getOrigemText = (origem: string) => {
-    switch (origem) {
-      case "1":
-        return "Sob Demanda";
-      case "2":
-        return "Avulsa";
-      default:
-        return origem;
-    }
-  };
-
-  const getTipoMovimentoText = (tipoMovimento: string) => {
-    switch (tipoMovimento) {
-      case "1":
-        return "Inventário";
-      case "2":
-        return "Transferência";
-      default:
-        return tipoMovimento;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "1":
-        return "Pendente";
-      case "2":
-        return "Em Andamento";
-      case "3":
-        return "Concluída";
-      default:
-        return status;
-    }
-  };
-
   const handleDeleteColeta = async (codColeta: number) => {
     if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
       try {
@@ -218,6 +219,23 @@ const ColetasPage: React.FC = () => {
     const { name, value } = e.target;
     setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
+  };
+
+  const handleNextItemPage = (coletaId: number, totalItems: number) => {
+    setCurrentItemPages((prev) => ({
+      ...prev,
+      [coletaId]: Math.min(
+        (prev[coletaId] || 0) + 1,
+        Math.ceil(totalItems / 3) - 1
+      ),
+    }));
+  };
+
+  const handlePrevItemPage = (coletaId: number) => {
+    setCurrentItemPages((prev) => ({
+      ...prev,
+      [coletaId]: Math.max((prev[coletaId] || 0) - 1, 0),
+    }));
   };
 
   const sortData = (key: keyof ColetaExibida) => {
@@ -253,7 +271,6 @@ const ColetasPage: React.FC = () => {
     }
   }, [isLoading, showLoading, hideLoading]);
 
-  
   if (coletasError) {
     return (
       <div className={styles.container}>
@@ -292,6 +309,7 @@ const ColetasPage: React.FC = () => {
           onClick={refetch}
           title="Atualizar coletas"
         >
+          <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
         </button>
       </div>
@@ -409,25 +427,51 @@ const ColetasPage: React.FC = () => {
                         <div className={styles.infoSection}>
                           <h3>Itens ({row.quantidade})</h3>
                           <div className={styles.itemsContainer}>
-                            {row.itens.slice(0, 3).map((item, index) => (
-                              <div key={index} className={styles.itemCard}>
-                                <p>
-                                  <strong>Item:</strong> {item.descricaoItem}
-                                </p>
-                                <p>
-                                  <strong>Cód. Barras:</strong> {item.codBarra}
-                                </p>
-                                <p>
-                                  <strong>Qtd.:</strong> {item.qtdConferida}
-                                </p>
-                              </div>
-                            ))}
-                            {row.itens.length > 3 && (
-                              <div className={styles.moreItems}>
-                                +{row.itens.length - 3} itens...
-                              </div>
-                            )}
+                            {row.itens
+                              .slice(
+                                (currentItemPages[row.id] || 0) * 3,
+                                ((currentItemPages[row.id] || 0) + 1) * 3
+                              )
+                              .map((item, index) => (
+                                <div key={index} className={styles.itemCard}>
+                                  <p>
+                                    <strong>Item:</strong> {item.descricaoItem}
+                                  </p>
+                                  <p>
+                                    <strong>Cód. Barras:</strong>{" "}
+                                    {item.codBarra}
+                                  </p>
+                                  <p>
+                                    <strong>Qtd.:</strong> {item.qtdConferida}
+                                  </p>
+                                </div>
+                              ))}
                           </div>
+                          {row.itens.length > 3 && (
+                            <div className={styles.itemPagination}>
+                              <button
+                                onClick={() => handlePrevItemPage(row.id)}
+                                disabled={(currentItemPages[row.id] || 0) === 0}
+                              >
+                                <FiChevronLeft />
+                              </button>
+                              <span>
+                                Página {(currentItemPages[row.id] || 0) + 1} de{" "}
+                                {Math.ceil(row.itens.length / 3)}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleNextItemPage(row.id, row.itens.length)
+                                }
+                                disabled={
+                                  (currentItemPages[row.id] || 0) >=
+                                  Math.ceil(row.itens.length / 3) - 1
+                                }
+                              >
+                                <FiChevronRight />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

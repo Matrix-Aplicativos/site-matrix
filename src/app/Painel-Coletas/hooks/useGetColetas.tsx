@@ -92,15 +92,16 @@ const useGetColetas = (
   pagina: number = 1,
   porPagina: number = 100,
   orderBy?: string,
-  sortDirection?: "asc" | "desc"
+  sortDirection?: "asc" | "desc",
+  enabled: boolean = true 
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [totalPaginas, setTotalPaginas] = useState<number>(0);
 
   const fetchColetas = useCallback(async () => {
-    if (!codEmpresa) return;
+    if (!codEmpresa || !enabled) return;
 
     try {
       setLoading(true);
@@ -109,7 +110,7 @@ const useGetColetas = (
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
-        orderBy: orderBy || "codColeta", 
+        orderBy: orderBy || "codColeta",
         sortDirection: sortDirection || "desc",
       });
 
@@ -117,7 +118,6 @@ const useGetColetas = (
         `/coleta/${codEmpresa}?${queryParams}`
       );
 
-      // Handle response data
       const responseData = response.data;
       const dados = Array.isArray(responseData.dados)
         ? responseData.dados
@@ -141,10 +141,12 @@ const useGetColetas = (
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, porPagina, orderBy, sortDirection]);
+  }, [codEmpresa, pagina, porPagina, orderBy, sortDirection, enabled]);
 
   useEffect(() => {
-    fetchColetas();
+    if (enabled) {
+      fetchColetas();
+    }
   }, [fetchColetas]);
 
   return { coletas, loading, error, refetch: fetchColetas, totalPaginas };
