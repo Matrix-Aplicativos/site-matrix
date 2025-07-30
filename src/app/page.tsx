@@ -218,8 +218,8 @@ export default function SiteMatrix() {
       whyTitle: "Por que o MOVIX?",
       whyPoints: [
         {
-          icon: <FaWifi className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Realize conferências offline de qualquer lugar.",
+          icon: <FaBarcode className="w-10 h-10 text-[#1769E3] self-center" />,
+          text: "Faça bipagens tanto por código do produto quanto código de barras.",
         },
         {
           icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
@@ -469,7 +469,7 @@ export default function SiteMatrix() {
 
       {/* Seção "Por que nosso produto" com Carrossel */}
       <section className="bg-[#f9f9f9] py-16 flex flex-col items-center">
-        <div className="text-center lg:col-span-2 mb-6">
+        <div className="text-center lg:col-span-2 mb-10">
           <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
             {tabContent[activeTab].whyTitle}
           </h2>
