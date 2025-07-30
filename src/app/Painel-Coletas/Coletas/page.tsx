@@ -718,12 +718,12 @@ const ColetasPage: React.FC = () => {
 
           <Form.Item label="Tipo de Movimento" required>
             <Select
-              name="tipoMovimento"
               value={newColeta.tipoMovimento}
-              onChange={(value) =>
-                handleNewColetaChange({
-                  target: { name: "tipoMovimento", value },
-                })
+              onChange={
+                (value) =>
+                  handleNewColetaChange({
+                    target: { name: "tipoMovimento", value },
+                  } as React.ChangeEvent<HTMLSelectElement>) 
               }
             >
               <Option value="1">Inventário</Option>
@@ -786,8 +786,10 @@ const ColetasPage: React.FC = () => {
               header={<strong>Itens Adicionados</strong>}
               renderItem={(item, index) => (
                 <List.Item
+                  key={index}
                   actions={[
                     <Button
+                      key={`remove-${index}`}
                       danger
                       type="text"
                       icon={<FiTrash2 />}
