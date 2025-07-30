@@ -207,7 +207,7 @@ export default function SiteMatrix() {
       productImage: Vendas,
     },
     coletas: {
-      title: "Matrix Coletas",
+      title: "MOVIX",
       description:
         "Solução completa para gestão de coletas e logística reversa, desenvolvida para empresas que precisam de controle total sobre suas operações de recebimento e transporte de mercadorias. Otimize sua operação com nossa tecnologia.",
       features: [
@@ -215,7 +215,7 @@ export default function SiteMatrix() {
         "Coletas Avulsas e sob demandas: Organize de maneira adequadas as coletas realizadas.",
         "Integração Total: Conecte-se facilmente com seu ERP ou sistema de gestão logística.",
       ],
-      whyTitle: "Por que o Matrix Coletas?",
+      whyTitle: "Por que o MOVIX?",
       whyPoints: [
         {
           icon: <FaWifi className="w-10 h-10 text-[#1769E3] self-center" />,
@@ -223,7 +223,7 @@ export default function SiteMatrix() {
         },
         {
           icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Tenha acesso aos balanços e aos inventários em tempo real.",
+          text: "Tenha acesso aos balanços e aos inventários em tempo real com nosso painel administrativo.",
         },
         {
           icon: (
@@ -289,7 +289,7 @@ export default function SiteMatrix() {
                 }`}
               >
                 <FaBarcode className="mr-2" />
-                Coletas
+                MOVIX
               </button>
             </div>
 
