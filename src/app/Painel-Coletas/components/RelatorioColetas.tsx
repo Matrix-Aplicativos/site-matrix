@@ -34,30 +34,23 @@ export default function RelatorioColetas({
   view,
   onViewChange,
 }: RelatorioColetasProps) {
-  // Carrega a empresa dinamicamente
   const { codEmpresa, loading: companyLoading } = useCurrentCompany();
-
-  // Busca as coletas apenas quando a empresa estiver carregada
   const { coletas, loading: coletasLoading } = useGetColetas(
-    codEmpresa || 0, // Usa 0 como fallback
+    codEmpresa || 0,
     1
   );
-
-  // Gera os dados do gráfico
   const chartData = useGraficoColetas(coletas, view);
 
-  // Estados combinados
   const isLoading = companyLoading || coletasLoading;
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.toLocaleString("pt-BR", { month: "long" });
 
-  // Opções do gráfico
   const options = {
     responsive: true,
     plugins: {
       legend: {
-        position: "top" as const,
+        display: false, // Removemos a legenda pois só temos um dataset
       },
       title: {
         display: true,
@@ -65,12 +58,14 @@ export default function RelatorioColetas({
           view === "mensal"
             ? `Coletas por Dia - ${currentMonth} ${currentYear}`
             : `Coletas por Mês - ${currentYear}`,
+        font: {
+          size: 16,
+        },
       },
       tooltip: {
         callbacks: {
           label: (context: any) => {
-            const label = context.dataset.label || "";
-            return `${label}: ${context.raw}`;
+            return `${context.raw} Coletas`;
           },
         },
       },
@@ -80,16 +75,29 @@ export default function RelatorioColetas({
         title: {
           display: true,
           text: view === "mensal" ? "Dias do Mês" : "Meses",
+          font: {
+            weight: "bold",
+          },
+        },
+        grid: {
+          display: false,
         },
       },
       y: {
         title: {
           display: true,
-          text: "Quantidade",
+          text: "Quantidade de Coletas",
+          font: {
+            weight: "bold",
+          },
         },
         beginAtZero: true,
         ticks: {
           stepSize: 1,
+          precision: 0,
+        },
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
         },
       },
     },
@@ -103,20 +111,21 @@ export default function RelatorioColetas({
     height: "100%",
     color: "#666",
     textAlign: "center",
+    padding: "20px",
   };
 
   const renderChartContent = () => {
-    // Estado de carregamento
     if (isLoading) {
       return (
         <>
           <LoadingOverlay />
-          <div style={placeholderStyle}>Carregando dados...</div>
+          <div style={placeholderStyle}>
+            Carregando dados de coletas...
+          </div>
         </>
       );
     }
 
-    // Sem empresa vinculada
     if (!codEmpresa) {
       return (
         <div style={placeholderStyle}>
@@ -125,17 +134,15 @@ export default function RelatorioColetas({
       );
     }
 
-    // Sem dados para exibir
     if (!chartData?.labels?.length) {
       return (
         <div style={placeholderStyle}>
-          Nenhum dado disponível para gerar o relatório.
+          Nenhuma movimentação registrada no período selecionado.
         </div>
       );
     }
 
-    // Renderiza o gráfico
-    return <Bar data={chartData} options={options} />;
+    return <Bar data={chartData}  />;
   };
 
   return (
@@ -148,35 +155,39 @@ export default function RelatorioColetas({
           marginBottom: "20px",
         }}
       >
-        <h2 style={{ marginLeft: 20, color: "#000" }}>Relatório de Coletas</h2>
+        <h2 style={{ marginLeft: 20, color: "#000", fontSize: "1.5rem" }}>
+          Relatório de Coletas
+        </h2>
         <div style={{ display: "flex", gap: "10px" }}>
           <button
             style={{
               padding: "8px 16px",
-              background: view === "mensal" ? "#007BFF" : "#f0f0f0",
+              background: view === "mensal" ? "#1769e3" : "#f0f0f0",
               color: view === "mensal" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
               fontWeight: "bold",
+              transition: "all 0.3s ease",
             }}
             onClick={() => onViewChange("mensal")}
           >
-            Mensal
+            Visão Mensal
           </button>
           <button
             style={{
               padding: "8px 16px",
-              background: view === "anual" ? "#007BFF" : "#f0f0f0",
+              background: view === "anual" ? "#1769e3" : "#f0f0f0",
               color: view === "anual" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
               fontWeight: "bold",
+              transition: "all 0.3s ease",
             }}
             onClick={() => onViewChange("anual")}
           >
-            Anual
+            Visão Anual
           </button>
         </div>
       </div>
@@ -186,6 +197,10 @@ export default function RelatorioColetas({
           height: "400px",
           width: "100%",
           position: "relative",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          padding: "20px",
         }}
       >
         {renderChartContent()}

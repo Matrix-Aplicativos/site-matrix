@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import { ChartData } from "chart.js";
 
 interface Coleta {
-  dataCadastro: string; // Changed from Date | null to string to match the API
-  tipo: number; // 1 = Sob Demanda, 2 = Avulsa
+  dataCadastro: string;
 }
 
 export default function useGraficoColetas(
@@ -42,8 +41,6 @@ export default function useGraficoColetas(
           ];
 
     const totais = Array(labels.length).fill(0);
-    const avulsas = Array(labels.length).fill(0);
-    const sobDemanda = Array(labels.length).fill(0);
 
     coletas.forEach((coleta) => {
       try {
@@ -64,12 +61,6 @@ export default function useGraficoColetas(
 
         if (index >= 0 && index < labels.length) {
           totais[index]++;
-
-          if (coleta.tipo === 1) {
-            avulsas[index]++;
-          } else if (coleta.tipo === 2) {
-            sobDemanda[index]++;
-          }
         }
       } catch (error) {
         console.error("Erro ao processar coleta:", error);
@@ -80,24 +71,10 @@ export default function useGraficoColetas(
       labels,
       datasets: [
         {
-          label: "Total",
+          label: "Coletas",
           data: totais,
           backgroundColor: "rgba(54, 162, 235, 0.7)",
           borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1,
-        },
-        {
-          label: "Avulsas",
-          data: avulsas,
-          backgroundColor: "rgba(255, 206, 86, 0.7)",
-          borderColor: "rgba(255, 206, 86, 1)",
-          borderWidth: 1,
-        },
-        {
-          label: "Sob Demanda",
-          data: sobDemanda,
-          backgroundColor: "rgba(75, 192, 192, 0.7)",
-          borderColor: "rgba(75, 192, 192, 1)",
           borderWidth: 1,
         },
       ],

@@ -7,7 +7,15 @@ import "./Sidebar.css";
 import Link from "next/link";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import { FiHome, FiLogOut, FiSmartphone, FiBarChart2 } from "react-icons/fi";
+import {
+  FiHome,
+  FiLogOut,
+  FiSmartphone,
+  FiBarChart2,
+  FiBox,
+  FiTruck,
+  FiClipboard,
+} from "react-icons/fi";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -35,9 +43,21 @@ export default function Sidebar() {
           </Link>
         </li>
         <li>
-          <Link href="/Painel-Coletas/Coletas" className="menu-item">
-            <FiBarChart2 size={24} />
-            Coletas
+          <Link href="/Painel-Coletas/Inventario" className="menu-item">
+            <FiBox size={24} />
+            Inventários
+          </Link>
+        </li>
+        <li>
+          <Link href="/Painel-Coletas/Transferencia" className="menu-item">
+            <FiTruck size={24} />
+            Transferências
+          </Link>
+        </li>
+        <li>
+          <Link href="/Painel-Coletas/Conferencias" className="menu-item">
+            <FiClipboard size={24} />
+            Conferências
           </Link>
         </li>
         <li>

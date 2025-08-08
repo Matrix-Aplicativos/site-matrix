@@ -36,8 +36,9 @@ export default function HomePage() {
   // Calculate statistics
   const {
     totalColetas,
-    coletasAvulsas,
-    coletasSobDemanda,
+    inventarios,
+    transferencias,
+    conferencias,
     coletasAnterior,
     variacaoColetas,
   } = useMemo(() => {
@@ -45,8 +46,9 @@ export default function HomePage() {
     if (!coletas || coletas.length === 0) {
       return {
         totalColetas: 0,
-        coletasAvulsas: 0,
-        coletasSobDemanda: 0,
+        inventarios: 0,
+        transferencias: 0,
+        conferencias: 0,
         coletasAnterior: 0,
         variacaoColetas: null,
       };
@@ -58,8 +60,9 @@ export default function HomePage() {
 
     let totalAtual = 0;
     let totalAnterior = 0;
-    let avulsas = 0;
-    let sobDemanda = 0;
+    let tipo1 = 0; // Inventários
+    let tipo2 = 0; // Transferências
+    let tipo3e4 = 0; // Conferências
 
     coletas.forEach((c) => {
       try {
@@ -70,8 +73,10 @@ export default function HomePage() {
         // Current month collections
         if (data.getFullYear() === anoAtual && data.getMonth() === mesAtual) {
           totalAtual++;
-          if (c.tipo === 1) avulsas++;
-          if (c.tipo === 2) sobDemanda++;
+
+          if (c.tipo === 1) tipo1++; // Inventário
+          else if (c.tipo === 2) tipo2++; // Transferência
+          else if (c.tipo === 3 || c.tipo === 4) tipo3e4++; // Conferências
         }
         // Previous month collections (for comparison)
         else if (
@@ -95,8 +100,9 @@ export default function HomePage() {
 
     return {
       totalColetas: totalAtual,
-      coletasAvulsas: avulsas,
-      coletasSobDemanda: sobDemanda,
+      inventarios: tipo1,
+      transferencias: tipo2,
+      conferencias: tipo3e4,
       coletasAnterior: totalAnterior,
       variacaoColetas: variacao,
     };
@@ -126,10 +132,8 @@ export default function HomePage() {
         <RelatorioColetas view={view} onViewChange={setView} />
       </div>
 
-      {/* Statistics Section */}
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
-          {/* Total Collections */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{totalColetas}</span>
@@ -152,14 +156,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Spontaneous Collections */}
+          {/* Inventários */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>{coletasAvulsas}</span>
-              <span>Coletas Avulsas</span>
+              <span className={styles.number}>{inventarios}</span>
+              <span>Inventários</span>
               <span className={styles.comparison}>
                 {totalColetas > 0
-                  ? `${((coletasAvulsas / totalColetas) * 100).toFixed(
+                  ? `${((inventarios / totalColetas) * 100).toFixed(
                       1
                     )}% do total`
                   : "0% do total"}
@@ -167,14 +171,29 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* On-Demand Collections */}
+          {/* Transferências */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
-              <span className={styles.number}>{coletasSobDemanda}</span>
-              <span>Coletas Sob Demanda</span>
+              <span className={styles.number}>{transferencias}</span>
+              <span>Transferências</span>
               <span className={styles.comparison}>
                 {totalColetas > 0
-                  ? `${((coletasSobDemanda / totalColetas) * 100).toFixed(
+                  ? `${((transferencias / totalColetas) * 100).toFixed(
+                      1
+                    )}% do total`
+                  : "0% do total"}
+              </span>
+            </div>
+          </div>
+
+          {/* Conferências */}
+          <div className={styles.statWithTable}>
+            <div className={styles.stat}>
+              <span className={styles.number}>{conferencias}</span>
+              <span>Conferências</span>
+              <span className={styles.comparison}>
+                {totalColetas > 0
+                  ? `${((conferencias / totalColetas) * 100).toFixed(
                       1
                     )}% do total`
                   : "0% do total"}

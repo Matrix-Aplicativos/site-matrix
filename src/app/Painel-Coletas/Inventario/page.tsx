@@ -2,14 +2,13 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import SearchBar from "../components/SearchBar";
-import styles from "./Coletas.module.css";
+import styles from "./Inventario.module.css";
 import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronsLeft,
   FiTrash2,
   FiRefreshCw,
-  FiPlus,
 } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
@@ -17,8 +16,6 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
 import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
 import useCurrentCompany from "../hooks/useCurrentCompany";
-import usePostColetaSobDemanda from "../hooks/usePostColetaSobDemanda";
-import { Modal, Form, Input, Select, Button, Divider, List, Space } from "antd";
 import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { getUserFromToken } from "@/app/getUserFromToken";
@@ -43,22 +40,6 @@ interface ColetaExibida {
   }[];
 }
 
-interface ItemPost {
-  codItem: number;
-  quantidade: number;
-}
-
-interface PostColetaPayload {
-  codColeta: number;
-  codEmpresa: number;
-  tipo: number;
-  descricao: string;
-  codUsuario: number;
-  codAlocEstoqueOrigem: number;
-  codAlocEstoqueDestino: number;
-  itens: ItemPost[];
-}
-
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
   descricao: 1,
   data: 2,
@@ -69,9 +50,8 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
   quantidade: 7,
 };
 
-const ColetasPage: React.FC = () => {
+const InventariosPage: React.FC = () => {
   // Estados da página
-  const { Option } = Select;
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -83,29 +63,15 @@ const ColetasPage: React.FC = () => {
   } | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-
-  // Estados para o modal de criação
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newColeta, setNewColeta] = useState({
-    descricao: "",
-    tipoMovimento: "1",
-    codAlocEstoqueOrigem: "",
-    codAlocEstoqueDestino: "",
-    itens: [] as Array<{ codItem: string; quantidade: string }>,
-  });
-  const [currentItem, setCurrentItem] = useState({
-    codItem: "",
-    quantidade: "",
-  });
+  const [currentItemPages, setCurrentItemPages] = useState<{
+    [key: number]: number;
+  }>({});
 
   // Contexto e hooks
   const { showLoading, hideLoading } = useLoading();
   const { codEmpresa, loading: companyLoading } = useCurrentCompany();
   const token = getCookie("token");
   const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
-  const [currentItemPages, setCurrentItemPages] = useState<{
-    [key: number]: number;
-  }>({});
 
   const {
     coletas,
@@ -128,17 +94,8 @@ const ColetasPage: React.FC = () => {
     error: deleteError,
   } = deleteColetaAvulsaHook();
 
-  // Hook para criar coleta
-  const {
-    postColeta,
-    loading: creatingColeta,
-    error: createError,
-    success: createSuccess,
-  } = usePostColetaSobDemanda();
-
   // Estados combinados
-  const isLoading =
-    companyLoading || coletasLoading || deleting || creatingColeta;
+  const isLoading = companyLoading || coletasLoading || deleting;
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
   const codUsuario = usuario?.codUsuario || 0;
 
@@ -160,6 +117,10 @@ const ColetasPage: React.FC = () => {
         return "Inventário";
       case "2":
         return "Transferência";
+      case "3":
+        return "Conferência de Venda";
+      case "4":
+        return "Conferência de Compra";
       default:
         return tipoMovimento;
     }
@@ -182,25 +143,27 @@ const ColetasPage: React.FC = () => {
   const filteredData = useMemo(() => {
     if (!coletas) return [];
 
-    const convertedData = coletas.map((c) => ({
-      id: c.codConferencia,
-      codConferenciaErp: c.codConferenciaErp,
-      descricao: c.descricao,
-      data: c.dataCadastro,
-      dataFim: c.dataFim,
-      origem: String(c.origem),
-      tipoMovimento: String(c.tipo),
-      usuario: c.usuario?.nome || "Usuário não informado",
-      quantidade: c.itens.length,
-      status: c.status,
-      alocOrigem: c.alocOrigem?.descricao || "Não informada",
-      alocDestino: c.alocDestino?.descricao || "Não informada",
-      itens: c.itens.map((item) => ({
-        descricaoItem: item.descricaoItem,
-        qtdConferida: item.qtdConferida,
-        codBarra: item.codBarra,
-      })),
-    }));
+    const convertedData = coletas
+      .filter((c) => String(c.tipo) === "1") 
+      .map((c) => ({
+        id: c.codConferencia,
+        codConferenciaErp: c.codConferenciaErp,
+        descricao: c.descricao,
+        data: c.dataCadastro,
+        dataFim: c.dataFim,
+        origem: String(c.origem),
+        tipoMovimento: String(c.tipo),
+        usuario: c.usuario?.nome || "Usuário não informado",
+        quantidade: c.itens.length,
+        status: c.status,
+        alocOrigem: c.alocOrigem?.descricao || "Não informada",
+        alocDestino: c.alocDestino?.descricao || "Não informada",
+        itens: c.itens.map((item) => ({
+          descricaoItem: item.descricaoItem,
+          qtdConferida: item.qtdConferida,
+          codBarra: item.codBarra,
+        })),
+      }));
 
     let result = [...convertedData];
 
@@ -255,110 +218,6 @@ const ColetasPage: React.FC = () => {
       } catch (error) {
         alert("Erro ao excluir coleta");
       }
-    }
-  };
-
-  // Handlers para o modal de criação
-  const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleCloseCreateModal = () => {
-    setIsCreateModalOpen(false);
-    setNewColeta({
-      descricao: "",
-      tipoMovimento: "1",
-      codAlocEstoqueOrigem: "",
-      codAlocEstoqueDestino: "",
-      itens: [],
-    });
-    setCurrentItem({ codItem: "", quantidade: "" });
-  };
-
-  const handleNewColetaChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setNewColeta((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCurrentItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCurrentItem((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddItem = () => {
-    if (currentItem.codItem && currentItem.quantidade) {
-      setNewColeta((prev) => ({
-        ...prev,
-        itens: [
-          ...prev.itens,
-          {
-            codItem: currentItem.codItem,
-            quantidade: currentItem.quantidade,
-          },
-        ],
-      }));
-      setCurrentItem({ codItem: "", quantidade: "" });
-    }
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setNewColeta((prev) => ({
-      ...prev,
-      itens: prev.itens.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSubmitColeta = async () => {
-    if (!codEmpresa || !codUsuario) {
-      alert("Empresa ou usuário não identificado");
-      return;
-    }
-
-    if (!newColeta.descricao) {
-      alert("Por favor, informe a descrição da coleta");
-      return;
-    }
-
-    if (!newColeta.codAlocEstoqueOrigem) {
-      alert("Por favor, informe a alocação de origem");
-      return;
-    }
-
-    if (newColeta.tipoMovimento === "2" && !newColeta.codAlocEstoqueDestino) {
-      alert("Para transferência, informe a alocação de destino");
-      return;
-    }
-
-    if (newColeta.itens.length === 0) {
-      alert("Adicione pelo menos um item à coleta");
-      return;
-    }
-
-    const payload: PostColetaPayload = {
-      codColeta: 0,
-      codEmpresa,
-      tipo: Number(newColeta.tipoMovimento),
-      descricao: newColeta.descricao,
-      codUsuario,
-      codAlocEstoqueOrigem: Number(newColeta.codAlocEstoqueOrigem),
-      codAlocEstoqueDestino: Number(newColeta.codAlocEstoqueDestino),
-      itens: newColeta.itens.map((item) => ({
-        codItem: Number(item.codItem),
-        quantidade: Number(item.quantidade),
-      })),
-    };
-
-    try {
-      await postColeta(payload);
-      if (createSuccess) {
-        alert("Coleta criada com sucesso!");
-        handleCloseCreateModal();
-        refetch();
-      }
-    } catch (error) {
-      alert(createError || "Erro ao criar coleta");
     }
   };
 
@@ -427,7 +286,7 @@ const ColetasPage: React.FC = () => {
   if (coletasError) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Coletas</h2>
+        <h2>Erro ao Carregar inventários</h2>
         <button onClick={refetch}>Tentar novamente</button>
       </div>
     );
@@ -449,39 +308,19 @@ const ColetasPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>COLETAS</h1>
+      <h1 className={styles.title}>INVENTÁRIOS</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar
-          placeholder="Qual conferência deseja buscar?"
+          placeholder="Qual inventário deseja buscar?"
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
           <button
-            onClick={handleOpenCreateModal}
-            title="Criar coleta sob demanda"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              backgroundColor: "#1769e3",
-              color: "white",
-              border: "none",
-              padding: "10px 16px",
-              borderRadius: "4px",
-              fontWeight: 500,
-              cursor: "pointer",
-              fontSize: "14px",
-            }}
-          >
-            Criar coleta sob demanda
-          </button>
-
-          <button
             className={styles.refreshButton}
             onClick={refetch}
-            title="Atualizar coletas"
+            title="Atualizar inventários"
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
             <FiRefreshCw className={isLoading ? styles.spinning : ""} />
@@ -499,7 +338,6 @@ const ColetasPage: React.FC = () => {
             >
               <option value="descricao">Descrição</option>
               <option value="origem">Origem</option>
-              <option value="tipoMovimento">Tipo de Movimento</option>
               <option value="status">Status</option>
             </select>
           </div>
@@ -698,136 +536,8 @@ const ColetasPage: React.FC = () => {
           </tfoot>
         </table>
       </div>
-
-      <Modal
-        open={isCreateModalOpen}
-        onCancel={handleCloseCreateModal}
-        title="Criar Coleta Sob Demanda"
-        footer={null}
-        width={700}
-      >
-        <Form layout="vertical">
-          <Form.Item label="Descrição" required>
-            <Input
-              name="descricao"
-              value={newColeta.descricao}
-              onChange={handleNewColetaChange}
-              placeholder="Descrição da coleta"
-            />
-          </Form.Item>
-
-          <Form.Item label="Tipo de Movimento" required>
-            <Select
-              value={newColeta.tipoMovimento}
-              onChange={
-                (value) =>
-                  handleNewColetaChange({
-                    target: { name: "tipoMovimento", value },
-                  } as React.ChangeEvent<HTMLSelectElement>) 
-              }
-            >
-              <Option value="1">Inventário</Option>
-              <Option value="2">Transferência</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Código Alocação Origem" required>
-            <Input
-              name="codAlocEstoqueOrigem"
-              value={newColeta.codAlocEstoqueOrigem}
-              onChange={handleNewColetaChange}
-              placeholder="Código da alocação de origem"
-            />
-          </Form.Item>
-
-          {newColeta.tipoMovimento === "2" && (
-            <Form.Item label="Código Alocação Destino" required>
-              <Input
-                name="codAlocEstoqueDestino"
-                value={newColeta.codAlocEstoqueDestino}
-                onChange={handleNewColetaChange}
-                placeholder="Código da alocação de destino"
-              />
-            </Form.Item>
-          )}
-
-          <Divider orientation="left">Itens</Divider>
-
-          <Space direction="horizontal" style={{ marginBottom: 16 }} wrap>
-            <Input
-              placeholder="Código do Item"
-              name="codItem"
-              value={currentItem.codItem}
-              onChange={handleCurrentItemChange}
-              style={{ width: 200 }}
-            />
-            <Input
-              placeholder="Quantidade"
-              type="number"
-              min={1}
-              name="quantidade"
-              value={currentItem.quantidade}
-              onChange={handleCurrentItemChange}
-              style={{ width: 150 }}
-            />
-            <Button
-              type="primary"
-              onClick={handleAddItem}
-              disabled={!currentItem.codItem || !currentItem.quantidade}
-            >
-              Adicionar Item
-            </Button>
-          </Space>
-
-          {newColeta.itens.length > 0 && (
-            <List
-              bordered
-              dataSource={newColeta.itens}
-              header={<strong>Itens Adicionados</strong>}
-              renderItem={(item, index) => (
-                <List.Item
-                  key={index}
-                  actions={[
-                    <Button
-                      key={`remove-${index}`}
-                      danger
-                      type="text"
-                      icon={<FiTrash2 />}
-                      onClick={() => handleRemoveItem(index)}
-                    />,
-                  ]}
-                >
-                  <span>
-                    <strong>Item:</strong> {item.codItem}
-                  </span>{" "}
-                  —{" "}
-                  <span>
-                    <strong>Qtd:</strong> {item.quantidade}
-                  </span>
-                </List.Item>
-              )}
-            />
-          )}
-
-          <Divider />
-
-          <Form.Item style={{ textAlign: "right" }}>
-            <Button onClick={handleCloseCreateModal} style={{ marginRight: 8 }}>
-              Cancelar
-            </Button>
-            <Button
-              type="primary"
-              onClick={handleSubmitColeta}
-              disabled={creatingColeta || newColeta.itens.length === 0}
-              loading={creatingColeta}
-            >
-              Criar Coleta
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 };
 
-export default ColetasPage;
+export default InventariosPage;
