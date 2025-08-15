@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +8,29 @@ import Logo from "@/app/img/Logo.png";
 import "./RedefinirSenha.css";
 import useRedefinirSenha from "../shared/useRedefinirSenha";
 
-export default function RedefinirSenhaPage() {
+// Componente de carregamento para o Suspense
+const LoadingFallback = () => (
+  <div className="password-reset-container">
+    <div className="password-reset-content">
+      <div className="password-reset-logo">
+        <Image src={Logo} alt="Logo" width={180} height={150} priority />
+      </div>
+      <p>Carregando formulário de redefinição de senha...</p>
+    </div>
+  </div>
+);
+
+// Componente principal que envolve com Suspense
+export default function RedefinirSenhaWrapper() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <RedefinirSenhaPage />
+    </Suspense>
+  );
+}
+
+// Componente da página de redefinição de senha
+function RedefinirSenhaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { redefinirSenha, loading, error } = useRedefinirSenha();
@@ -18,12 +40,17 @@ export default function RedefinirSenhaPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [senhaForca, setSenhaForca] = useState(0);
   const [mensagemErro, setMensagemErro] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (!token) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !token) {
       router.push("/");
     }
-  }, [token, router]);
+  }, [token, router, isMounted]);
 
   const verificarForcaSenha = (valor: string) => {
     if (valor.length === 0) return 0;
