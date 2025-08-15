@@ -212,7 +212,7 @@ const InventariosPage: React.FC = () => {
   const handleDeleteColeta = async (codColeta: number) => {
     if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
       try {
-        await deletarColeta(codEmpresa || 0, codColeta);
+        await deletarColeta(codColeta || 0);
         alert("Coleta excluída com sucesso!");
         refetch();
       } catch (error) {

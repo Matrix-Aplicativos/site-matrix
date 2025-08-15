@@ -5,13 +5,13 @@ const useDeleteColetaAvulsa = () => {
   const [loading, setLoading] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const deletarColeta = async (codEmpresa: number, codColeta: number) => {
+  const deletarColeta = async ( codColeta: number) => {
     setLoading(true);
     setError(null);
     console.log("Deletando coleta: ", codColeta);
 
     try {
-      await axiosInstance.delete(`coleta/${codEmpresa}/${codColeta}`);
+      await axiosInstance.delete(`coleta/${codColeta}`);
       return true;
     } catch (err: any) {
       const errorMessage =

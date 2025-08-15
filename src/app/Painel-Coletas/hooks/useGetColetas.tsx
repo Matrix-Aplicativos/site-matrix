@@ -115,7 +115,7 @@ const useGetColetas = (
       });
 
       const response = await axiosInstance.get(
-        `/coleta/${codEmpresa}?${queryParams}`
+        `/coleta/empresa/${codEmpresa}?${queryParams}`
       );
 
       const responseData = response.data;

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/app/img/Logo.png";
 import "./RedefinirSenha.css";
-import useLogin from "../hooks/useLogin";
+import useLogin from "../shared/useLogin";
 
 export default function RedefinirSenhaPage() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function RedefinirSenhaPage() {
     const result = await redefinirSenha(senha, token);
     if (result) {
       alert("Senha redefinida com sucesso!");
-      router.push("/Painel-FDV");
+      router.push("/");
     }
   };
 

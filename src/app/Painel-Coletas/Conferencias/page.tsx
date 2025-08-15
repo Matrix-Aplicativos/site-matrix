@@ -207,18 +207,6 @@ const ConferenciasPage: React.FC = () => {
     return result;
   }, [coletas, query, dateRange, selectedFilter, sortConfig]);
 
-  const handleDeleteColeta = async (codColeta: number) => {
-    if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
-      try {
-        await deletarColeta(codEmpresa || 0, codColeta);
-        alert("Coleta excluída com sucesso!");
-        refetch();
-      } catch (error) {
-        alert("Erro ao excluir coleta");
-      }
-    }
-  };
-
   // Outros handlers
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -371,7 +359,7 @@ const ConferenciasPage: React.FC = () => {
                   {col.label} <FaSort style={{ marginLeft: "0.5em" }} />
                 </th>
               ))}
-              <th>Ações</th>
+
               <th></th>
             </tr>
           </thead>
@@ -383,20 +371,7 @@ const ConferenciasPage: React.FC = () => {
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
-                  <td className={styles.actionsCell}>
-                    {row.origem === "2" && !row.dataFim && (
-                      <button
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteColeta(row.id);
-                        }}
-                        title="Excluir coleta avulsa"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    )}
-                  </td>
+
                   <td>
                     <button
                       className={styles.expandButton}
