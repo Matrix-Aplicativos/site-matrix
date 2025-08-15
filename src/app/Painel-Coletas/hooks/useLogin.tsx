@@ -143,20 +143,29 @@ const useLogin = (): UseLoginHook => {
       const response = await axiosInstance.post("/auth/solicitar-recuperacao", {
         login,
       });
-      return response.data;
+
+      // Verifica explicitamente se a requisição foi bem-sucedida
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: response.data?.message || "Solicitação enviada com sucesso!",
+        };
+      }
+      return null;
     } catch (error) {
       console.error(error);
       setError(
         error instanceof AxiosError
-          ? error.response?.data.message
+          ? error.response?.data.message ||
+              "Erro ao solicitar redefinição de senha"
           : "Erro ao solicitar redefinição de senha"
       );
-      return null;
+      return { success: false };
     } finally {
       setLoading(false);
     }
   };
-
+  
   const redefinirSenha = async (senha: string, token: string) => {
     setLoading(true);
     setError(null);

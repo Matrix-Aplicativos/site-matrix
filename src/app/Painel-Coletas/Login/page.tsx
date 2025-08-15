@@ -31,8 +31,20 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    setTextoIdentificacao("");
-    setTipoMensagem("");
+    if (!textoIdentificacao) return;
+
+    const timer = setTimeout(() => {
+      setTextoIdentificacao("");
+      setTipoMensagem("");
+    }, 3000); // 3000ms = 3 segundos
+
+    return () => clearTimeout(timer); // limpa o timeout se textoIdentificacao mudar antes de 3s
+  }, [textoIdentificacao]);
+  useEffect(() => {
+    if (!textoIdentificacao) {
+      setTextoIdentificacao("");
+      setTipoMensagem("");
+    }
   }, [modoEsqueciSenha, definirPrimeiraSenha]);
 
   const handleDefinirSenha = async (e: React.FormEvent) => {
@@ -71,15 +83,20 @@ export default function LoginPage() {
         setTipoMensagem("erro");
         return;
       }
+
       const resp = await solicitarRedefinicaoSenha(login);
-      if (resp) {
+
+      if (resp?.success) {
         setTextoIdentificacao(
-          "Vá para seu email para prosseguir com a redefinição"
+          resp.message ||
+            "Solicitação enviada com sucesso! Verifique seu email."
         );
         setTipoMensagem("sucesso");
-        setTimeout(() => {
-          setModoEsqueciSenha(false);
-        }, 3000);
+        setModoEsqueciSenha(false);
+        setLogin("");
+      } else if (!resp) {
+        setTextoIdentificacao(error || "Erro ao enviar solicitação");
+        setTipoMensagem("erro");
       }
       return;
     }
@@ -203,7 +220,7 @@ export default function LoginPage() {
                 color: "#007bff",
                 cursor: "pointer",
                 textAlign: "center",
-                marginTop: "5px",
+                
               }}
               onClick={() => setModoEsqueciSenha(true)}
             >
