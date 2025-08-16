@@ -40,14 +40,13 @@ interface ColetaExibida {
   }[];
 }
 
-const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
-  descricao: 1,
-  data: 2,
-  origem: 3,
-  tipoMovimento: 4,
-  status: 5,
-  usuario: 6,
-  quantidade: 7,
+// Mapeia a chave da coluna da tabela para o nome do campo na API
+const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
+  descricao: "descricao",
+  data: "dataCadastro", 
+  origem: "origem",
+  tipoMovimento: "tipo", 
+  status: "status",
 };
 
 const InventariosPage: React.FC = () => {
@@ -144,7 +143,7 @@ const InventariosPage: React.FC = () => {
     if (!coletas) return [];
 
     const convertedData = coletas
-      .filter((c) => String(c.tipo) === "1") 
+      .filter((c) => String(c.tipo) === "1")
       .map((c) => ({
         id: c.codConferencia,
         codConferenciaErp: c.codConferenciaErp,

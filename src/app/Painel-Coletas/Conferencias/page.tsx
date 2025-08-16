@@ -40,14 +40,12 @@ interface ColetaExibida {
   }[];
 }
 
-const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: number } = {
-  descricao: 1,
-  data: 2,
-  origem: 3,
-  tipoMovimento: 4,
-  status: 5,
-  usuario: 6,
-  quantidade: 7,
+const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
+  descricao: "descricao",
+  data: "dataCadastro",
+  origem: "origem",
+  tipoMovimento: "tipo",
+  status: "status",
 };
 
 const ConferenciasPage: React.FC = () => {
