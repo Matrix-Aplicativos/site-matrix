@@ -53,10 +53,17 @@ function RedefinirSenhaPage() {
   }, [token, router, isMounted]);
 
   const verificarForcaSenha = (valor: string) => {
-    if (valor.length === 0) return 0;
-    if (valor.length < 6) return 1; // Fraca
-    if (valor.length < 10) return 2; // Moderada
-    return 3; // Forte
+    if (valor.length < 6) return 1; // sempre fraca se menor que 6
+
+    let forca = 0;
+    if (/[A-Z]/.test(valor)) forca++; // maiúscula
+    if (/[a-z]/.test(valor)) forca++; // minúscula
+    if (/[0-9]/.test(valor)) forca++; // número
+    if (/[^A-Za-z0-9]/.test(valor)) forca++; // caractere especial
+
+    if (forca <= 1) return 1; // fraca
+    if (forca === 2 || forca === 3) return 2; // moderada
+    return 3; // forte
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

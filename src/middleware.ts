@@ -1,64 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import axios from "axios";
 import { getUserFromToken } from "./app/getUserFromToken";
 
-const baseApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const publicRoutes = [
+  "/",
+  "/Painel-FDV/Login",
+  "/Painel-Coletas/Login",
+  "/Redefinir-Senha",
+];
 
-// 1. Specify protected and public routes
-const publicRoutes = ["/Login", "/Esqueceu-a-senha"];
-
-export default async function authenticationMiddleware(req: NextRequest) {
-  // 2. Check if the current route is protected or public
+export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  console.log(path);
-  const isPublicRoute = publicRoutes.includes(path);
-  if (isPublicRoute) {
+
+  // Rotas públicas não precisam de autenticação
+  if (publicRoutes.includes(path)) {
     return NextResponse.next();
-  } else {
-    // 3. Get Token from cookies
-    const tokenSession = await cookies().get("token")?.value;
-    const rt = await cookies().get("refreshToken")?.value;
-    const currentUser = getUserFromToken(tokenSession!);
-    console.log("Usuario Atual:", currentUser);
-    // 4. Check if the token is valid by fetching the user data from the API
-    if (tokenSession) {
-      console.log("Tem token", tokenSession);
-      try {
-        const currentUser = getUserFromToken(tokenSession);
-        console.log(baseApiUrl);
-        console.log("Usuario Atual:", currentUser);
-        const response = await axios(`${baseApiUrl}/usuario/${currentUser}`, {
-          method: "GET",
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${tokenSession}`,
-            "Content-Type": "application/json",
-          },
-        });
+  }
 
-        return NextResponse.next();
-      } catch (err) {
-        console.log("Veio para o erro", err);
-        return NextResponse.redirect(new URL("/Login", req.nextUrl));
-      }
-    } else {
-      if (rt) {
-        console.log("Existe refreshToken", rt);
-        return NextResponse.next();
-      }
-      // 4. Redirect to /login if the user is not authenticated
-      if (tokenSession === undefined) {
-        return NextResponse.redirect(new URL("/Login", req.nextUrl));
-      }
+  const token = req.cookies.get("token")?.value;
 
+  if (token) {
+    try {
+      // Se conseguir decodificar o token, deixa passar
+      getUserFromToken(token);
       return NextResponse.next();
+    } catch {
+      // Token inválido → redireciona pro login correto
+      return redirectToLogin(path, req);
     }
   }
+
+  // Sem token → redireciona pro login correto
+  return redirectToLogin(path, req);
+}
+
+function redirectToLogin(path: string, req: NextRequest) {
+  if (path.startsWith("/Painel-Coletas")) {
+    return NextResponse.redirect(new URL("/Painel-Coletas/Login", req.url));
+  }
+  if (path.startsWith("/Painel-FDV")) {
+    return NextResponse.redirect(new URL("/Painel-FDV/Login", req.url));
+  }
+  // fallback
+  return NextResponse.redirect(new URL("/", req.url));
 }
 
 export const config = {
-  matcher: [
-    "/((?!Login|api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
-  ],
+  matcher: "/((?!api|_next/static|_next/image|favicon.ico).*)",
 };

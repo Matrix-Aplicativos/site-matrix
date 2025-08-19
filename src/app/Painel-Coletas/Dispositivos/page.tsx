@@ -70,11 +70,11 @@ const DispositivosPage: React.FC = () => {
     { key: "ativo", label: "Status" },
   ];
 
-const handleSort = (key: string) => {
+  const handleSort = (key: string) => {
   const fieldMap: { [key: string]: string } = {
-    'nomeDispositivo': 'nomeDispositivo',
-    'codDispositivo': 'id.codDispositivo', 
-    'ativo': 'ativo'
+    nomeDispositivo: "nome",           
+    codDispositivo: "id.codDispositivo",
+    ativo: "ativo",                    
   };
 
   const apiField = fieldMap[key] || key;
@@ -82,8 +82,10 @@ const handleSort = (key: string) => {
     sortConfig?.key === apiField && sortConfig.direction === "asc"
       ? "desc"
       : "asc";
+
   setSortConfig({ key: apiField, direction });
 };
+
 
   const handleDeleteDevice = async (codDispositivo: string) => {
     if (window.confirm("Deseja mesmo excluir esse dispositivo?")) {
@@ -203,9 +205,7 @@ const handleSort = (key: string) => {
                               ? styles.statusActive
                               : styles.statusInactive
                           }`}
-                        >
-                          
-                        </div>
+                        ></div>
                       </div>
                       {!dispositivo.ativo && (
                         <button
