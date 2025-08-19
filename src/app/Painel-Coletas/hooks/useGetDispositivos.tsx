@@ -19,7 +19,7 @@ interface UseGetDispositivosHook {
 const useGetDispositivos = (
   codEmpresa: number,
   pagina: number,
-  sortKey?: string,
+  orderBy?: string,
   sortDirection?: "asc" | "desc",
   enabled: boolean = true // ✅ novo parâmetro opcional
 ): UseGetDispositivosHook => {
@@ -35,7 +35,7 @@ const useGetDispositivos = (
       const queryParams = [
         `pagina=${pagina}`,
         `porPagina=5`,
-        sortKey ? `sortKey=${sortKey}` : null,
+        orderBy ? `orderBy=${orderBy}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
         .filter(Boolean)
@@ -57,7 +57,7 @@ const useGetDispositivos = (
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection, enabled]);
+  }, [codEmpresa, pagina, orderBy, sortDirection, enabled]);
 
   useEffect(() => {
     if (enabled) {

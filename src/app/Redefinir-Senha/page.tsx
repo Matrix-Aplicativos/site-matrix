@@ -67,6 +67,13 @@ function RedefinirSenhaPage() {
       return;
     }
 
+    if (senhaForca < 2 || senha.length < 6) {
+      setMensagemErro(
+        "A senha deve ser moderada ou forte e ter no mínimo 6 caracteres."
+      );
+      return;
+    }
+
     if (!token) {
       setMensagemErro("Token inválido. Solicite um novo link de redefinição.");
       return;
