@@ -412,7 +412,7 @@ export default function SiteMatrix() {
             <p className="mb-6 text-lg">
               {activeTab === "vendas"
                 ? "Na Matrix, desenvolvemos soluções inovadoras para potencializar sua força de vendas. Nosso aplicativo foi projetado para simplificar processos, aumentar a produtividade e impulsionar seus resultados comerciais."
-                : "Solução completa para gestão logística e transporte. O Matrix Coletas oferece controle total sobre suas operações de recebimento e distribuição, com tecnologia de ponta para otimizar seus processos."}
+                : "Solução completa para gestão logística e transporte. O Movix oferece controle total sobre suas operações de recebimento e distribuição, com tecnologia de ponta para otimizar seus processos."}
             </p>
           </div>
           <div className="lg:w-1/2 mt-8 lg:mt-0 flex justify-center items-center w-full h-full lg:ml-8">
