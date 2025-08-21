@@ -48,16 +48,17 @@ export default function RelatorioColetas({
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // garante que use toda a largura/altura do container
     plugins: {
       legend: {
-        display: false, // Removemos a legenda pois só temos um dataset
+        display: false, // removemos a legenda pois só temos um dataset
       },
       title: {
         display: true,
         text:
           view === "mensal"
-            ? `Coletas por Dia - ${currentMonth} ${currentYear}`
-            : `Coletas por Mês - ${currentYear}`,
+            ? `Coletas por dia - ${currentMonth}`
+            : `Coletas por mês - ${currentYear}`,
         font: {
           size: 16,
         },
@@ -76,7 +77,7 @@ export default function RelatorioColetas({
           display: true,
           text: view === "mensal" ? "Dias do Mês" : "Meses",
           font: {
-            weight: "bold",
+            weight: "bold" as const, // 👈 evita erro de tipagem
           },
         },
         grid: {
@@ -88,7 +89,7 @@ export default function RelatorioColetas({
           display: true,
           text: "Quantidade de Coletas",
           font: {
-            weight: "bold",
+            weight: "bold" as const, // 👈 idem
           },
         },
         beginAtZero: true,
@@ -101,8 +102,7 @@ export default function RelatorioColetas({
         },
       },
     },
-    maintainAspectRatio: false,
-  };
+  } as const;
 
   const placeholderStyle: React.CSSProperties = {
     display: "flex",
@@ -119,9 +119,7 @@ export default function RelatorioColetas({
       return (
         <>
           <LoadingOverlay />
-          <div style={placeholderStyle}>
-            Carregando dados de coletas...
-          </div>
+          <div style={placeholderStyle}>Carregando dados de coletas...</div>
         </>
       );
     }
@@ -142,7 +140,7 @@ export default function RelatorioColetas({
       );
     }
 
-    return <Bar data={chartData}  />;
+    return <Bar data={chartData} options={options} />;
   };
 
   return (
