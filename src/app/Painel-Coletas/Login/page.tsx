@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Logo from "@/app/img/Logo.png";
@@ -12,129 +12,238 @@ import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
-  const { loginUsuario, loading, error, definirPrimeiraSenhaUsuario } =
-    useLogin();
-  const [codUsuario, setCodUsuario] = useState<Number | 0>(0);
+  const {
+    loginUsuario,
+    loading,
+    error,
+    definirPrimeiraSenhaUsuario,
+    solicitarRedefinicaoSenha,
+  } = useLogin();
+
   const [definirPrimeiraSenha, setDefinirPrimeiraSenha] = useState(false);
+  const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
   const [login, setLogin] = useState("");
   const [textoIdentificacao, setTextoIdentificacao] = useState("");
+  const [tipoMensagem, setTipoMensagem] = useState<"sucesso" | "erro" | "">("");
   const [senha, setSenha] = useState("");
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [forcaSenha, setForcaSenha] = useState(0);
   const router = useRouter();
 
+  useEffect(() => {
+    if (!textoIdentificacao) return;
+
+    const timer = setTimeout(() => {
+      setTextoIdentificacao("");
+      setTipoMensagem("");
+    }, 3000); // 3000ms = 3 segundos
+
+    return () => clearTimeout(timer); // limpa o timeout se textoIdentificacao mudar antes de 3s
+  }, [textoIdentificacao]);
+  useEffect(() => {
+    if (!textoIdentificacao) {
+      setTextoIdentificacao("");
+      setTipoMensagem("");
+    }
+  }, [modoEsqueciSenha, definirPrimeiraSenha]);
+
   const handleDefinirSenha = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (forcaSenha >= 2) {
-      const data = await definirPrimeiraSenhaUsuario({ login, senha });
+    const data = await definirPrimeiraSenhaUsuario({
+      senha,
+      confirmacaoSenha,
+    });
+
+    if (!data) return; // hook já trata erro
+
+    if (
+      data.status === 200 ||
+      data.message?.toLowerCase().includes("sucesso")
+    ) {
       setTextoIdentificacao(
-        data?.status === 200
-          ? "Senha definida com sucesso"
-          : "Ocorreu um erro ao definir a senha"
+        "Senha definida com sucesso! Faça login novamente."
       );
+      setTipoMensagem("sucesso");
       setDefinirPrimeiraSenha(false);
       setSenha("");
+      setConfirmacaoSenha("");
+      setLogin("");
     } else {
-      setTextoIdentificacao(
-        "Sua senha está muito fraca, tente uma senha mais forte"
-      );
+      setTextoIdentificacao(data.message || "Erro ao definir senha.");
+      setTipoMensagem("erro");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const tokenObtido = await loginUsuario({ login, senha });
-    if (tokenObtido) {
-      try {
-        const response = await axiosInstance.get(
-          "/usuario/" + getUserFromToken(tokenObtido)
+
+    if (modoEsqueciSenha) {
+      if (!login) {
+        setTextoIdentificacao("Digite seu login para continuar");
+        setTipoMensagem("erro");
+        return;
+      }
+
+      const resp = await solicitarRedefinicaoSenha(login);
+
+      if (resp?.success) {
+        setTextoIdentificacao(
+          resp.message ||
+            "Solicitação enviada com sucesso! Verifique seu email."
         );
-        const usuario: Usuario = response.data;
+        setTipoMensagem("sucesso");
+        setModoEsqueciSenha(false);
+        setLogin("");
+      } else if (!resp) {
+        setTextoIdentificacao(error || "Erro ao enviar solicitação");
+        setTipoMensagem("erro");
+      }
+      return;
+    }
 
-        const codTipo = usuario.tipoUsuario?.codTipoUsuario;
+    const loginResult = await loginUsuario({ login, senha });
 
-        if (codTipo !== 1 && codTipo !== 5) {
-          setError(
-            "Acesso negado. Seu perfil de usuário não tem permissão para acessar o painel."
+    if (loginResult) {
+      const { token, primeiroAcesso } = loginResult;
+
+      if (primeiroAcesso) {
+        setDefinirPrimeiraSenha(true);
+        setSenha("");
+        setConfirmacaoSenha("");
+        setTextoIdentificacao(
+          "Este é o seu primeiro acesso, defina sua nova senha:"
+        );
+        setTipoMensagem("");
+      } else {
+        try {
+          const response = await axiosInstance.get(
+            "/usuario/" + getUserFromToken(token)
           );
-          return;
-        }
+          const usuario: Usuario = response.data;
+          const codTipo = usuario.tipoUsuario?.codTipoUsuario;
 
-        if (usuario.primeiroAcesso) {
-          setDefinirPrimeiraSenha(true);
-          setSenha("");
-          setTextoIdentificacao("Defina sua senha");
-        } else {
-          router.push("/");
+          if (codTipo !== 1 && codTipo !== 5) {
+            setTextoIdentificacao(
+              "Acesso negado. Seu perfil de usuário não tem permissão para acessar o painel."
+            );
+            setTipoMensagem("erro");
+            return;
+          }
+          router.push("/Painel-Coletas");
+        } catch {
+          setTextoIdentificacao("Erro ao validar o tipo de usuário.");
+          setTipoMensagem("erro");
         }
-      } catch (err) {
-        setError("Erro ao validar o tipo de usuário.");
       }
     }
   };
 
-  const verificarForcaSenha = () => {
+  const verificarForcaSenha = (valor: string) => {
     let pontuacao = 0;
-    if (senha.length >= 8) pontuacao++;
-
-    if (/[A-Z]/.test(senha)) pontuacao++;
-
-    if (/[a-z]/.test(senha)) pontuacao++;
-
-    if (/\d/.test(senha)) pontuacao++;
-
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(senha)) pontuacao++;
-    if (pontuacao === 0) return 0; // Muito Fraco
-    if (pontuacao <= 2) return 1; // Fraco
-    if (pontuacao === 3) return 2; // Moderado
-    else return 3; // Forte
+    if (valor.length >= 8) pontuacao++;
+    if (/[A-Z]/.test(valor)) pontuacao++;
+    if (/[a-z]/.test(valor)) pontuacao++;
+    if (/\d/.test(valor)) pontuacao++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(valor)) pontuacao++;
+    if (pontuacao === 0) return 0;
+    if (pontuacao <= 2) return 1;
+    if (pontuacao === 3) return 2;
+    return 3;
   };
 
   return (
     <div className="container">
       <div className="content">
         <div className="logo-container">
-          <Image src={Logo} alt="Logo" width={250} height={220} priority />
+          <Image src={Logo} alt="Logo" width={220} height={200} priority />
         </div>
 
         <h5 className="heading">Área do Cliente</h5>
+
         <form
           className="login-form"
-          onSubmit={(event: React.FormEvent) => {
-            if (definirPrimeiraSenha) {
-              handleDefinirSenha(event);
-            } else handleSubmit(event);
-          }}
+          onSubmit={definirPrimeiraSenha ? handleDefinirSenha : handleSubmit}
         >
-          <div className="input-field">
-            <input
-              disabled={definirPrimeiraSenha}
-              id="login"
-              type="text"
-              className="validate"
-              placeholder="Digite seu login"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
-            />
-            <label htmlFor="login">Login</label>
-          </div>
+          {!definirPrimeiraSenha && (
+            <div className="input-field">
+              <input
+                id="login"
+                type="text"
+                placeholder="Digite seu login"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+              />
+              <label htmlFor="login">Login</label>
+            </div>
+          )}
 
-          <div className="input-field">
-            <input
-              id="senha"
-              type="password"
-              className="validate"
-              placeholder="Digite sua senha"
-              value={senha}
-              onChange={(e) => {
-                setSenha(e.target.value);
-                if (definirPrimeiraSenha) setForcaSenha(verificarForcaSenha());
+          {!modoEsqueciSenha && (
+            <div className="input-field">
+              <input
+                id="senha"
+                type="password"
+                placeholder={
+                  definirPrimeiraSenha
+                    ? "Digite sua nova senha"
+                    : "Digite sua senha"
+                }
+                value={senha}
+                onChange={(e) => {
+                  setSenha(e.target.value);
+                  if (definirPrimeiraSenha) {
+                    setForcaSenha(verificarForcaSenha(e.target.value));
+                  }
+                }}
+              />
+              <label htmlFor="senha">
+                {definirPrimeiraSenha ? "Nova Senha" : "Senha"}
+              </label>
+            </div>
+          )}
+
+          {definirPrimeiraSenha && (
+            <div className="input-field">
+              <input
+                id="confirmacaoSenha"
+                type="password"
+                placeholder="Confirme sua nova senha"
+                value={confirmacaoSenha}
+                onChange={(e) => setConfirmacaoSenha(e.target.value)}
+              />
+              <label htmlFor="confirmacaoSenha">Confirmar Senha</label>
+            </div>
+          )}
+
+          {!definirPrimeiraSenha && !modoEsqueciSenha && (
+            <p
+              style={{
+                color: "#007bff",
+                cursor: "pointer",
+                textAlign: "center",
+                
               }}
-            />
-            <label htmlFor="senha">Senha</label>
-            {definirPrimeiraSenha ? (
-              <>
+              onClick={() => setModoEsqueciSenha(true)}
+            >
+              Esqueceu sua senha?
+            </p>
+          )}
+
+          {definirPrimeiraSenha && (
+            <>
+              <div
+                style={{
+                  height: "5px",
+                  borderRadius: "2.5px",
+                  backgroundColor: "#e0e0e0",
+                  marginTop: "10px",
+                }}
+              >
                 <div
                   style={{
+                    height: "100%",
+                    borderRadius: "2.5px",
+                    transition:
+                      "width 0.3s ease-in-out, background-color 0.3s ease-in-out",
                     backgroundColor:
                       forcaSenha >= 3
                         ? "green"
@@ -143,53 +252,76 @@ export default function LoginPage() {
                         : "red",
                     width: `${forcaSenha * 33.3333}%`,
                   }}
-                  className="forca-senha"
                 ></div>
-                <p
-                  style={{
-                    color:
-                      forcaSenha >= 3
-                        ? "green"
-                        : forcaSenha >= 2
-                        ? "orange"
-                        : "red",
-                  }}
-                  className="texto-forca-senha"
-                >
-                  {forcaSenha >= 3
-                    ? "Forte"
-                    : forcaSenha >= 2
-                    ? "Moderado"
-                    : "Fraco"}
-                </p>
-              </>
-            ) : null}
-          </div>
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading
-              ? "Entrando..."
-              : definirPrimeiraSenha
-              ? "Definir Senha"
-              : "Entrar"}
-          </button>
-          {definirPrimeiraSenha ? (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                setLogin("");
-                setDefinirPrimeiraSenha(false);
-                setTextoIdentificacao("");
-                setSenha("");
+              </div>
+              <p
+                style={{
+                  textAlign: "right",
+                  fontSize: "0.8rem",
+                  color:
+                    forcaSenha >= 3
+                      ? "green"
+                      : forcaSenha >= 2
+                      ? "orange"
+                      : "red",
+                }}
+              >
+                {forcaSenha >= 3
+                  ? "Forte"
+                  : forcaSenha >= 2
+                  ? "Moderado"
+                  : "Fraca"}
+              </p>
+            </>
+          )}
+
+          {(textoIdentificacao || error) && (
+            <p
+              style={{
+                textAlign: "center",
+                margin: "10px 0",
+                color:
+                  tipoMensagem === "sucesso" || (!tipoMensagem && !error)
+                    ? "green"
+                    : "red",
+                fontWeight: "bold",
               }}
-              className="voltar-button"
+            >
+              {textoIdentificacao || error}
+            </p>
+          )}
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "7px" }}>
+            <button
+              type="submit"
+              className="action-button enviar"
               disabled={loading}
             >
-              Voltar
+              {loading
+                ? "Processando..."
+                : modoEsqueciSenha
+                ? "Enviar"
+                : definirPrimeiraSenha
+                ? "Definir Senha"
+                : "Entrar"}
             </button>
-          ) : null}
+            {(modoEsqueciSenha || definirPrimeiraSenha) && (
+              <button
+                type="button"
+                className="action-button voltar"
+                onClick={() => {
+                  setModoEsqueciSenha(false);
+                  setDefinirPrimeiraSenha(false);
+                  setSenha("");
+                  setConfirmacaoSenha("");
+                  setLogin("");
+                }}
+              >
+                Voltar
+              </button>
+            )}
+          </div>
         </form>
-        <p style={{ maxWidth: 270 }}>{textoIdentificacao}</p>
-        {error && <p style={{ color: "red" }}>{error}</p>}
       </div>
 
       <footer className="footer">
@@ -200,7 +332,4 @@ export default function LoginPage() {
       </footer>
     </div>
   );
-}
-function setError(arg0: string) {
-  alert("Esse tipo de usuário nao tem acesso ao painel.");
 }

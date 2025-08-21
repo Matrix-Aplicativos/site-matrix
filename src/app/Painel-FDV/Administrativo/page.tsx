@@ -15,7 +15,6 @@ const AdmPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay />
       <h1 className={styles.title}>
         ADMINISTRATIVO -{" "}
         {usuario?.empresas?.[0]?.nomeFantasia?.toUpperCase() ??

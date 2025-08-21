@@ -25,7 +25,7 @@ const axiosInstanceColeta = axios.create({
 
 axiosInstanceColeta.interceptors.request.use(
   (config) => {
-    const token = getCookie("token_coleta");
+    const token = getCookie("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.headers["Content-Type"] = "application/json";
@@ -61,7 +61,7 @@ axiosInstanceColeta.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const rt = getCookie("refreshToken_coleta");
+        const rt = getCookie("refreshToken");
         if (!rt) throw new Error("Refresh token Coleta não encontrado.");
 
         const response = await axios.post(
@@ -74,13 +74,13 @@ axiosInstanceColeta.interceptors.response.use(
 
         const { token, refreshToken } = response.data;
 
-        setCookie("token_coleta", token, {
+        setCookie("token", token, {
           maxAge: Number(tokenExpiration),
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict", 
         });
 
-        setCookie("refreshToken_coleta", refreshToken, {
+        setCookie("refreshToken", refreshToken, {
           maxAge: Number(refreshTokenExpiration),
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict", 
@@ -90,7 +90,7 @@ axiosInstanceColeta.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstanceColeta(originalRequest);
       } catch (err) {
-        deleteCookie("refreshToken_coleta");
+        deleteCookie("refreshToken");
         processQueue(err, null);
         return Promise.reject(err);
       } finally {

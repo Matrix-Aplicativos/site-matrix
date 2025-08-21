@@ -29,7 +29,7 @@ const DeviceComponent: React.FC = () => {
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa ?? 0;
 
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [itemsPerPage] = useState(5); // Definindo 5 itens por página como padrão
+  const [itemsPerPage] = useState(5); 
   const [hasMoreData, setHasMoreData] = useState(true);
 
   const { dispositivos, loading, refetch } = useGetDispositivos(
@@ -74,20 +74,7 @@ const DeviceComponent: React.FC = () => {
     }
   }, [dispositivos, maximoDispositivos, itemsPerPage]);
 
-  useEffect(() => {
-    if (loading || loadingConfig || deleteLoading || ativarLoading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
-  }, [
-    loading,
-    loadingConfig,
-    deleteLoading,
-    ativarLoading,
-    showLoading,
-    hideLoading,
-  ]);
+  
 
   useEffect(() => {
     if (deleteError) {

@@ -19,20 +19,23 @@ interface UseGetDispositivosHook {
 const useGetDispositivos = (
   codEmpresa: number,
   pagina: number,
-  sortKey?: string,
-  sortDirection?: "asc" | "desc"
+  orderBy?: string,
+  sortDirection?: "asc" | "desc",
+  enabled: boolean = true // ✅ novo parâmetro opcional
 ): UseGetDispositivosHook => {
   const [dispositivos, setDispositivos] = useState<Dispositivo[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDispositivos = useCallback(async () => {
+    if (!enabled || !codEmpresa) return; // ✅ controle de execução
+
     try {
       setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
         `porPagina=5`,
-        sortKey ? `sortKey=${sortKey}` : null,
+        orderBy ? `orderBy=${orderBy}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
         .filter(Boolean)
@@ -41,6 +44,7 @@ const useGetDispositivos = (
       const response = await axiosInstance.get(
         `/dispositivo/${codEmpresa}?${queryParams}`
       );
+
       setDispositivos(response.data);
       setError(null);
     } catch (err) {
@@ -53,13 +57,13 @@ const useGetDispositivos = (
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection]);
+  }, [codEmpresa, pagina, orderBy, sortDirection, enabled]);
 
   useEffect(() => {
-    if (codEmpresa) {
+    if (enabled) {
       fetchDispositivos();
     }
-  }, [codEmpresa, pagina, sortKey, sortDirection, fetchDispositivos]);
+  }, [fetchDispositivos, enabled]);
 
   return { dispositivos, loading, error, refetch: fetchDispositivos };
 };

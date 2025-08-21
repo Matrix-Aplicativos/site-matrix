@@ -19,11 +19,15 @@ import Logo from "./img/Logo.svg";
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
-import Home from "./img/home-fdv.png";
-import Capa from "./img/capa-fdv.png";
-import Produtos from "./img/produtos-fdv.png";
-import Clientes from "./img/clientes-fdv.png";
-import Pedidos from "./img/pedidos-fdv.png";
+import HomeColeta from "./img/home-coleta.png";
+import CapaColeta from "./img/capa-coleta.png";
+import DemandasColeta from "./img/demandas-coleta.png";
+import ColetasColeta from "./img/coletas-coleta.png";
+import HomeFDV from "./img/home-fdv.png";
+import CapaFDV from "./img/capa-fdv.png";
+import ProdutosFDV from "./img/produtos-fdv.png";
+import ClientesFDV from "./img/clientes-fdv.png";
+import PedidosFDV from "./img/pedidos-fdv.png";
 import Scanner from "./img/scaneamento.jpg";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -49,7 +53,30 @@ export default function SiteMatrix() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("vendas");
 
-  const [carouselImages] = useState([Capa, Home, Produtos, Clientes, Pedidos]);
+  const [carouselImages] = useState([
+    CapaFDV,
+    HomeFDV,
+    ProdutosFDV,
+    ClientesFDV,
+    PedidosFDV,
+  ]);
+  const [carouselImagesColetas] = useState([
+    CapaColeta,
+    HomeColeta,
+    DemandasColeta,
+    ColetasColeta,
+  ]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasReloaded = urlParams.get("reloaded") === "true";
+
+    if (!hasReloaded) {
+      urlParams.set("reloaded", "true");
+      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+      window.location.replace(newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -180,7 +207,7 @@ export default function SiteMatrix() {
       productImage: Vendas,
     },
     coletas: {
-      title: "Matrix Coletas",
+      title: "MOVIX",
       description:
         "Solução completa para gestão de coletas e logística reversa, desenvolvida para empresas que precisam de controle total sobre suas operações de recebimento e transporte de mercadorias. Otimize sua operação com nossa tecnologia.",
       features: [
@@ -188,15 +215,15 @@ export default function SiteMatrix() {
         "Coletas Avulsas e sob demandas: Organize de maneira adequadas as coletas realizadas.",
         "Integração Total: Conecte-se facilmente com seu ERP ou sistema de gestão logística.",
       ],
-      whyTitle: "Por que o Matrix Coletas?",
+      whyTitle: "Por que o MOVIX?",
       whyPoints: [
         {
-          icon: <FaWifi className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Realize conferências offline de qualquer lugar.",
+          icon: <FaBarcode className="w-10 h-10 text-[#1769E3] self-center" />,
+          text: "Faça bipagens tanto por código do produto quanto código de barras.",
         },
         {
           icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Tenha acesso aos balanços e aos inventários em tempo real.",
+          text: "Tenha acesso aos balanços e aos inventários em tempo real com nosso painel administrativo.",
         },
         {
           icon: (
@@ -217,7 +244,7 @@ export default function SiteMatrix() {
   return (
     <div className="font-roboto">
       <header
-        className={`bg-blue-600 text-white py-4 fixed w-full top-0 z-50 transition-transform duration-300 ${
+        className={`bg-[#1769E3] text-white py-4 fixed w-full top-0 z-50 transition-transform duration-300 ${
           showHeader ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -241,7 +268,7 @@ export default function SiteMatrix() {
               Sobre nós
             </Link>
 
-            <div className="flex space-x-2 bg-blue-500 p-1 rounded-lg">
+            <div className="flex space-x-2 bg-blue-600 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("vendas")}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
@@ -262,7 +289,7 @@ export default function SiteMatrix() {
                 }`}
               >
                 <FaBarcode className="mr-2" />
-                Coletas
+                MOVIX
               </button>
             </div>
 
@@ -319,7 +346,7 @@ export default function SiteMatrix() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-2 rounded-lg ${
-                  activeTab === "vendas" ? "bg-blue-700" : "bg-blue-500"
+                  activeTab === "vendas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
                 <FaShoppingCart className="inline mr-2" />
@@ -331,7 +358,7 @@ export default function SiteMatrix() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-2 rounded-lg ${
-                  activeTab === "coletas" ? "bg-blue-700" : "bg-blue-500"
+                  activeTab === "coletas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
                 <FaBarcode className="inline mr-2" />
@@ -373,7 +400,7 @@ export default function SiteMatrix() {
       {/* Seção Sobre Nós (comum a ambos) */}
       <section
         id="sobre-nos"
-        className="bg-gradient-to-t from-blue-900 to-blue-400 text-white pt-24 pb-8"
+        className="bg-gradient-to-t from-[#0C48ED] to-[#1769E3] text-white pt-24 pb-8"
       >
         <div className="container mx-auto flex flex-col lg:flex-row items-center px-4">
           <div className="lg:w-1/2">
@@ -385,7 +412,7 @@ export default function SiteMatrix() {
             <p className="mb-6 text-lg">
               {activeTab === "vendas"
                 ? "Na Matrix, desenvolvemos soluções inovadoras para potencializar sua força de vendas. Nosso aplicativo foi projetado para simplificar processos, aumentar a produtividade e impulsionar seus resultados comerciais."
-                : "Solução completa para gestão logística e transporte. O Matrix Coletas oferece controle total sobre suas operações de recebimento e distribuição, com tecnologia de ponta para otimizar seus processos."}
+                : "Solução completa para gestão logística e transporte. O Movix oferece controle total sobre suas operações de recebimento e distribuição, com tecnologia de ponta para otimizar seus processos."}
             </p>
           </div>
           <div className="lg:w-1/2 mt-8 lg:mt-0 flex justify-center items-center w-full h-full lg:ml-8">
@@ -442,7 +469,7 @@ export default function SiteMatrix() {
 
       {/* Seção "Por que nosso produto" com Carrossel */}
       <section className="bg-[#f9f9f9] py-16 flex flex-col items-center">
-        <div className="text-center lg:col-span-2 mb-6">
+        <div className="text-center lg:col-span-2 mb-10">
           <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
             {tabContent[activeTab].whyTitle}
           </h2>
@@ -482,10 +509,12 @@ export default function SiteMatrix() {
               modules={[Autoplay, Pagination, Navigation]}
               className="mySwiper rounded-lg shadow-xl"
             >
-              {carouselImages.map((image, index) => (
+              {(activeTab === "vendas"
+                ? carouselImages
+                : carouselImagesColetas
+              ).map((image, index) => (
                 <SwiperSlide key={index}>
                   <div className="flex justify-center items-center h-200">
-                    {" "}
                     <Image
                       src={image}
                       alt={`Demonstração ${index + 1}`}
@@ -517,11 +546,11 @@ export default function SiteMatrix() {
               <p className="text-[#666666] font-semibold text-3xl lg:text-[32px] mb-4">
                 Telefone
               </p>
-              <div className="space-y-2 mb-4 text-xl">
+              <div className="space-y-2 mb-4 text-xl text-[#666666]">
                 <p>+55 65 99223-3566</p>
                 <p>+55 65 99604-4321</p>
               </div>
-              <p className="mb-4">Ou</p>
+              <p className="mb-4 text-[#666666]">Ou</p>
               <div className="flex justify-center lg:justify-center">
                 <Link
                   href="https://wa.me/5565992233566"
@@ -616,7 +645,7 @@ export default function SiteMatrix() {
         </div>
       </section>
 
-      <footer className="bg-blue-600 text-white py-4">
+      <footer className="bg-[#1769E3] text-white py-4">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4 gap-4">
           <div className="flex items-center">
             <Image
@@ -633,7 +662,10 @@ export default function SiteMatrix() {
               <Link href="https://www.instagram.com/matrixxapp" target="_blank">
                 <FaInstagram className="text-2xl hover:text-gray-400" />
               </Link>
-              <Link href="https://www.linkedin.com" target="_blank">
+              <Link
+                href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
+                target="_blank"
+              >
                 <FaLinkedin className="text-2xl hover:text-gray-400" />
               </Link>
               <Link href="https://wa.me/5565992233566" target="_blank">

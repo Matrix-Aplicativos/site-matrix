@@ -22,21 +22,12 @@ export default function RedefinirSenhaPage() {
 
         <div className="token-input-container">
           {[...Array(6)].map((_, index) => (
-<<<<<<< HEAD
             <input 
               key={index} 
               type="text" 
               maxLength={1}
               className="token-input-box" 
               inputMode="numeric" 
-=======
-            <input
-              key={index}
-              type="text"
-              maxLength={1} 
-              className="token-input-box"
-              inputMode="numeric"
->>>>>>> developer
             />
           ))}
         </div>

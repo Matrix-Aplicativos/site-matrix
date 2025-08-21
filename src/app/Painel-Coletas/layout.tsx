@@ -17,11 +17,11 @@ export default function PainelLayout({
   const pathname = usePathname();
   const hideSidebar =
     pathname === "/Painel-Coletas/Login" ||
+    pathname === "/Painel-Coletas/Login/" ||
     pathname === "/Painel-Coletas/RedefinirSenha";
 
   return (
-    <html lang="pt-br">
-      <body
+      <div
         className={`painel-body ${roboto.className}`}
         style={{ display: "flex" }}
       >
@@ -38,7 +38,6 @@ export default function PainelLayout({
           </main>
           <LoadingOverlay />
         </LoadingProvider>
-      </body>
-    </html>
+      </div>
   );
 }

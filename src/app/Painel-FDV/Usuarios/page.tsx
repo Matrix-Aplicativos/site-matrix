@@ -82,7 +82,10 @@ const UsuariosPage: React.FC = () => {
   const handleAtivarUsuario = async (codUsuario: string | number) => {
     await ativarUsuario(String(codUsuario), true, () => {
       toast.success("Usuário ativado com sucesso!");
-      setPaginaAtual((prev) => (prev === 1 ? 2 : 1));
+      // This logic forces a re-render/refetch. A better approach might be a dedicated refetch function.
+      const currentPage = paginaAtual;
+      setPaginaAtual(0); // Temporarily change to trigger useEffect
+      setTimeout(() => setPaginaAtual(currentPage), 0);
     });
   };
 
@@ -119,35 +122,14 @@ const UsuariosPage: React.FC = () => {
     setPaginaAtual(1);
   };
 
-  const handleNextPage = () => {
-    setPaginaAtual((prev) => prev + 1);
-  };
-
-  const handlePrevPage = () => {
-    setPaginaAtual((prev) => Math.max(1, prev - 1));
-  };
+  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
 
   const columns: ColumnDefinition[] = [
-    {
-      key: "nome",
-      label: "Nome",
-      render: (value) => <>{value}</>,
-    },
-    {
-      key: "email",
-      label: "Email",
-      render: (value) => <>{value}</>,
-    },
-    {
-      key: "cpf",
-      label: "CPF",
-      render: (value) => <>{value}</>,
-    },
-    {
-      key: "tipoUsuario.nome",
-      label: "Tipo de Usuário",
-      render: (value) => <>{value}</>,
-    },
+    { key: "nome", label: "Nome" },
+    { key: "email", label: "Email" },
+    { key: "cpf", label: "CPF" },
+    { key: "tipoUsuario.nome", label: "Tipo de Usuário" },
     {
       key: "ativo",
       label: "Status",
@@ -168,7 +150,7 @@ const UsuariosPage: React.FC = () => {
       label: "Ações",
       render: (_value: any, _row: UsuarioGet, rowIndex: number) => (
         <button
-          style={{ background: "none", border: "none", cursor: "pointer" }}
+          className={styles.expandButton}
           onClick={() => toggleExpandRow(rowIndex)}
         >
           {expandedRow === rowIndex ? "▲" : "▼"}
@@ -217,13 +199,10 @@ const UsuariosPage: React.FC = () => {
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key}>
+                <th key={col.key} onClick={() => handleSort(col.key)}>
                   {col.label}
-                  {col.key !== "actions" && (
-                    <FaSort
-                      style={{ marginLeft: "0.5em", cursor: "pointer" }}
-                      onClick={() => handleSort(col.key)}
-                    />
+                  {col.key !== "actions" && col.key !== "ativo" && (
+                    <FaSort style={{ marginLeft: "0.5em" }} />
                   )}
                 </th>
               ))}
@@ -231,7 +210,7 @@ const UsuariosPage: React.FC = () => {
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
+              <React.Fragment key={row.codUsuario}>
                 <tr
                   className={row.ativo ? styles.activeRow : styles.inactiveRow}
                 >
@@ -290,41 +269,50 @@ const UsuariosPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
+          {/* *** MODIFICATION START *** */}
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length}>
+                <div className={styles.paginationContainer}>
+                  <div className={styles.paginationControls}>
+                    <button
+                      onClick={() => setPaginaAtual(1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronsLeft />
+                    </button>
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>{paginaAtual}</span>
+                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                  <div className={styles.itemsPerPageContainer}>
+                    <span>Usuários por página: </span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setPaginaAtual(1);
+                      }}
+                      className={styles.itemsPerPageSelect}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+          {/* *** MODIFICATION END *** */}
         </table>
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={() => setPaginaAtual(1)}
-            disabled={paginaAtual === 1}
-          >
-            <FiChevronsLeft />
-          </button>
-
-          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
-            <FiChevronLeft />
-          </button>
-
-          <span>{paginaAtual}</span>
-
-          <button onClick={handleNextPage} disabled={!hasMoreData}>
-            <FiChevronRight />
-          </button>
-
-          <div className={styles.itemsPerPageContainer}>
-            <span>Usuários por página: </span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
   );

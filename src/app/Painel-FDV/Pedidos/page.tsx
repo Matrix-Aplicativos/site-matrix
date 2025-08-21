@@ -47,9 +47,34 @@ const PedidosPage: React.FC = () => {
   useEffect(() => {
     if (pedidos) {
       setHasMoreData(pedidos.length > 0);
-      setFilteredData(pedidos);
+      let data = pedidos;
+      // Apply filtering right away
+      if (
+        query !== "" ||
+        dateRange.startDate !== "" ||
+        dateRange.endDate !== ""
+      ) {
+        if (query) {
+          data = data.filter((pedido) =>
+            pedido[selectedFilter as keyof Pedido]
+              ?.toString()
+              .toLowerCase()
+              .includes(query.toLowerCase())
+          );
+        }
+        if (dateRange.startDate && dateRange.endDate) {
+          data = data.filter((pedido) => {
+            const pedidoDate = new Date(pedido.dataCadastro);
+            return (
+              pedidoDate >= new Date(dateRange.startDate) &&
+              pedidoDate <= new Date(dateRange.endDate)
+            );
+          });
+        }
+      }
+      setFilteredData(data);
     }
-  }, [pedidos]);
+  }, [pedidos, query, dateRange, selectedFilter]);
 
   useEffect(() => {
     if (isLoading) {
@@ -58,39 +83,6 @@ const PedidosPage: React.FC = () => {
       hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
-
-  useEffect(() => {
-    if (
-      query === "" &&
-      dateRange.startDate === "" &&
-      dateRange.endDate === ""
-    ) {
-      setFilteredData(pedidos || []);
-    } else {
-      let filtered = pedidos || [];
-
-      if (query) {
-        filtered = filtered.filter((pedido) =>
-          pedido[selectedFilter as keyof Pedido]
-            ?.toString()
-            .toLowerCase()
-            .includes(query.toLowerCase())
-        );
-      }
-
-      if (dateRange.startDate && dateRange.endDate) {
-        filtered = filtered.filter((pedido) => {
-          const pedidoDate = new Date(pedido.dataCadastro);
-          return (
-            pedidoDate >= new Date(dateRange.startDate) &&
-            pedidoDate <= new Date(dateRange.endDate)
-          );
-        });
-      }
-
-      setFilteredData(filtered);
-    }
-  }, [query, dateRange, pedidos, selectedFilter]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -102,7 +94,7 @@ const PedidosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
+    setPaginaAtual(1);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +103,7 @@ const PedidosPage: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    setPaginaAtual(1); // Resetar para a primeira página ao alterar datas
+    setPaginaAtual(1);
   };
 
   const sortData = (key: keyof Pedido) => {
@@ -123,50 +115,33 @@ const PedidosPage: React.FC = () => {
     ) {
       direction = "desc";
     }
-
     const sortedData = [...filteredData].sort((a, b) => {
-      if (a[key] < b[key]) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (a[key] > b[key]) {
-        return direction === "asc" ? 1 : -1;
-      }
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
     });
-
     setFilteredData(sortedData);
     setSortConfig({ key, direction });
   };
 
-  const handleNextPage = () => {
-    setPaginaAtual((prev) => prev + 1);
-  };
+  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
 
-  const handlePrevPage = () => {
-    setPaginaAtual((prev) => Math.max(1, prev - 1));
-  };
+  const getStatusLabel = (status: string) =>
+    status === "4" ? "Faturado" : status === "5" ? "Cancelado" : "Outro Status";
+  const getStatusColorClass = (status: string) =>
+    status === "4"
+      ? styles["status-invoiced"]
+      : status === "5"
+      ? styles["status-canceled"]
+      : "";
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "4":
-        return "Faturado";
-      case "5":
-        return "Cancelado";
-      default:
-        return "Outro Status";
-    }
-  };
-
-  const getStatusColorClass = (status: string) => {
-    switch (status) {
-      case "4":
-        return styles["status-invoiced"];
-      case "5":
-        return styles["status-canceled"];
-      default:
-        return "";
-    }
-  };
+  const columns = [
+    { key: "codPedido", label: "Código " },
+    { key: "dataCadastro", label: "Data" },
+    { key: "valorTotal", label: "Valor Total" },
+    { key: "status", label: "Status" },
+  ];
 
   return (
     <div className={styles.container}>
@@ -198,14 +173,12 @@ const PedidosPage: React.FC = () => {
                 name="startDate"
                 value={dateRange.startDate}
                 onChange={handleDateChange}
-                placeholder="Início"
               />
               <input
                 type="date"
                 name="endDate"
                 value={dateRange.endDate}
                 onChange={handleDateChange}
-                placeholder="Fim"
               />
             </div>
           </div>
@@ -215,25 +188,21 @@ const PedidosPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th onClick={() => sortData("codPedido")}>
-                Código do Pedido <FaSort />
-              </th>
-              <th onClick={() => sortData("dataCadastro")}>
-                Data <FaSort />
-              </th>
-              <th onClick={() => sortData("valorTotal")}>
-                Valor Total <FaSort />
-              </th>
-              <th onClick={() => sortData("status")}>
-                Status <FaSort />
-              </th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={() => sortData(col.key as keyof Pedido)}
+                >
+                  {col.label} <FaSort />
+                </th>
+              ))}
               <th></th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                <tr style={{ position: "relative" }}>
+              <React.Fragment key={row.codPedido}>
+                <tr className={getStatusColorClass(row.status)}>
                   <td>{row.codPedido}</td>
                   <td>
                     {new Date(row.dataCadastro).toLocaleDateString("pt-BR")}
@@ -242,30 +211,16 @@ const PedidosPage: React.FC = () => {
                   <td>{getStatusLabel(row.status)}</td>
                   <td>
                     <button
+                      className={styles.expandButton}
                       onClick={() => toggleExpandRow(rowIndex)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
                     >
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
                   </td>
-                  <div
-                    className={`${
-                      styles["status-indicator"]
-                    } ${getStatusColorClass(row.status)}`}
-                  />
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    <td colSpan={5}>
-                      <div
-                        className={`${
-                          styles["status-indicator"]
-                        } ${getStatusColorClass(row.status)}`}
-                      />
+                    <td colSpan={columns.length + 1}>
                       <div className={styles.additionalInfo}>
                         <div>
                           <p>
@@ -295,7 +250,7 @@ const PedidosPage: React.FC = () => {
                           </p>
                           <p>
                             <strong>Observação:</strong>{" "}
-                            {row.observacao || "Sem Observação"}
+                            {row.observacao || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -305,44 +260,50 @@ const PedidosPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
+          {/* *** MODIFICATION START *** */}
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length + 1}>
+                <div className={styles.paginationContainer}>
+                  <div className={styles.paginationControls}>
+                    <button
+                      onClick={() => setPaginaAtual(1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronsLeft />
+                    </button>
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>{paginaAtual}</span>
+                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                  <div className={styles.itemsPerPageContainer}>
+                    <span>Pedidos por página: </span>
+                    <select
+                      value={porPagina}
+                      onChange={(e) => {
+                        setPorPagina(Number(e.target.value));
+                        setPaginaAtual(1);
+                      }}
+                      className={styles.itemsPerPageSelect}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+          {/* *** MODIFICATION END *** */}
         </table>
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={(e) => {
-              if (paginaAtual >= 2) {
-                e.preventDefault();
-                setPaginaAtual(1);
-              }
-            }}
-          >
-            <FiChevronsLeft />
-          </button>
-          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
-            <FiChevronLeft />
-          </button>
-
-          <span>{paginaAtual}</span>
-
-          <button onClick={handleNextPage} disabled={!hasMoreData}>
-            <FiChevronRight />
-          </button>
-
-          <div className={styles.itemsPerPageContainer}>
-            <span>Pedidos por página: </span>
-            <select
-              value={porPagina}
-              onChange={(e) => {
-                setPorPagina(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
   );

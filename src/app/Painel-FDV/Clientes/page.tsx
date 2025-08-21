@@ -42,7 +42,6 @@ const ClientesPage: React.FC = () => {
 
   useEffect(() => {
     if (clientes) {
-      // Verifica se recebemos dados para saber se há mais páginas
       setHasMoreData(clientes.length > 0);
       setFilteredData(clientes);
       setSortedData(clientes);
@@ -67,7 +66,7 @@ const ClientesPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Resetar para a primeira página ao pesquisar
+    setPaginaAtual(1); // Reset to first page on search
 
     if (clientes) {
       const filtered = clientes.filter((cliente: any) => {
@@ -75,10 +74,13 @@ const ClientesPage: React.FC = () => {
         switch (searchTopic) {
           case "RazaoSocial":
             return cliente.razaoSocial.toLowerCase().includes(searchValue);
+          case "NomeFantasia":
+            return cliente.nomeFantasia.toLowerCase().includes(searchValue);
           case "CnpjCpf":
-            return cliente.cnpjcpf !== null && cliente.cnpjcpf !== undefined
-              ? cliente.cnpjcpf.toString().toLowerCase().includes(searchValue)
-              : false;
+            return (
+              cliente.cnpjcpf?.toString().toLowerCase().includes(searchValue) ??
+              false
+            );
           case "Codigo":
             return cliente.codClienteErp.toString().includes(searchValue);
           default:
@@ -92,7 +94,6 @@ const ClientesPage: React.FC = () => {
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" | null = "asc";
-
     if (
       sortConfig &&
       sortConfig.key === key &&
@@ -100,41 +101,23 @@ const ClientesPage: React.FC = () => {
     ) {
       direction = "desc";
     }
-
     const sorted = [...filteredData].sort((a: any, b: any) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
     });
-
     setSortedData(sorted);
     setSortConfig({ key, direction });
   };
 
-  const handleNextPage = () => {
-    setPaginaAtual((prev) => prev + 1);
-  };
-
-  const handlePrevPage = () => {
-    setPaginaAtual((prev) => Math.max(1, prev - 1));
-  };
+  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
 
   const columns = [
     { key: "codClienteErp", label: "Código" },
     { key: "razaoSocial", label: "Razão Social" },
     { key: "nomeFantasia", label: "Nome Fantasia" },
     { key: "cnpjcpf", label: "CNPJ/CPF" },
-    {
-      key: "actions",
-      render: (_value: any, _row: any, rowIndex: number) => (
-        <button
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-          onClick={() => toggleExpandRow(rowIndex)}
-        >
-          {expandedRow === rowIndex ? "▲" : "▼"}
-        </button>
-      ),
-    },
   ];
 
   return (
@@ -155,6 +138,7 @@ const ClientesPage: React.FC = () => {
               onChange={(e) => setSearchTopic(e.target.value)}
             >
               <option value="RazaoSocial">Razão Social</option>
+              <option value="NomeFantasia">Nome Fantasia</option>
               <option value="CnpjCpf">CNPJ/CPF</option>
               <option value="Codigo">Código</option>
             </select>
@@ -166,162 +150,152 @@ const ClientesPage: React.FC = () => {
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key}>
+                <th key={col.key} onClick={() => handleSort(col.key)}>
                   {col.label}
-                  {col.key !== "actions" && (
-                    <FaSort
-                      style={{ marginLeft: "0.5em", cursor: "pointer" }}
-                      onClick={() => handleSort(col.key)}
-                    />
-                  )}
+                  <FaSort style={{ marginLeft: "0.5em" }} />
                 </th>
               ))}
+              <th></th> {/* Header for expand button */}
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                <tr style={{ position: "relative" }}>
-                  <td>{row.codClienteErp}</td>
-                  <td>{row.razaoSocial}</td>
-                  <td>{row.nomeFantasia}</td>
-                  <td>{formatCnpjCpf(row.cnpjcpf)}</td>
-                  <td>
-                    <button
-                      onClick={() => toggleExpandRow(rowIndex)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
-                  </td>
-                  <div
-                    className={`${styles["status-indicator"]} ${
+            {Array.isArray(sortedData) &&
+              sortedData.map((row, rowIndex) => (
+                <React.Fragment key={row.codClienteErp}>
+                  <tr
+                    className={
                       row.status === "A"
-                        ? styles["status-active"]
-                        : styles["status-inactive"]
-                    }`}
-                  />
-                </tr>
-                {expandedRow === rowIndex && (
-                  <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length}>
-                      <div
-                        className={`${styles["status-indicator"]} ${
-                          row.status === "A"
-                            ? styles["status-active"]
-                            : styles["status-inactive"]
-                        }`}
-                      />
-                      <div className={styles.additionalInfo}>
-                        <div>
-                          <p>
-                            <strong>Razão Social:</strong> {row.razaoSocial}
-                          </p>
-                          <p>
-                            <strong>Nome Fantasia:</strong> {row.nomeFantasia}
-                          </p>
-                          <p>
-                            <strong>CNPJ/CPF:</strong>{" "}
-                            {formatCnpjCpf(row.cnpjcpf)}
-                          </p>
-                          <p>
-                            <strong>Telefone:</strong>{" "}
-                            {formatTelefone(row.fone1)}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Email:</strong> {row.email}
-                          </p>
-                          <p>
-                            <strong>Endereço:</strong> {row.endereco}
-                          </p>
-                          <p>
-                            <strong>Complemento:</strong>{" "}
-                            {row.complemento || "Nenhum"}
-                          </p>
-                          <p>
-                            <strong>CEP:</strong>{" "}
-                            {formatCep(row.cep) || "Não informado"}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Município (IBGE):</strong>{" "}
-                            {row.municipio.codMunicipio}
-                          </p>
-                          <p>
-                            <strong>Status:</strong> {row.status}
-                          </p>
-                          <p>
-                            <strong>Território:</strong>{" "}
-                            {row.territorio?.descricao ?? "Sem Território"}
-                          </p>
-                          <p>
-                            <strong>Rota:</strong>{" "}
-                            {row.rota?.descricao ?? "Sem Rota"}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Segmento:</strong>{" "}
-                            {row.segmento?.descricao ?? "Sem Segmento"}
-                          </p>
-                          <p>
-                            <strong>Classificação:</strong>{" "}
-                            {row.classificacao?.descricao ??
-                              "Sem classificação"}
-                          </p>
-                        </div>
-                      </div>
+                        ? styles.statusActive
+                        : styles.statusInactive
+                    }
+                  >
+                    <td>{row.codClienteErp}</td>
+                    <td>{row.razaoSocial}</td>
+                    <td>{row.nomeFantasia}</td>
+                    <td>{formatCnpjCpf(row.cnpjcpf)}</td>
+                    <td>
+                      <button
+                        className={styles.expandButton}
+                        onClick={() => toggleExpandRow(rowIndex)}
+                      >
+                        {expandedRow === rowIndex ? "▲" : "▼"}
+                      </button>
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
+                  {expandedRow === rowIndex && (
+                    <tr className={styles.expandedRow}>
+                      <td colSpan={columns.length + 1}>
+                        <div className={styles.additionalInfo}>
+                          <div>
+                            <p>
+                              <strong>Razão Social:</strong> {row.razaoSocial}
+                            </p>
+                            <p>
+                              <strong>Nome Fantasia:</strong> {row.nomeFantasia}
+                            </p>
+                            <p>
+                              <strong>CNPJ/CPF:</strong>{" "}
+                              {formatCnpjCpf(row.cnpjcpf)}
+                            </p>
+                            <p>
+                              <strong>Telefone:</strong>{" "}
+                              {formatTelefone(row.fone1)}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Email:</strong> {row.email}
+                            </p>
+                            <p>
+                              <strong>Endereço:</strong> {row.endereco}
+                            </p>
+                            <p>
+                              <strong>Complemento:</strong>{" "}
+                              {row.complemento || "Nenhum"}
+                            </p>
+                            <p>
+                              <strong>CEP:</strong>{" "}
+                              {formatCep(row.cep) || "Não informado"}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Município (IBGE):</strong>{" "}
+                              {row.municipio.codMunicipio}
+                            </p>
+                            <p>
+                              <strong>Status:</strong> {row.status}
+                            </p>
+                            <p>
+                              <strong>Território:</strong>{" "}
+                              {row.territorio?.descricao ?? "N/A"}
+                            </p>
+                            <p>
+                              <strong>Rota:</strong>{" "}
+                              {row.rota?.descricao ?? "N/A"}
+                            </p>
+                          </div>
+                          <div>
+                            <p>
+                              <strong>Segmento:</strong>{" "}
+                              {row.segmento?.descricao ?? "N/A"}
+                            </p>
+                            <p>
+                              <strong>Classificação:</strong>{" "}
+                              {row.classificacao?.descricao ?? "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
           </tbody>
+          {/* *** MODIFICATION START *** */}
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length + 1}>
+                <div className={styles.paginationContainer}>
+                  <div className={styles.paginationControls}>
+                    <button
+                      onClick={() => setPaginaAtual(1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronsLeft />
+                    </button>
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={paginaAtual === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>{paginaAtual}</span>
+                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                  <div className={styles.itemsPerPageContainer}>
+                    <span>Clientes por página: </span>
+                    <select
+                      value={porPagina}
+                      onChange={(e) => {
+                        setPorPagina(Number(e.target.value));
+                        setPaginaAtual(1);
+                      }}
+                      className={styles.itemsPerPageSelect}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+          {/* *** MODIFICATION END *** */}
         </table>
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={(e) => {
-              if (paginaAtual >= 2) {
-                e.preventDefault();
-                setPaginaAtual(1);
-              }
-            }}
-          >
-            <FiChevronsLeft />
-          </button>
-          <button onClick={handlePrevPage} disabled={paginaAtual === 1}>
-            <FiChevronLeft />
-          </button>
-
-          <span>{paginaAtual}</span>
-
-          <button onClick={handleNextPage} disabled={!hasMoreData}>
-            <FiChevronRight />
-          </button>
-
-          <div className={styles.itemsPerPageContainer}>
-            <span>Clientes por página: </span>
-            <select
-              value={porPagina}
-              onChange={(e) => {
-                setPorPagina(Number(e.target.value));
-                setPaginaAtual(1);
-              }}
-              className={styles.itemsPerPageSelect}
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
   );

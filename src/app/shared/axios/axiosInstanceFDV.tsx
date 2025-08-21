@@ -25,7 +25,7 @@ const axiosInstanceFDV = axios.create({
 
 axiosInstanceFDV.interceptors.request.use(
   (config) => {
-    const token = getCookie("token_fdv"); // use cookies separados se necessário
+    const token = getCookie("token"); // use cookies separados se necessário
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.headers["Content-Type"] = "application/json";
@@ -74,13 +74,13 @@ axiosInstanceFDV.interceptors.response.use(
 
         const { token, refreshToken } = response.data;
 
-        setCookie("token_fdv", token, {
+        setCookie("token", token, {
           maxAge: Number(tokenExpiration),
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
         });
 
-        setCookie("refreshToken_fdv", refreshToken, {
+        setCookie("refreshToken", refreshToken, {
           maxAge: Number(refreshTokenExpiration),
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
@@ -90,7 +90,7 @@ axiosInstanceFDV.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstanceFDV(originalRequest);
       } catch (err) {
-        deleteCookie("refreshToken_fdv");
+        deleteCookie("refreshToken");
         processQueue(err, null);
         return Promise.reject(err);
       } finally {
