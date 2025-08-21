@@ -48,6 +48,8 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   status: "status",
 };
 
+const TIPOS_DE_COLETA = ["3", "4"];
+
 const ConferenciasPage: React.FC = () => {
   // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -82,7 +84,7 @@ const ConferenciasPage: React.FC = () => {
     porPagina,
     sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
     sortConfig?.direction,
-    ["3", "4"],
+    TIPOS_DE_COLETA,
     !!codEmpresa
   );
 
