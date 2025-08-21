@@ -31,3 +31,6 @@ jobs:
           body: |
             🚀 Este PR foi criado automaticamente para mesclar a branch **${{ github.ref_name }}** na **main**.
             Favor revisar e aprovar.
+          draft: false
+          branch-suffix: timestamp   # <- evita conflitos criando PR único
+          always-create: true        # <- força criação mesmo sem diferenças
