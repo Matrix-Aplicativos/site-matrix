@@ -3,22 +3,31 @@ name: Auto PR Release → Main
 on:
   create:
     branches:
-      - 'release/*'
+      - "release/*"
 
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Criar Pull Request para main
+      - name: Debug branch info
+        run: |
+          echo "Ref: $GITHUB_REF"
+          echo "Ref name: $GITHUB_REF_NAME"
+          echo "Event name: $GITHUB_EVENT_NAME"
+
+      - name: Criar Pull Request para Main
         uses: peter-evans/create-pull-request@v6
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
           base: main
-          title: "Merge de branch ${{ github.ref_name }} para main"
+          title: "Merge ${{ github.ref_name }} into main"
           body: |
             🚀 Este PR foi criado automaticamente para mesclar a branch **${{ github.ref_name }}** na **main**.
             Favor revisar e aprovar.
-          draft: false
