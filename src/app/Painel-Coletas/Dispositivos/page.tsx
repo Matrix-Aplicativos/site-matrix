@@ -33,15 +33,17 @@ const DispositivosPage: React.FC = () => {
   // Contexto de loading
   const { showLoading, hideLoading } = useLoading();
 
-  // Busca de dados
+  // ✅ Hook atualizado - agora recebe porPagina e retorna totalPaginas
   const {
     dispositivos,
     loading: dispositivosLoading,
     error: dispositivosError,
     refetch,
+    totalPaginas, // ✅ Novo campo retornado pelo hook
   } = useGetDispositivos(
-    codEmpresa || 0, // Fallback para 0 se não houver empresa
+    codEmpresa || 0,
     paginaAtual,
+    porPagina, // ✅ Agora passando o parâmetro porPagina
     sortConfig?.key,
     sortConfig?.direction,
     !!codEmpresa
@@ -56,7 +58,9 @@ const DispositivosPage: React.FC = () => {
 
   // Estados combinados
   const isLoading = companyLoading || dispositivosLoading || loadingConfig;
-  const hasMoreData = dispositivos ? dispositivos.length >= porPagina : false;
+
+  // ✅ Agora podemos usar totalPaginas para controlar a paginação
+  const hasMoreData = paginaAtual < totalPaginas;
 
   // Contadores de status
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
@@ -71,21 +75,20 @@ const DispositivosPage: React.FC = () => {
   ];
 
   const handleSort = (key: string) => {
-  const fieldMap: { [key: string]: string } = {
-    nomeDispositivo: "nome",           
-    codDispositivo: "id.codDispositivo",
-    ativo: "ativo",                    
+    const fieldMap: { [key: string]: string } = {
+      nomeDispositivo: "nome",
+      codDispositivo: "id.codDispositivo",
+      ativo: "ativo",
+    };
+
+    const apiField = fieldMap[key] || key;
+    const direction =
+      sortConfig?.key === apiField && sortConfig.direction === "asc"
+        ? "desc"
+        : "asc";
+
+    setSortConfig({ key: apiField, direction });
   };
-
-  const apiField = fieldMap[key] || key;
-  const direction =
-    sortConfig?.key === apiField && sortConfig.direction === "asc"
-      ? "desc"
-      : "asc";
-
-  setSortConfig({ key: apiField, direction });
-};
-
 
   const handleDeleteDevice = async (codDispositivo: string) => {
     if (window.confirm("Deseja mesmo excluir esse dispositivo?")) {
@@ -110,6 +113,8 @@ const DispositivosPage: React.FC = () => {
 
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
   const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handleFirstPage = () => setPaginaAtual(1);
+  const handleLastPage = () => setPaginaAtual(totalPaginas);
 
   // Efeitos
   useEffect(() => {
@@ -259,7 +264,7 @@ const DispositivosPage: React.FC = () => {
                         </button>
                       </div>
                       <div className={styles.itemsPerPageContainer}>
-                        <span>Dispositivos por página: </span>
+                        <span>Itens por página: </span>
                         <select
                           value={porPagina}
                           onChange={(e) => {
