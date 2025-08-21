@@ -1,12 +1,12 @@
 name: Auto PR Release → Main
 
 on:
-  create:
+  push:
     branches:
       - "release/*"
 
 jobs:
-  create-pull-request:
+  create-pr:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,22 +15,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug branch info
-        run: |
-          echo "Ref: $GITHUB_REF"
-          echo "Ref name: $GITHUB_REF_NAME"
-          echo "Event name: $GITHUB_EVENT_NAME"
+      - name: Install GitHub CLI
+        run: sudo apt-get install -y gh
 
-      - name: Criar Pull Request para Main
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}
-          base: main
-          title: "Merge ${{ github.ref_name }} into main"
-          body: |
-            🚀 Este PR foi criado automaticamente para mesclar a branch **${{ github.ref_name }}** na **main**.
-            Favor revisar e aprovar.
-          draft: false
-          branch-suffix: timestamp   # <- evita conflitos criando PR único
-          always-create: true        # <- força criação mesmo sem diferenças
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Verificar se já algum PR release/x.x.x Aberto
+        id: check_pr
+        run: |
+          if gh pr list --base main --head "${GITHUB_REF_NAME}" --state open --json number --jq '.[0].number' | grep -q '^[0-9]\+'; then
+            echo "pr_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "pr_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Criar PR se não existir
+        if: steps.check_pr.outputs.pr_exists == 'false'
+        run: |
+          gh pr create \
+            --base main \
+            --head "${GITHUB_REF_NAME}" \
+            --title "Merge ${GITHUB_REF_NAME} into main" \
+            --body "🚀 Este PR foi criado automaticamente para mesclar a branch **${GITHUB_REF_NAME}** na **main**. Favor revisar e aprovar."
