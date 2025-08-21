@@ -93,7 +93,8 @@ const useGetColetas = (
   porPagina: number = 100,
   orderBy?: string,
   sortDirection?: "asc" | "desc",
-  enabled: boolean = true 
+  tipo?: string | string[], 
+  enabled: boolean = true
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -113,6 +114,14 @@ const useGetColetas = (
         orderBy: orderBy || "codColeta",
         sortDirection: sortDirection || "desc",
       });
+
+      if (tipo) {
+        if (Array.isArray(tipo)) {
+          tipo.forEach((t) => queryParams.append("tipo", t));
+        } else {
+          queryParams.append("tipo", tipo);
+        }
+      }
 
       const response = await axiosInstance.get(
         `/coleta/empresa/${codEmpresa}?${queryParams}`
@@ -141,7 +150,7 @@ const useGetColetas = (
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, porPagina, orderBy, sortDirection, enabled]);
+  }, [codEmpresa, pagina, porPagina, orderBy, sortDirection, tipo, enabled]);
 
   useEffect(() => {
     if (enabled) {

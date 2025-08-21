@@ -80,25 +80,23 @@ const InventariosPage: React.FC = () => {
   } = useGetColetas(
     codEmpresa || 0,
     paginaAtual,
-    100,
+    porPagina,
     sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
     sortConfig?.direction,
+    "1",
     !!codEmpresa
   );
 
-  // Hook para deletar coletas
   const {
     deletarColeta,
     loading: deleting,
     error: deleteError,
   } = deleteColetaAvulsaHook();
 
-  // Estados combinados
   const isLoading = companyLoading || coletasLoading || deleting;
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
   const codUsuario = usuario?.codUsuario || 0;
 
-  // Funções auxiliares
   const getOrigemText = (origem: string) => {
     switch (origem) {
       case "1":

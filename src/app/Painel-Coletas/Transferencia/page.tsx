@@ -79,9 +79,10 @@ const TransferenciasPage: React.FC = () => {
   } = useGetColetas(
     codEmpresa || 0,
     paginaAtual,
-    100,
+    porPagina,
     sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
     sortConfig?.direction,
+    "2",
     !!codEmpresa
   );
 
