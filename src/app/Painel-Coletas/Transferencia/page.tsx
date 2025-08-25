@@ -128,11 +128,13 @@ const TransferenciasPage: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case "1":
-        return "Pendente";
+        return "Não Iniciada";
       case "2":
-        return "Em Andamento";
+        return "Finalizada Parcialmente";
       case "3":
-        return "Concluída";
+        return "Finalizada Completa";
+      case "4":
+        return "Em Andamento";
       default:
         return status;
     }

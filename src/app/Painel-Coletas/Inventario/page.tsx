@@ -43,9 +43,9 @@ interface ColetaExibida {
 // Mapeia a chave da coluna da tabela para o nome do campo na API
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   descricao: "descricao",
-  data: "dataCadastro", 
+  data: "dataCadastro",
   origem: "origem",
-  tipoMovimento: "tipo", 
+  tipoMovimento: "tipo",
   status: "status",
 };
 
@@ -126,11 +126,13 @@ const InventariosPage: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case "1":
-        return "Pendente";
+        return "Não Iniciada";
       case "2":
-        return "Em Andamento";
+        return "Finalizada Parcialmente";
       case "3":
-        return "Concluída";
+        return "Finalizada Completa";
+      case "4":
+        return "Em Andamento";
       default:
         return status;
     }
