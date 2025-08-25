@@ -35,6 +35,7 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import InputMask from "react-input-mask";
 
 export default function SiteMatrix() {
   const [showHeader, setShowHeader] = useState(true);
@@ -45,6 +46,7 @@ export default function SiteMatrix() {
     empresa: "",
     assunto: "",
     mensagem: "",
+    telefone: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
@@ -133,23 +135,15 @@ export default function SiteMatrix() {
     setSubmitStatus(null);
 
     try {
-      const response = await fetch("/api/send-email", {
+      const API_URL =
+        "http://ec2-18-119-111-2.us-east-2.compute.amazonaws.com:8082";
+
+      const response = await fetch(`${API_URL}/contato`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: "contato@matrixapps.com.br",
-          subject: `Contato via site: ${formData.assunto}`,
-          text: `Nome: ${formData.nome}\nEmail: ${formData.email}\nEmpresa: ${formData.empresa}\nMensagem: ${formData.mensagem}`,
-          html: `
-            <h2>Novo contato via site</h2>
-            <p><strong>Nome:</strong> ${formData.nome}</p>
-            <p><strong>Email:</strong> ${formData.email}</p>
-            <p><strong>Empresa:</strong> ${formData.empresa}</p>
-            <p><strong>Assunto:</strong> ${formData.assunto}</p>
-            <p><strong>Mensagem:</strong></p>
-            <p>${formData.mensagem}</p>
-          `,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -160,11 +154,18 @@ export default function SiteMatrix() {
           empresa: "",
           assunto: "",
           mensagem: "",
+          telefone: "",
         });
       } else {
+        console.error(
+          "Erro na resposta:",
+          response.status,
+          response.statusText
+        );
         setSubmitStatus("error");
       }
     } catch (error) {
+      console.error("Erro na requisição:", error);
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -362,7 +363,7 @@ export default function SiteMatrix() {
                 }`}
               >
                 <FaBarcode className="inline mr-2" />
-                Coletas
+                MOVIX
               </button>
             </div>
             <Link
@@ -493,7 +494,7 @@ export default function SiteMatrix() {
             ))}
           </div>
 
-          {/* Coluna do carrossel */}
+          {/* Coluna do carrossel - COM CORREÇÕES */}
           <div className="w-full lg:w-1/2 max-w-md mx-auto">
             <Swiper
               spaceBetween={30}
@@ -507,27 +508,55 @@ export default function SiteMatrix() {
               }}
               navigation={true}
               modules={[Autoplay, Pagination, Navigation]}
-              className="mySwiper rounded-lg shadow-xl"
+              className="mySwiper"
+              style={{ background: "transparent" }}
             >
               {(activeTab === "vendas"
                 ? carouselImages
                 : carouselImagesColetas
               ).map((image, index) => (
-                <SwiperSlide key={index}>
-                  <div className="flex justify-center items-center h-200">
-                    <Image
-                      src={image}
-                      alt={`Demonstração ${index + 1}`}
-                      width={300}
-                      height={300}
-                      className="object-contain rounded-lg"
-                    />
-                  </div>
+                <SwiperSlide
+                  key={index}
+                  style={{
+                    background: "transparent",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    src={image}
+                    alt={`Demonstração ${index + 1}`}
+                    width={300}
+                    height={300}
+                    className="object-contain rounded-lg"
+                    style={{ background: "transparent" }}
+                  />
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
         </div>
+
+        {/* Adicione o estilo inline */}
+        <style jsx>{`
+          .mySwiper {
+            background: transparent !important;
+          }
+          .mySwiper .swiper-slide {
+            background: transparent !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .mySwiper .swiper-pagination-bullet {
+            background: #1769e3 !important;
+          }
+          .mySwiper .swiper-button-next,
+          .mySwiper .swiper-button-prev {
+            color: #1769e3 !important;
+          }
+        `}</style>
       </section>
 
       <section id="contato" className="bg-[#f9f9f9] py-10">
@@ -599,15 +628,28 @@ export default function SiteMatrix() {
                     className="p-3 border border-gray-300 rounded-lg w-full text-lg"
                   />
                 </div>
-                <input
-                  type="text"
-                  name="assunto"
-                  placeholder="Assunto"
-                  value={formData.assunto}
-                  onChange={handleChange}
-                  required
-                  className="p-3 border border-gray-300 rounded-lg w-full text-lg"
-                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    name="assunto"
+                    placeholder="Assunto"
+                    value={formData.assunto}
+                    onChange={handleChange}
+                    required
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg"
+                  />
+                  <InputMask
+                    mask="(99) 99999-9999"
+                    type="tel"
+                    name="telefone"
+                    placeholder="Telefone"
+                    value={formData.telefone}
+                    onChange={handleChange}
+                    required
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
                 <textarea
                   name="mensagem"
                   placeholder="Mensagem"
