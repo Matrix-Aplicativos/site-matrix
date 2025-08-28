@@ -156,7 +156,7 @@ export default function SiteMatrix() {
 
     try {
       const API_URL =
-        "http://ec2-18-119-111-2.us-east-2.compute.amazonaws.com:8082";
+        "http://ec2-3-20-117-56.us-east-2.compute.amazonaws.com:8082";
 
       const response = await fetch(`${API_URL}/contato`, {
         method: "POST",
