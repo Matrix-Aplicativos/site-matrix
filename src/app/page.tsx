@@ -155,9 +155,10 @@ export default function SiteMatrix() {
     setSubmitStatus(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL.replace("/v1","")
+      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL;
+      const api = API_URL.replace("/v1","")
 
-      const response = await fetch(`${API_URL}/contato`, {
+      const response = await fetch(`${api}/contato`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
