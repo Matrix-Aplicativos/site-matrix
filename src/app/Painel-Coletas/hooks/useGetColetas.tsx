@@ -23,6 +23,13 @@ interface ItemConferencia {
   codFabricante: string;
   qtdAConferir: number;
   qtdConferida: number;
+  usuarioBipagem: {
+    codUsuario: number;
+    codUsuarioErp: string;
+    nome: string;
+    cpf: string;
+  };
+  dataHoraBipe: string;
 }
 
 interface Usuario {
@@ -93,7 +100,7 @@ const useGetColetas = (
   porPagina: number = 100,
   orderBy?: string,
   sortDirection?: "asc" | "desc",
-  tipo?: string | string[], 
+  tipo?: string | string[],
   enabled: boolean = true
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);

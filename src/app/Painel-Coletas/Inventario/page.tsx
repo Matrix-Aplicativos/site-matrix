@@ -37,6 +37,8 @@ interface ColetaExibida {
     descricaoItem: string;
     qtdConferida: number;
     codBarra: string;
+    usuarioBipagemNome: string;
+    dataHoraBipe: string;
   }[];
 }
 
@@ -161,6 +163,8 @@ const InventariosPage: React.FC = () => {
           descricaoItem: item.descricaoItem,
           qtdConferida: item.qtdConferida,
           codBarra: item.codBarra,
+          usuarioBipagemNome: item.usuarioBipagem?.nome || "Item não bipado",
+          dataHoraBipe: item.dataHoraBipe,
         })),
       }));
 
@@ -455,6 +459,18 @@ const InventariosPage: React.FC = () => {
                                   </p>
                                   <p>
                                     <strong>Qtd.:</strong> {item.qtdConferida}
+                                  </p>
+                                  <p>
+                                    <strong>Responsável Bipagem:</strong>{" "}
+                                    {item.usuarioBipagemNome}
+                                  </p>
+                                  <p>
+                                    <strong>Data/Hora Bipe:</strong>{" "}
+                                    {item.dataHoraBipe
+                                      ? new Date(
+                                          item.dataHoraBipe
+                                        ).toLocaleString("pt-BR")
+                                      : "Item não bipado"}
                                   </p>
                                 </div>
                               ))}

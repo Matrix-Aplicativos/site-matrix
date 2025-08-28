@@ -71,6 +71,13 @@ interface Coleta {
     codFabricante: string;
     qtdAConferir: number;
     qtdConferida: number;
+    usuarioBipagem: {
+      codUsuario: number;
+      codUsuarioErp: string;
+      nome: string;
+      cpf: string;
+    };
+    dataHoraBipe: string;
   }[];
   dataCadastro: string;
 }
