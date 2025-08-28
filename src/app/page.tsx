@@ -21,8 +21,9 @@ import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
 import HomeColeta from "./img/home-coleta.png";
 import CapaColeta from "./img/capa-coleta.png";
-import DemandasColeta from "./img/demandas-coleta.png";
-import ColetasColeta from "./img/coletas-coleta.png";
+import MovimentacoesColeta from "./img/movimentacoes-coleta.png";
+import ColetasColeta from "./img/itens-coleta.png";
+import ConferenciasColeta from "./img/conferencias-coleta.png";
 import HomeFDV from "./img/home-fdv.png";
 import CapaFDV from "./img/capa-fdv.png";
 import ProdutosFDV from "./img/produtos-fdv.png";
@@ -36,6 +37,17 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import InputMask from "react-input-mask";
+
+interface Feature {
+  title: string;
+  text: string;
+}
+
+interface TabContent {
+  title: string;
+  description: string;
+  features: Feature[];
+}
 
 export default function SiteMatrix() {
   const [showHeader, setShowHeader] = useState(true);
@@ -65,18 +77,26 @@ export default function SiteMatrix() {
   const [carouselImagesColetas] = useState([
     CapaColeta,
     HomeColeta,
-    DemandasColeta,
+    ConferenciasColeta,
+    MovimentacoesColeta,
     ColetasColeta,
   ]);
 
   useEffect(() => {
+    // Verificar se estamos no cliente (não no servidor)
+    if (typeof window === "undefined") return;
+
     const urlParams = new URLSearchParams(window.location.search);
     const hasReloaded = urlParams.get("reloaded") === "true";
 
-    if (!hasReloaded) {
+    if (!hasReloaded && sessionStorage.getItem("hasReloaded") !== "true") {
+      sessionStorage.setItem("hasReloaded", "true");
       urlParams.set("reloaded", "true");
       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
       window.location.replace(newUrl);
+    } else if (hasReloaded) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
     }
   }, []);
 
@@ -171,17 +191,28 @@ export default function SiteMatrix() {
       setIsSubmitting(false);
     }
   };
-
   const tabContent = {
     vendas: {
       title: "Força de Vendas Matrix",
       description:
         "Está em busca de uma solução que impulsione os resultados da sua equipe de vendas e eleve a produtividade a outro nível? Nosso aplicativo de força de vendas foi desenvolvido especialmente para representantes comerciais e lojas que desejam otimizar seus processos e alcançar resultados extraordinários.",
       features: [
-        "Gestão de Pedidos: Controle completo de pedidos em tempo real, garantindo mais agilidade e organização.",
-        "Catálogo Digital: Apresente seus produtos de forma profissional e visualmente atraente, diretamente pelo aplicativo.",
-        "Relatórios Personalizados: Acompanhe o desempenho da equipe e tome decisões estratégicas com base em sistemas precisos.",
-        "Controle de Estoque: Evite surpresas desagradáveis com um sistema integrado de gerenciamento de estoque.",
+        {
+          title: "Gestão de Pedidos",
+          text: "Controle completo de pedidos em tempo real, garantindo mais agilidade e organização.",
+        },
+        {
+          title: "Catálogo Digital",
+          text: "Apresente seus produtos de forma profissional e visualmente atraente, diretamente pelo aplicativo.",
+        },
+        {
+          title: "Relatórios Personalizados",
+          text: "Acompanhe o desempenho da equipe e tome decisões estratégicas com base em sistemas precisos.",
+        },
+        {
+          title: "Controle de Estoque",
+          text: "Evite surpresas desagradáveis com um sistema integrado de gerenciamento de estoque.",
+        },
       ],
       whyTitle: "Por que o Força de Vendas Matrix?",
       whyPoints: [
@@ -207,14 +238,33 @@ export default function SiteMatrix() {
       coverImage: Futuro,
       productImage: Vendas,
     },
+
     coletas: {
-      title: "MOVIX",
+      title:
+        "Automatize suas Rotinas de Estoque ganhando tempo e evitando Prejuízos",
       description:
-        "Solução completa para gestão de coletas e logística reversa, desenvolvida para empresas que precisam de controle total sobre suas operações de recebimento e transporte de mercadorias. Otimize sua operação com nossa tecnologia.",
+        "Automatize as Rotinas de Separação de mercadoria da sua empresa eliminando prejuízos financeiros ou desgastes com clientes coletando e conferindo produtos com assertividade. Para cada Rotina da sua empresa o Movix tem uma solução.",
       features: [
-        "Gestão de Coletas: Controle completo dos itens em tempo real, garantindo mais agilidade e organização.",
-        "Coletas Avulsas e sob demandas: Organize de maneira adequadas as coletas realizadas.",
-        "Integração Total: Conecte-se facilmente com seu ERP ou sistema de gestão logística.",
+        {
+          title: "Inventários",
+          text: "Elimine o uso de papel e erros de digitação. Conte com coleta via código de barras ou buscas inteligentes diretamente no ato do inventário.",
+        },
+        {
+          title: "Transferência de Estoque",
+          text: "Crie demandas ou faça transferências avulsas com conferência automática no momento da separação.",
+        },
+        {
+          title: "Compras",
+          text: "Receba mercadorias com assertividade conferindo os itens pelo XML da nota ou pedido integrado ao ERP.",
+        },
+        {
+          title: "Pedido de Vendas / Nota de Saída",
+          text: "Garanta que o cliente receba exatamente o produto vendido, com agilidade e conferência no ato da separação.",
+        },
+        {
+          title: "Integração Total",
+          text: "API de integração com seu ERP, sem retrabalho de lançamentos ou processos manuais.",
+        },
       ],
       whyTitle: "Por que o MOVIX?",
       whyPoints: [
@@ -241,7 +291,6 @@ export default function SiteMatrix() {
       productImage: Scanner,
     },
   };
-
   return (
     <div className="font-roboto">
       <header
@@ -408,12 +457,12 @@ export default function SiteMatrix() {
             <h1 className="text-4xl font-bold mb-4">
               {activeTab === "vendas"
                 ? "TRANSFORMANDO SUAS VENDAS"
-                : "REVOLUCIONANDO SUAS COLETAS"}
+                : "MOVIX, SEU ESTOQUE NA PALMA DA MÃO"}
             </h1>
             <p className="mb-6 text-lg">
               {activeTab === "vendas"
                 ? "Na Matrix, desenvolvemos soluções inovadoras para potencializar sua força de vendas. Nosso aplicativo foi projetado para simplificar processos, aumentar a produtividade e impulsionar seus resultados comerciais."
-                : "Solução completa para gestão logística e transporte. O Movix oferece controle total sobre suas operações de recebimento e distribuição, com tecnologia de ponta para otimizar seus processos."}
+                : "O Movix é um Aplicativo Prático e Intuitivo para realizar Inventários e Transferências de Estoque, além de Conferências de Compras e Vendas, facilitando a conferencia da movimentação dos Produtos e certificando o produto Coletado através de código de barras ou QrCode."}
             </p>
           </div>
           <div className="lg:w-1/2 mt-8 lg:mt-0 flex justify-center items-center w-full h-full lg:ml-8">
@@ -461,7 +510,9 @@ export default function SiteMatrix() {
             </p>
             <ul className="list-disc pl-6 text-lg lg:text-xl text-[#333333] space-y-3">
               {tabContent[activeTab].features.map((feature, index) => (
-                <li key={index}>{feature}</li>
+                <li key={index}>
+                  <strong>{feature.title}:</strong> {feature.text}
+                </li>
               ))}
             </ul>
           </div>
@@ -607,7 +658,7 @@ export default function SiteMatrix() {
                   value={formData.nome}
                   onChange={handleChange}
                   required
-                  className="p-3 border border-gray-300 rounded-lg w-full text-lg"
+                  className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
@@ -617,7 +668,7 @@ export default function SiteMatrix() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg"
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                   />
                   <input
                     type="text"
@@ -625,7 +676,7 @@ export default function SiteMatrix() {
                     placeholder="Empresa"
                     value={formData.empresa}
                     onChange={handleChange}
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg"
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                   />
                 </div>
 
@@ -637,7 +688,7 @@ export default function SiteMatrix() {
                     value={formData.assunto}
                     onChange={handleChange}
                     required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg"
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                   />
                   <InputMask
                     mask="(99) 99999-9999"
@@ -647,7 +698,7 @@ export default function SiteMatrix() {
                     value={formData.telefone}
                     onChange={handleChange}
                     required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <textarea
@@ -657,7 +708,7 @@ export default function SiteMatrix() {
                   value={formData.mensagem}
                   onChange={handleChange}
                   required
-                  className="p-3 border border-gray-300 rounded-lg resize-none w-full text-lg"
+                  className="p-3 border border-gray-300 rounded-lg resize-none w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                 ></textarea>
 
                 {submitStatus === "success" && (
