@@ -6,6 +6,7 @@ const publicRoutes = [
   "/Painel-FDV/Login",
   "/Painel-Coletas/Login",
   "/Redefinir-Senha",
+  "/Contato",
 ];
 
 export default function middleware(req: NextRequest) {
