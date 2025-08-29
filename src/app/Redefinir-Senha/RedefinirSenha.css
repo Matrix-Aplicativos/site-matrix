@@ -159,3 +159,17 @@ body {
   cursor: pointer;
   text-decoration: underline;
 }
+
+.senha-container {
+  position: relative;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #555;
+  font-size: 1.1rem;
+}

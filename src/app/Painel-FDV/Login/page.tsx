@@ -8,8 +8,9 @@ import "./Login.css";
 import useLogin from "../hooks/useLogin";
 import Link from "next/link";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "../../shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { Usuario } from "../utils/types/Usuario";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // <-- ícones de olho
 
 export default function LoginPage() {
   const {
@@ -28,6 +29,8 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [forcaSenha, setForcaSenha] = useState(0);
+  const [mostrarSenha, setMostrarSenha] = useState(false); // <-- controle do olho da senha
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false); // <-- controle do olho da confirmação
   const router = useRouter();
 
   useEffect(() => {
@@ -36,10 +39,11 @@ export default function LoginPage() {
     const timer = setTimeout(() => {
       setTextoIdentificacao("");
       setTipoMensagem("");
-    }, 3000); // 3000ms = 3 segundos
+    }, 3000);
 
-    return () => clearTimeout(timer); // limpa o timeout se textoIdentificacao mudar antes de 3s
+    return () => clearTimeout(timer);
   }, [textoIdentificacao]);
+
   useEffect(() => {
     if (!textoIdentificacao) {
       setTextoIdentificacao("");
@@ -158,7 +162,7 @@ export default function LoginPage() {
           <Image src={Logo} alt="Logo" width={220} height={200} priority />
         </div>
 
-        <h5 className="heading">Área do Cliente</h5>
+        <h5 className="heading">Área do Cliente FDV</h5>
 
         <form
           className="login-form"
@@ -178,10 +182,10 @@ export default function LoginPage() {
           )}
 
           {!modoEsqueciSenha && (
-            <div className="input-field">
+            <div className="input-field senha-container">
               <input
                 id="senha"
-                type="password"
+                type={mostrarSenha ? "text" : "password"} // <-- alterna o tipo
                 placeholder={
                   definirPrimeiraSenha
                     ? "Digite sua nova senha"
@@ -198,19 +202,31 @@ export default function LoginPage() {
               <label htmlFor="senha">
                 {definirPrimeiraSenha ? "Nova Senha" : "Senha"}
               </label>
+              <span
+                className="eye-icon"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+              >
+                {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
           )}
 
           {definirPrimeiraSenha && (
-            <div className="input-field">
+            <div className="input-field senha-container">
               <input
                 id="confirmacaoSenha"
-                type="password"
+                type={mostrarConfirmacao ? "text" : "password"} // <-- alterna o tipo
                 placeholder="Confirme sua nova senha"
                 value={confirmacaoSenha}
                 onChange={(e) => setConfirmacaoSenha(e.target.value)}
               />
               <label htmlFor="confirmacaoSenha">Confirmar Senha</label>
+              <span
+                className="eye-icon"
+                onClick={() => setMostrarConfirmacao(!mostrarConfirmacao)}
+              >
+                {mostrarConfirmacao ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
           )}
 
