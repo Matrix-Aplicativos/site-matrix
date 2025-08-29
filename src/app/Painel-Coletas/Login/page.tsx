@@ -143,15 +143,14 @@ export default function LoginPage() {
   };
 
   const verificarForcaSenha = (valor: string) => {
-    let pontuacao = 0;
-    if (valor.length >= 8) pontuacao++;
-    if (/[A-Z]/.test(valor)) pontuacao++;
-    if (/[a-z]/.test(valor)) pontuacao++;
-    if (/\d/.test(valor)) pontuacao++;
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(valor)) pontuacao++;
-    if (pontuacao === 0) return 0;
-    if (pontuacao <= 2) return 1;
-    if (pontuacao === 3) return 2;
+    if (valor.length < 6) return 1;
+    let forca = 0;
+    if (/[A-Z]/.test(valor)) forca++;
+    if (/[a-z]/.test(valor)) forca++;
+    if (/[0-9]/.test(valor)) forca++;
+    if (/[^A-Za-z0-9]/.test(valor)) forca++;
+    if (forca <= 1) return 1;
+    if (forca === 2 || forca === 3) return 2;
     return 3;
   };
 
@@ -210,6 +209,54 @@ export default function LoginPage() {
               </span>
             </div>
           )}
+         {definirPrimeiraSenha && senha && (
+            <>
+              <div
+                style={{
+                  
+                  height: "5px",
+                  borderRadius: "2.5px",
+                  marginTop: "-30px",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    borderRadius: "2.5px",
+                    transition:
+                      "width 0.3s ease-in-out, background-color 0.3s ease-in-out",
+                    backgroundColor:
+                      forcaSenha >= 3
+                        ? "green"
+                        : forcaSenha >= 2
+                        ? "orange"
+                        : "red",
+                    width: `${forcaSenha * 33.3333}%`,
+                  }}
+                ></div>
+              </div>
+              <p
+                style={{
+                  textAlign: "left",
+                  fontSize: "0.8rem",
+                  color:
+                    forcaSenha >= 3
+                      ? "green"
+                      : forcaSenha >= 2
+                      ? "orange"
+                      : "red",
+                      marginBottom: '40px'
+                }}
+              >
+                {forcaSenha >= 3
+                  ? "Forte"
+                  : forcaSenha >= 2
+                  ? "Moderado"
+                  : "Fraca"}
+              </p>
+            </>
+          )}
+
 
           {definirPrimeiraSenha && (
             <div className="input-field senha-container">
@@ -243,53 +290,7 @@ export default function LoginPage() {
             </p>
           )}
 
-          {definirPrimeiraSenha && (
-            <>
-              <div
-                style={{
-                  height: "5px",
-                  borderRadius: "2.5px",
-                  backgroundColor: "#e0e0e0",
-                  marginTop: "10px",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    borderRadius: "2.5px",
-                    transition:
-                      "width 0.3s ease-in-out, background-color 0.3s ease-in-out",
-                    backgroundColor:
-                      forcaSenha >= 3
-                        ? "green"
-                        : forcaSenha >= 2
-                        ? "orange"
-                        : "red",
-                    width: `${forcaSenha * 33.3333}%`,
-                  }}
-                ></div>
-              </div>
-              <p
-                style={{
-                  textAlign: "right",
-                  fontSize: "0.8rem",
-                  color:
-                    forcaSenha >= 3
-                      ? "green"
-                      : forcaSenha >= 2
-                      ? "orange"
-                      : "red",
-                }}
-              >
-                {forcaSenha >= 3
-                  ? "Forte"
-                  : forcaSenha >= 2
-                  ? "Moderado"
-                  : "Fraca"}
-              </p>
-            </>
-          )}
-
+         
           {(textoIdentificacao || error) && (
             <p
               style={{
