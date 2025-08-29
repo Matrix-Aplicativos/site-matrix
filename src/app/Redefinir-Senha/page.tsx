@@ -123,13 +123,24 @@ function RedefinirSenhaPage() {
             >
               {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
             </span>
-
-            {senha && (
+          </div>
+          {senha && (
+            <div style={{width:'100%',flexDirection:'column',height:32,display: "flex",justifyContent:'flex-start',alignItems:'flex-start'}}>
               <div
                 style={{
-                  marginTop: "5px",
+                  marginTop: "-30px",
                   textAlign: "right",
-                  fontSize: "0.8rem",
+                  fontSize: "0.1rem",
+                  height: '5px',
+                  transition: "width 0.3s ease-in-out, background-color 0.3s ease-in-out",
+                  width: `${senhaForca * 33.3333}%`,
+                  userSelect: 'none',
+                  borderRadius: 5,
+                  backgroundColor: senhaForca === 3
+                      ? "#4CAF50"
+                      : senhaForca === 2
+                      ? "#FFC107"
+                      : "#F44336",
                   color:
                     senhaForca === 3
                       ? "#4CAF50"
@@ -138,14 +149,22 @@ function RedefinirSenhaPage() {
                       : "#F44336",
                 }}
               >
+                Barra
+              </div>
+              <span style={{color:senhaForca === 3
+                      ? "#4CAF50"
+                      : senhaForca === 2
+                      ? "#FFC107"
+                      : "#F44336",
+                      fontSize: '0.9em'}}>
                 {senhaForca === 3
-                  ? "Forte"
-                  : senhaForca === 2
-                  ? "Moderada"
-                  : "Fraca"}
+              ? "Forte"
+              : senhaForca === 2
+              ? "Moderada"
+              : "Fraca"}
+              </span>
               </div>
             )}
-          </div>
 
           <div className="password-reset-input-field senha-container">
             <input
