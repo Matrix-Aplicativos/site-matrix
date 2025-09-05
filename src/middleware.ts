@@ -7,6 +7,7 @@ const publicRoutes = [
   "/Painel-Coletas/Login",
   "/Redefinir-Senha",
   "/Contato",
+  "/Privacidade",
 ];
 
 export default function middleware(req: NextRequest) {

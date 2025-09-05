@@ -65,7 +65,7 @@ export default function SiteMatrix() {
     null
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("vendas");
+  const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("coletas");
 
   const [carouselImages] = useState([
     CapaFDV,
