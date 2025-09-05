@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
               className="hover:underline whitespace-nowrap text-base flex items-center"
             >
               <FaHome className="mr-2" />
-              Voltar ao Site
+              Voltar ao site
             </Link>
           </nav>
 
@@ -66,7 +66,7 @@ export default function PrivacyPolicy() {
 
       <main className="flex-grow pt-24 pb-16 bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto  rounded-lg shadow-md p-6 md:p-8">
+          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
             <h1 className="text-3xl md:text-4xl font-bold text-[#1769E3] mb-6 text-center">
               Política de Privacidade
             </h1>
@@ -211,7 +211,7 @@ export default function PrivacyPolicy() {
                 Podemos atualizar nossa Política de Privacidade periodicamente.
                 Notificaremos você sobre quaisquer alterações publicando a nova
                 Política de Privacidade nesta página e atualizando a data de
-                "Última atualização" no topo deste documento.
+                &quot;Última atualização&quot; no topo deste documento.
               </p>
 
               <h2 className="text-xl md:text-2xl font-semibold text-[#1769E3] mt-6 mb-3">
@@ -224,7 +224,7 @@ export default function PrivacyPolicy() {
               </p>
               <ul className="list-none pl-0 text-gray-700 mb-4">
                 <li className="mb-2">
-                  <strong>E-mail:</strong> contato@matrixapps.com.br
+                  <strong>E-mail:</strong> contato@matrixapps.com.br 
                 </li>
                 <li className="mb-2">
                   <strong>Telefone:</strong> +55 65 99223-3566 / +55 65 99604-4321
