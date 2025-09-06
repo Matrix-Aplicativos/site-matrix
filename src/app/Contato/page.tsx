@@ -34,7 +34,7 @@ export default function ContatoPage() {
     setSubmitStatus(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL;
+      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL!.replace("/v1","");
 
       const response = await fetch(`${API_URL}/contato`, {
         method: "POST",
