@@ -96,7 +96,7 @@ export default function PrivacyPolicy() {
                 <li className="mb-2">
                   Informações de contato (nome, e-mail, telefone, empresa)
                 </li>
-                <li className="mb-2">Dados de uso dos nossos aplicativos</li>
+                <li className="mb-2">Dados de uso dos nossos aplicativos (CPF)</li>
                 <li className="mb-2">
                   Informações de dispositivos (tipo, sistema operacional,
                   identificadores)
@@ -156,9 +156,7 @@ export default function PrivacyPolicy() {
                 <li className="mb-2">
                   Autoridades legais quando exigido por lei
                 </li>
-                <li>
-                  Empresas afiliadas para fins de consolidação de relatórios
-                </li>
+                
               </ul>
 
               <h2 className="text-xl md:text-2xl font-semibold text-[#1769E3] mt-6 mb-3">
