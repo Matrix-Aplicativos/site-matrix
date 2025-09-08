@@ -4,8 +4,8 @@ import ClientLayoutWrapper from "./clienteLayoutWrapper"; // 1. IMPORTE o novo c
 
 export const metadata: Metadata = {
   title: {
-    default: "Matrix Apps - Soluções em Aplicativos para Vendas e Logística",
-    template: "%s | Matrix Apps",
+    default: "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
+    template: "%s | Matrix Aplicativos",
   },
   description:
     "Aplicativo de força de vendas offline e gestão de coletas para empresas. Aumente produtividade, controle pedidos e otimize logística com tecnologia integrada ao seu ERP.",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Matrix Apps - Transforme suas Vendas e Coletas",
+    title: "Matrix Aplicativos - Transforme suas Vendas e Coletas",
     description:
       "Soluções em aplicativos móveis para equipes de vendas e gestão logística.",
     url: "https://www.matrixapps.com.br",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Matrix Apps - Soluções em Aplicativos para Vendas e Logística",
+    title: "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
     description:
       "Aplicativo de força de vendas offline e gestão de coletas para empresas.",
     images: ["https://www.matrixapps.com.br/images/twitter-card.jpg"],
