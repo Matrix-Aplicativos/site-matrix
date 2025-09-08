@@ -34,8 +34,7 @@ export default function ContatoPage() {
     setSubmitStatus(null);
 
     try {
-      const API_URL =
-        "http://ec2-3-20-117-56.us-east-2.compute.amazonaws.com:8082";
+      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL;
 
       const response = await fetch(`${API_URL}/contato`, {
         method: "POST",
