@@ -11,10 +11,10 @@ import {
   FiHome,
   FiLogOut,
   FiSmartphone,
-  FiBarChart2,
   FiBox,
   FiTruck,
   FiClipboard,
+  FiBriefcase, 
 } from "react-icons/fi";
 
 export default function Sidebar() {
@@ -24,10 +24,11 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    router.push("/Painel-Coletas/Login");
+    localStorage.removeItem("empresaSelecionada");
     deleteCookie("token");
     deleteCookie("user");
     deleteCookie("refreshToken");
+    router.push("/Painel-Coletas/Login");
   };
 
   return (
@@ -64,6 +65,12 @@ export default function Sidebar() {
           <Link href="/Painel-Coletas/Dispositivos" className="menu-item">
             <FiSmartphone size={24} />
             Dispositivos
+          </Link>
+        </li>
+        <li>
+          <Link href="/Painel-Coletas/SelecionarEmpresa" className="menu-item">
+            <FiBriefcase size={24} />
+            Mudar Empresa
           </Link>
         </li>
       </ul>

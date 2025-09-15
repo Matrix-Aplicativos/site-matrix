@@ -1,24 +1,23 @@
+"use client";
+
 import { useState } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { setCookie } from "cookies-next";
 import { AxiosError } from "axios";
 
-// Interfaces
+// Interfaces (sem alterações)
 interface LoginCredenciais {
   login: string;
   senha: string;
 }
-
 interface DefinirPrimeiraSenhaCredenciais {
   senha: string;
   confirmacaoSenha: string;
 }
-
 interface LoginResultado {
   token: string;
   primeiroAcesso: boolean;
 }
-
 interface UseLoginHook {
   loginUsuario: (
     credenciais: LoginCredenciais
@@ -35,7 +34,7 @@ interface UseLoginHook {
   primeiroAcesso: boolean;
 }
 
-// Helper
+// Helper (sem alterações)
 const verificarForcaSenha = (senha: string) => {
   let pontuacao = 0;
   if (senha.length >= 8) pontuacao++;
@@ -76,6 +75,8 @@ const useLogin = (): UseLoginHook => {
         maxAge: 60 * 60,
         secure: process.env.NODE_ENV === "production",
       });
+
+      localStorage.setItem("authToken", token);
 
       return { token, primeiroAcesso };
     } catch (err) {
@@ -144,7 +145,6 @@ const useLogin = (): UseLoginHook => {
         login,
       });
 
-      // Verifica explicitamente se a requisição foi bem-sucedida
       if (response.status >= 200 && response.status < 300) {
         return {
           success: true,
@@ -165,7 +165,7 @@ const useLogin = (): UseLoginHook => {
       setLoading(false);
     }
   };
-  
+
   const redefinirSenha = async (senha: string, token: string) => {
     setLoading(true);
     setError(null);

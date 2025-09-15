@@ -34,7 +34,9 @@ export default function RelatorioColetas({
   view,
   onViewChange,
 }: RelatorioColetasProps) {
-  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+
+  const codEmpresa = empresa?.codEmpresa;
   const { coletas, loading: coletasLoading } = useGetColetas(
     codEmpresa || 0,
     1

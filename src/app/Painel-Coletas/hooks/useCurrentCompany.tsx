@@ -1,23 +1,34 @@
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "./useGetLoggedUser";
-import { useEffect, useState } from "react";
-import { getUserFromToken } from "../utils/functions/getUserFromToken";
+"use client";
 
-export default function useCurrentCompany() {
-  const token = getCookie("token");
-  const codUsuario = getUserFromToken(String(token));
-  const { usuario, loading: userLoading } = useGetLoggedUser(codUsuario || 0);
-  const [codEmpresa, setCodEmpresa] = useState<number | null>(null);
+import { useState, useEffect } from "react";
+import { Empresa } from "../utils/types/Usuario";
+
+interface UseCurrentCompanyReturn {
+  empresa: Empresa | null;
+  loading: boolean;
+}
+
+export default function useCurrentCompany(): UseCurrentCompanyReturn {
+  const [empresa, setEmpresa] = useState<Empresa | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && usuario) {
-      const empresa = usuario.empresas?.[0];
-      if (!empresa) {
-        console.error("Usuário não tem empresas vinculadas:", usuario);
-      }
-      setCodEmpresa(empresa?.codEmpresa || null);
-    }
-  }, [userLoading, usuario]);
+    const empresaData = localStorage.getItem("empresaSelecionada");
 
-  return { codEmpresa, loading: userLoading };
+    try {
+      if (empresaData) {
+        const empresaObj: Empresa = JSON.parse(empresaData);
+        setEmpresa(empresaObj);
+      } else {
+        setEmpresa(null);
+      }
+    } catch (error) {
+      console.error("HOOK useCurrentCompany: Falha ao converter JSON", error);
+      setEmpresa(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { empresa, loading };
 }

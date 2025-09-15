@@ -10,7 +10,7 @@ import Link from "next/link";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { Usuario } from "../utils/types/Usuario";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // <-- ícones de olho
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
   const {
@@ -29,18 +29,16 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [forcaSenha, setForcaSenha] = useState(0);
-  const [mostrarSenha, setMostrarSenha] = useState(false); // <-- controle do olho da senha
-  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false); // <-- controle do olho da confirmação
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (!textoIdentificacao) return;
-
     const timer = setTimeout(() => {
       setTextoIdentificacao("");
       setTipoMensagem("");
     }, 3000);
-
     return () => clearTimeout(timer);
   }, [textoIdentificacao]);
 
@@ -57,9 +55,7 @@ export default function LoginPage() {
       senha,
       confirmacaoSenha,
     });
-
-    if (!data) return; // hook já trata erro
-
+    if (!data) return;
     if (
       data.status === 200 ||
       data.message?.toLowerCase().includes("sucesso")
@@ -87,9 +83,7 @@ export default function LoginPage() {
         setTipoMensagem("erro");
         return;
       }
-
       const resp = await solicitarRedefinicaoSenha(login);
-
       if (resp?.success) {
         setTextoIdentificacao(
           resp.message ||
@@ -133,9 +127,23 @@ export default function LoginPage() {
             setTipoMensagem("erro");
             return;
           }
-          router.push("/Painel-Coletas");
+
+          // ===== INÍCIO DA LÓGICA DE EMPRESAS =====
+          if (!usuario.empresas || usuario.empresas.length === 0) {
+            setTextoIdentificacao("Usuário não vinculado a nenhuma empresa.");
+            setTipoMensagem("erro");
+            return;
+          }
+
+          if (usuario.empresas.length === 1) {
+            const empresa = usuario.empresas[0];
+            localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
+            router.push("/Painel-Coletas");
+          } else {
+            router.push("/Painel-Coletas/SelecionarEmpresa");
+          }
         } catch {
-          setTextoIdentificacao("Erro ao validar o tipo de usuário.");
+          setTextoIdentificacao("Erro ao validar os dados do usuário.");
           setTipoMensagem("erro");
         }
       }
@@ -153,6 +161,9 @@ export default function LoginPage() {
     if (forca === 2 || forca === 3) return 2;
     return 3;
   };
+
+  // O restante do seu componente (o return com o JSX) permanece o mesmo.
+  // Cole o código acima e mantenha seu JSX original.
 
   return (
     <div className="container">
@@ -184,7 +195,7 @@ export default function LoginPage() {
             <div className="input-field senha-container">
               <input
                 id="senha"
-                type={mostrarSenha ? "text" : "password"} // <-- alterna o tipo
+                type={mostrarSenha ? "text" : "password"}
                 placeholder={
                   definirPrimeiraSenha
                     ? "Digite sua nova senha"
@@ -209,11 +220,10 @@ export default function LoginPage() {
               </span>
             </div>
           )}
-         {definirPrimeiraSenha && senha && (
+          {definirPrimeiraSenha && senha && (
             <>
               <div
                 style={{
-                  
                   height: "5px",
                   borderRadius: "2.5px",
                   marginTop: "-30px",
@@ -245,7 +255,7 @@ export default function LoginPage() {
                       : forcaSenha >= 2
                       ? "orange"
                       : "red",
-                      marginBottom: '40px'
+                  marginBottom: "40px",
                 }}
               >
                 {forcaSenha >= 3
@@ -257,12 +267,11 @@ export default function LoginPage() {
             </>
           )}
 
-
           {definirPrimeiraSenha && (
             <div className="input-field senha-container">
               <input
                 id="confirmacaoSenha"
-                type={mostrarConfirmacao ? "text" : "password"} // <-- alterna o tipo
+                type={mostrarConfirmacao ? "text" : "password"}
                 placeholder="Confirme sua nova senha"
                 value={confirmacaoSenha}
                 onChange={(e) => setConfirmacaoSenha(e.target.value)}
@@ -290,7 +299,6 @@ export default function LoginPage() {
             </p>
           )}
 
-         
           {(textoIdentificacao || error) && (
             <p
               style={{

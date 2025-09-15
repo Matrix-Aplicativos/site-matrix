@@ -7,13 +7,19 @@ import LoadingOverlay from "../shared/components/LoadingOverlay";
 import styles from "./Home.module.css";
 import useGetColetas from "./hooks/useGetColetas";
 import useCurrentCompany from "./hooks/useCurrentCompany";
+import { isSameMonth, subMonths, isSameYear } from "date-fns"; // Import para datas
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
 
-  // Get company data
-  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+  // --- CORREÇÃO 1: Usando o hook da maneira correta ---
+  // O hook retorna o objeto 'empresa', não 'codEmpresa' diretamente.
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+
+  // Pegamos o codEmpresa a partir do objeto 'empresa'.
+  const codEmpresa = empresa?.codEmpresa;
+  // ---------------------------------------------------
 
   // Get collection data only when company is available
   const { coletas, loading: coletasLoading } = useGetColetas(
@@ -33,7 +39,7 @@ export default function HomePage() {
     }
   }, [isLoading, showLoading, hideLoading]);
 
-  // Calculate statistics
+  // Calculate statistics com a correção de datas (date-fns)
   const {
     totalColetas,
     inventarios,
@@ -42,7 +48,6 @@ export default function HomePage() {
     coletasAnterior,
     variacaoColetas,
   } = useMemo(() => {
-    // Default empty state
     if (!coletas || coletas.length === 0) {
       return {
         totalColetas: 0,
@@ -53,35 +58,26 @@ export default function HomePage() {
         variacaoColetas: null,
       };
     }
-
     const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-
-    let totalAtual = 0;
-    let totalAnterior = 0;
-    let tipo1 = 0; // Inventários
-    let tipo2 = 0; // Transferências
-    let tipo3e4 = 0; // Conferências
-
+    const mesAnterior = subMonths(hoje, 1);
+    let totalAtual = 0,
+      totalAnterior = 0,
+      tipo1 = 0,
+      tipo2 = 0,
+      tipo3e4 = 0;
     coletas.forEach((c) => {
       try {
         if (!c.dataCadastro) return;
         const data = new Date(c.dataCadastro);
         if (isNaN(data.getTime())) return;
-
-        // Current month collections
-        if (data.getFullYear() === anoAtual && data.getMonth() === mesAtual) {
+        if (isSameMonth(data, hoje) && isSameYear(data, hoje)) {
           totalAtual++;
-
-          if (c.tipo === 1) tipo1++; // Inventário
-          else if (c.tipo === 2) tipo2++; // Transferência
-          else if (c.tipo === 3 || c.tipo === 4) tipo3e4++; // Conferências
-        }
-        // Previous month collections (for comparison)
-        else if (
-          data.getFullYear() === anoAtual &&
-          data.getMonth() === mesAtual - 1
+          if (c.tipo === 1) tipo1++;
+          else if (c.tipo === 2) tipo2++;
+          else if (c.tipo === 3 || c.tipo === 4) tipo3e4++;
+        } else if (
+          isSameMonth(data, mesAnterior) &&
+          isSameYear(data, mesAnterior)
         ) {
           totalAnterior++;
         }
@@ -89,15 +85,12 @@ export default function HomePage() {
         console.error("Date processing error:", error);
       }
     });
-
-    // Calculate variation
     const variacao =
       totalAnterior > 0
         ? ((totalAtual - totalAnterior) / totalAnterior) * 100
         : totalAtual > 0
         ? 100
         : null;
-
     return {
       totalColetas: totalAtual,
       inventarios: tipo1,
@@ -110,11 +103,12 @@ export default function HomePage() {
 
   // Loading state
   if (isLoading) {
-    return <div className={styles.container}>Loading dashboard...</div>;
+    return <div className={styles.container}>Carregando painel...</div>;
   }
 
-  // No company assigned
-  if (!codEmpresa) {
+  // --- CORREÇÃO 2: A condição de verificação ---
+  // Agora verificamos se o objeto 'empresa' existe.
+  if (!empresa) {
     return (
       <div className={styles.container}>
         <h2>No Company Assigned</h2>
@@ -126,7 +120,10 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>SEU PAINEL DE CONTROLE</h1>
+      {/* --- CORREÇÃO 3: Título dinâmico --- */}
+      <h1 className={styles.title}>
+        SEU PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
+      </h1>
 
       <div className={styles.border}>
         <RelatorioColetas view={view} onViewChange={setView} />
@@ -151,12 +148,10 @@ export default function HomePage() {
                   vs mês anterior
                 </span>
               ) : (
-                <span className={styles.comparison}>No previous data</span>
+                <span className={styles.comparison}>Sem dados anteriores</span>
               )}
             </div>
           </div>
-
-          {/* Inventários */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{inventarios}</span>
@@ -170,8 +165,6 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-
-          {/* Transferências */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{transferencias}</span>
@@ -185,8 +178,6 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-
-          {/* Conferências */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{conferencias}</span>

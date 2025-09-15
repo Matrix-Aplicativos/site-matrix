@@ -18,6 +18,7 @@ export default function PainelLayout({
   const hideSidebar =
     pathname === "/Painel-Coletas/Login" ||
     pathname === "/Painel-Coletas/Login/" ||
+    pathname === "/Painel-Coletas/SelecionarEmpresa" ||
     pathname === "/Painel-Coletas/RedefinirSenha";
 
   return (

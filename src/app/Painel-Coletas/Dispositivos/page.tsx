@@ -27,8 +27,9 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  // Carrega empresa dinamicamente
-  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+
+  const codEmpresa = empresa?.codEmpresa;
 
   // Contexto de loading
   const { showLoading, hideLoading } = useLoading();

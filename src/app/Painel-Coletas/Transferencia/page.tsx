@@ -69,7 +69,9 @@ const TransferenciasPage: React.FC = () => {
 
   // Contexto e hooks
   const { showLoading, hideLoading } = useLoading();
-  const { codEmpresa, loading: companyLoading } = useCurrentCompany();
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+
+  const codEmpresa = empresa?.codEmpresa;
   const token = getCookie("token");
   const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
 
