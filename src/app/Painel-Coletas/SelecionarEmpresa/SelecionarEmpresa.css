@@ -1,0 +1,154 @@
+.selecao-container-grid {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Header da Página */
+.selecao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #fff;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- NOVAS REGRAS PARA ALINHAMENTO --- */
+.header-left,
+.header-right {
+  flex: 1; /* Faz com que ambos ocupem o mesmo espaço */
+}
+
+.header-left {
+  display: flex;
+  justify-content: flex-start; /* Alinha a searchbar à esquerda */
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end; /* Alinha a logo à direita */
+}
+
+.header-center {
+  /* O centro não precisa de flex: 1 para não competir por espaço */
+  text-align: center;
+}
+/* -------------------------------------- */
+
+.header-center h1 {
+  /* Renomeado de .title-wrapper h1 */
+  font-size: 24px;
+  color: #343a40;
+  margin: 0;
+}
+
+.header-center p {
+  /* Renomeado de .title-wrapper p */
+  font-size: 16px;
+  color: #6c757d;
+  margin: 4px 0 0;
+}
+
+.header-left .searchBarContainer {
+  /* Ajuste para o container da searchbar */
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Grid de Empresas (sem alterações) */
+.empresas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  padding: 40px;
+}
+/* ... (resto do seu CSS permanece o mesmo) ... */
+.empresa-box {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+  font-family: inherit;
+}
+
+.empresa-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+.empresa-box-nome {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 10px;
+}
+
+.empresa-box-cnpj {
+  font-size: 0.9em;
+  color: #6c757d;
+  margin: 0;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6c757d;
+}
+
+@media (max-width: 1200px) {
+  .empresas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  /* Mantém a centralização do header mesmo em telas menores */
+  .selecao-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .header-left,
+  .header-right,
+  .header-center {
+    width: 100%;
+    justify-content: center;
+  }
+  .header-left .searchBarContainer {
+    max-width: none; /* Ocupa a largura total */
+  }
+  .empresas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .empresas-grid {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .selecao-header {
+    padding: 20px;
+  }
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+}
