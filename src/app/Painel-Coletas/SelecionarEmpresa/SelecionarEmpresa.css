@@ -4,6 +4,28 @@
   font-family: Arial, sans-serif;
 }
 
+/* --- Seta fixa no canto superior esquerdo --- */
+.back-arrow {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.3s, transform 0.2s;
+  color: #000;
+}
+
+.back-arrow:hover {
+  background: #f1f1f1;
+  transform: scale(1.05);
+}
+
 /* Header da Página */
 .selecao-header {
   display: flex;
@@ -15,56 +37,57 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* --- NOVAS REGRAS PARA ALINHAMENTO --- */
+/* --- Alinhamento Header --- */
 .header-left,
 .header-right {
-  flex: 1; /* Faz com que ambos ocupem o mesmo espaço */
+  flex: 1;
 }
 
 .header-left {
   display: flex;
-  justify-content: flex-start; /* Alinha a searchbar à esquerda */
+  justify-content: flex-start;
 }
 
 .header-right {
   display: flex;
-  justify-content: flex-end; /* Alinha a logo à direita */
+  justify-content: flex-end;
 }
 
 .header-center {
-  /* O centro não precisa de flex: 1 para não competir por espaço */
   text-align: center;
 }
-/* -------------------------------------- */
 
 .header-center h1 {
-  /* Renomeado de .title-wrapper h1 */
   font-size: 24px;
   color: #343a40;
   margin: 0;
 }
 
 .header-center p {
-  /* Renomeado de .title-wrapper p */
   font-size: 16px;
   color: #6c757d;
   margin: 4px 0 0;
 }
 
+/* Ajuste SearchBar */
 .header-left .searchBarContainer {
-  /* Ajuste para o container da searchbar */
   max-width: 400px;
   width: 100%;
 }
 
-/* Grid de Empresas (sem alterações) */
+.searchBarContainer input {
+  color: #000 !important; 
+  background-color: #fff !important; 
+}
+
+/* Grid de Empresas */
 .empresas-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 25px;
   padding: 40px;
 }
-/* ... (resto do seu CSS permanece o mesmo) ... */
+
 .empresa-box {
   background-color: #ffffff;
   border: 1px solid #dee2e6;
@@ -115,7 +138,6 @@
 }
 
 @media (max-width: 992px) {
-  /* Mantém a centralização do header mesmo em telas menores */
   .selecao-header {
     flex-direction: column;
     gap: 20px;
@@ -127,7 +149,7 @@
     justify-content: center;
   }
   .header-left .searchBarContainer {
-    max-width: none; /* Ocupa a largura total */
+    max-width: none;
   }
   .empresas-grid {
     grid-template-columns: repeat(2, 1fr);

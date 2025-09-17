@@ -13,24 +13,17 @@ export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
 
-  // --- CORREÇÃO 1: Usando o hook da maneira correta ---
-  // O hook retorna o objeto 'empresa', não 'codEmpresa' diretamente.
   const { empresa, loading: companyLoading } = useCurrentCompany();
 
-  // Pegamos o codEmpresa a partir do objeto 'empresa'.
   const codEmpresa = empresa?.codEmpresa;
-  // ---------------------------------------------------
-
-  // Get collection data only when company is available
+  
   const { coletas, loading: coletasLoading } = useGetColetas(
     codEmpresa || 0,
     1
   );
 
-  // Combined loading state
   const isLoading = companyLoading || coletasLoading;
 
-  // Loading effect
   useEffect(() => {
     if (isLoading) {
       showLoading();
@@ -39,7 +32,6 @@ export default function HomePage() {
     }
   }, [isLoading, showLoading, hideLoading]);
 
-  // Calculate statistics com a correção de datas (date-fns)
   const {
     totalColetas,
     inventarios,
@@ -101,13 +93,9 @@ export default function HomePage() {
     };
   }, [coletas]);
 
-  // Loading state
   if (isLoading) {
     return <div className={styles.container}>Carregando painel...</div>;
   }
-
-  // --- CORREÇÃO 2: A condição de verificação ---
-  // Agora verificamos se o objeto 'empresa' existe.
   if (!empresa) {
     return (
       <div className={styles.container}>

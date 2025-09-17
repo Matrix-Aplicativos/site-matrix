@@ -8,6 +8,7 @@ import Logo from "@/app/img/Logo.png";
 import "./SelecionarEmpresa.css";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import SearchBar from "../components/SearchBar";
+import { ArrowLeft } from "lucide-react"; 
 
 export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -16,7 +17,6 @@ export default function SelecionarEmpresaPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // ... (lógica do useEffect permanece a mesma)
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("authToken");
@@ -37,7 +37,6 @@ export default function SelecionarEmpresaPage() {
   }, []);
 
   const filteredEmpresas = useMemo(() => {
-    // ... (lógica do useMemo permanece a mesma)
     if (!usuario?.empresas) return [];
     if (!searchQuery) return usuario.empresas;
     const lowercasedQuery = searchQuery.toLowerCase();
@@ -49,13 +48,11 @@ export default function SelecionarEmpresaPage() {
   }, [usuario, searchQuery]);
 
   const handleSelectEmpresa = (empresa: Empresa) => {
-    // ... (lógica do handleSelectEmpresa permanece a mesma)
     localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
     window.location.href = "/Painel-Coletas";
   };
 
   const formatCpfCnpj = (cnpj: string) => {
-    // ... (lógica do formatCpfCnpj permanece a mesma)
     if (!cnpj) return "";
     return cnpj.replace(
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
@@ -72,13 +69,16 @@ export default function SelecionarEmpresaPage() {
 
   return (
     <div className="selecao-container-grid">
+      <div className="back-arrow" onClick={() => window.history.back()}>
+        <ArrowLeft size={22} />
+      </div>
+
       <header className="selecao-header">
-        {/* Ordem dos itens no header ajustada para o alinhamento */}
         <div className="header-left">
           <SearchBar
             placeholder="Buscar por nome ou CNPJ..."
             onSearch={setSearchQuery}
-            showFilterIcon={false} // <-- Propriedade para esconder o ícone
+            showFilterIcon={false}
           />
         </div>
         <div className="header-center">
@@ -91,7 +91,6 @@ export default function SelecionarEmpresaPage() {
       </header>
 
       <main className="empresas-grid">
-        {/* ... (lógica do main permanece a mesma) ... */}
         {filteredEmpresas.length > 0 ? (
           filteredEmpresas.map((empresa) => (
             <button
