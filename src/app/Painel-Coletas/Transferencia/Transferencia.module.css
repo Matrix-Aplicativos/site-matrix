@@ -205,8 +205,8 @@
   border-radius: 4px;
   padding: 12px;
   min-width: 300px;
-  max-width: 300px; /* Largura fixa */
-  min-height: 100px; /* Altura mínima para uniformidade */
+  max-width: 300px; /* Largura fixa /
+min-height: 100px; / Altura mínima para uniformidade */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -312,117 +312,134 @@
   color: #666;
 }
 
-/* ... (mantenha todo o CSS anterior) ... */
+/* --- INÍCIO DA ADIÇÃO DOS ESTILOS DE STATUS --- */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  white-space: nowrap;
+}
 
-/* Modo Escuro - Textos Pretos */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: #ffffff; /* Fundo branco para contraste */
-  }
+/* Finalizada Completa - Verde */
+.statusCompleted {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
 
-  .title {
-    color: #000000;
-  }
+/* Finalizada Parcialmente - Amarelo */
+.statusPartial {
+  background-color: #fffde7;
+  color: #f57f17;
+}
 
+/* Em Andamento - Azul */
+.statusInProgress {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
 
-  .table th,
-  .table td {
-    color: #000000;
-  }
+.title {
+  color: #000000;
+}
 
-  .table th {
-    background-color: #ffffff;
-  }
+.table th,
+.table td {
+  color: #000000;
+}
 
-  .table tbody tr:nth-child(even) {
-    background-color: #f0f0f0;
-  }
+.table th {
+  background-color: #ffffff;
+}
 
-  .table tbody tr:hover {
-    background-color: #e0e0e0;
-  }
+.table tbody tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
 
-  .additionalInfo {
-    background: #ffffff;
-  }
+.table tbody tr:hover {
+  background-color: #e0e0e0;
+}
 
-  .additionalInfo p {
-    color: #000000;
-  }
+.additionalInfo {
+  background: #ffffff;
+}
 
-  .filterExpansion {
-    background: #ffffff;
-  }
+.additionalInfo p {
+  color: #000000;
+}
 
-  .filterSection label {
-    color: #000000;
-  }
+.filterExpansion {
+  background: #ffffff;
+}
 
-  .filterSection select,
-  .filterSection input {
-    background-color: #ffffff;
+.filterSection label {
+  color: #000000;
+}
 
-    color: #000000;
-  }
+.filterSection select,
+.filterSection input {
+  background-color: #ffffff;
 
-  .expandedRow > td {
-    background-color: #ffffff;
-  }
+  color: #000000;
+}
 
-  .paginationControls button {
-    background-color: #ffffff;
-    color: #000000;
-  }
+.expandedRow > td {
+  background-color: #ffffff;
+}
 
-  .paginationControls button:hover:not(:disabled) {
-    background-color: #1769e3;
-    color: #ffffff;
-  }
+.paginationControls button {
+  background-color: #ffffff;
+  color: #000000;
+}
 
-  .itemsPerPageSelect {
-    background-color: #ffffff;
+.paginationControls button:hover:not(:disabled) {
+  background-color: #1769e3;
+  color: #ffffff;
+}
 
-    color: #000000;
-  }
+.itemsPerPageSelect {
+  background-color: #ffffff;
 
-  .deleteButton {
-    color: #ff0000; /* Mantém vermelho para destaque */
-  }
+  color: #000000;
+}
 
-  .itemCard {
-    background: #ffffff;
-  }
+.deleteButton {
+  color: #ff0000; /* Mantém vermelho para destaque */
+}
 
-  .itemCard p strong {
-    color: #000000;
-  }
+.itemCard {
+  background: #ffffff;
+}
 
-  .moreItems {
-    color: #000000;
-  }
+.itemCard p strong {
+  color: #000000;
+}
 
-  .refreshButton svg {
-    color: #1769e3; /* Mantém azul para consistência */
-  }
+.moreItems {
+  color: #000000;
+}
 
-  .itemPagination button {
-    color: #000000;
-  }
+.refreshButton svg {
+  color: #1769e3; /* Mantém azul para consistência */
+}
 
-  .itemPagination button:disabled {
-    color: #666666;
-  }
+.itemPagination button {
+  color: #000000;
+}
 
-  .itemPagination span {
-    color: #000000;
-  }
+.itemPagination button:disabled {
+  color: #666666;
+}
 
-  /* Mantém cores semânticas (positivo/negativo) */
-  .positive {
-    color: #008000; /* Verde mais escuro para melhor contraste */
-  }
+.itemPagination span {
+  color: #000000;
+}
 
-  .negative {
-    color: #ff0000; /* Vermelho mais escuro */
-  }
+/* Mantém cores semânticas (positivo/negativo) /
+.positive {
+color: #008000; / Verde mais escuro para melhor contraste */
+
+.negative {
+  color: #ff0000; /* Vermelho mais escuro */
 }

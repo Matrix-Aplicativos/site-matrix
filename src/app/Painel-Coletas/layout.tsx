@@ -1,8 +1,10 @@
 "use client";
 
-import Sidebar from "./components/Sidebar";
+// Adicione o 'useState' na importação do React
+import React, { useState } from "react";
+import Sidebar from "./components/Sidebar"; // Verifique se o caminho está correto
 import { Roboto } from "next/font/google";
-import "./painel-globals.css";
+import "./painel-globals.css"; // Vamos adicionar os novos estilos aqui
 import { usePathname } from "next/navigation";
 import { LoadingProvider } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
@@ -15,30 +17,44 @@ export default function PainelLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  // 1. Adicionando o estado para controlar a sidebar
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
+
   const hideSidebar =
     pathname === "/Painel-Coletas/Login" ||
     pathname === "/Painel-Coletas/Login/" ||
     pathname === "/Painel-Coletas/SelecionarEmpresa" ||
     pathname === "/Painel-Coletas/RedefinirSenha";
 
+  // 2. Lógica para determinar a classe do 'main'
+  let mainClassName = "";
+  if (hideSidebar) {
+    mainClassName = "content-no-sidebar";
+  } else {
+    mainClassName = isSidebarOpen ? "content-shifted" : "content-full";
+  }
+
   return (
-      <div
-        className={`painel-body ${roboto.className}`}
-        style={{ display: "flex" }}
-      >
-        <LoadingProvider>
-          {!hideSidebar && <Sidebar />}
-          <main
-            style={{
-              marginLeft: hideSidebar ? "0" : "260px",
-              padding: "20px",
-              width: "100%",
-            }}
-          >
-            {children}
-          </main>
-          <LoadingOverlay />
-        </LoadingProvider>
-      </div>
+    <div
+      className={`painel-body ${roboto.className}`}
+      style={{ display: "flex" }}
+    >
+      <LoadingProvider>
+        {/* 3. Passando as props para o Sidebar */}
+        {!hideSidebar && (
+          <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        )}
+
+        {/* 4. Usando className em vez de style para o 'main' */}
+        <main className={mainClassName}>{children}</main>
+
+        <LoadingOverlay />
+      </LoadingProvider>
+    </div>
   );
 }
