@@ -14,3 +14,26 @@
   overflow-y: auto;
   padding: 0;
 }
+
+.content-shifted {
+  margin-left: 220px; /* Largura da sidebar aberta (ajuste se for diferente) */
+  width: calc(100% - 220px);
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+/* Estilo para quando a sidebar está visível e FECHADA */
+.content-full {
+  margin-left: 80px; /* Largura da sidebar fechada (ajuste se for diferente) */
+  width: calc(100% - 80px);
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+/* Estilo para quando a sidebar está completamente OCULTA */
+.content-no-sidebar {
+  margin-left: 0;
+  width: 100%;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}

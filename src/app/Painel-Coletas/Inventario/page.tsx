@@ -3,14 +3,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import SearchBar from "../components/SearchBar";
 import styles from "./Inventario.module.css";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiTrash2,
-  FiRefreshCw,
-} from "react-icons/fi";
-import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
@@ -18,41 +10,93 @@ import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { getCookie } from "cookies-next";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { getUserFromToken } from "@/app/getUserFromToken";
+import { getUserFromToken } from "../../getUserFromToken";
+import ExpandedRowContent from "../components/ExpandedRow";
+
+// --- Componentes SVG para os ícones ---
+const IconTrash = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
+  </svg>
+);
+const IconRefresh = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+  </svg>
+);
+const IconSort = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: "0.5em" }}
+  >
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+  </svg>
+);
+
+interface ColumnConfig {
+  key: keyof ColetaExibida;
+  label: string;
+  sortable: boolean;
+}
 
 interface ColetaExibida {
   id: number;
   codConferenciaErp: string;
   descricao: string;
   data: string;
-  dataFim: string;
+  dataFim: string | null;
   origem: string;
   tipoMovimento: string;
   usuario: string;
-  quantidade: number;
   status: string;
   alocOrigem: string;
   alocDestino: string;
-  itens: {
-    descricaoItem: string;
-    qtdConferida: number;
-    codBarra: string;
-    usuarioBipagemNome: string;
-    dataHoraBipe: string;
-  }[];
 }
 
-// Mapeia a chave da coluna da tabela para o nome do campo na API
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   descricao: "descricao",
   data: "dataCadastro",
   origem: "origem",
   tipoMovimento: "tipo",
   status: "status",
+  usuario: "usuario",
 };
 
 const InventariosPage: React.FC = () => {
-  // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -64,17 +108,10 @@ const InventariosPage: React.FC = () => {
   } | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [currentItemPages, setCurrentItemPages] = useState<{
-    [key: number]: number;
-  }>({});
 
-  // Contexto e hooks
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
-
   const codEmpresa = empresa?.codEmpresa;
-  const token = getCookie("token");
-  const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
 
   const {
     coletas,
@@ -91,15 +128,9 @@ const InventariosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  const {
-    deletarColeta,
-    loading: deleting,
-    error: deleteError,
-  } = deleteColetaAvulsaHook();
-
+  const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
   const isLoading = companyLoading || coletasLoading || deleting;
   const hasMoreData = coletas ? coletas.length >= porPagina : false;
-  const codUsuario = usuario?.codUsuario || 0;
 
   const getOrigemText = (origem: string) => {
     switch (origem) {
@@ -116,12 +147,6 @@ const InventariosPage: React.FC = () => {
     switch (tipoMovimento) {
       case "1":
         return "Inventário";
-      case "2":
-        return "Transferência";
-      case "3":
-        return "Conferência de Venda";
-      case "4":
-        return "Conferência de Compra";
       default:
         return tipoMovimento;
     }
@@ -142,7 +167,22 @@ const InventariosPage: React.FC = () => {
     }
   };
 
-  // Filtragem e ordenação
+  // *** AJUSTE 1: FUNÇÃO PARA PEGAR A CLASSE CSS DO STATUS ***
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case "1":
+        return styles.statusNotStarted; // Vermelho
+      case "2":
+        return styles.statusPartial; // Amarelo
+      case "3":
+        return styles.statusCompleted; // Verde
+      case "4":
+        return styles.statusInProgress; // Azul
+      default:
+        return "";
+    }
+  };
+
   const filteredData = useMemo(() => {
     if (!coletas) return [];
 
@@ -157,38 +197,24 @@ const InventariosPage: React.FC = () => {
         origem: String(c.origem),
         tipoMovimento: String(c.tipo),
         usuario: c.usuario?.nome || "Usuário não informado",
-        quantidade: c.itens.length,
         status: c.status,
         alocOrigem: c.alocOrigem?.descricao || "Não informada",
         alocDestino: c.alocDestino?.descricao || "Não informada",
-        itens: c.itens.map((item) => ({
-          descricaoItem: item.descricaoItem,
-          qtdConferida: item.qtdConferida,
-          codBarra: item.codBarra,
-          usuarioBipagemNome: item.usuarioBipagem?.nome || "Item não bipado",
-          dataHoraBipe: item.dataHoraBipe,
-        })),
       }));
 
     let result = [...convertedData];
 
-    // Filtro por texto
     if (query) {
       result = result.filter((coleta) => {
         let fieldValue =
-          coleta[selectedFilter as keyof ColetaExibida]?.toString();
-
+          coleta[selectedFilter as keyof ColetaExibida]?.toString() || "";
         if (selectedFilter === "origem") fieldValue = getOrigemText(fieldValue);
-        else if (selectedFilter === "tipoMovimento")
-          fieldValue = getTipoMovimentoText(fieldValue);
         else if (selectedFilter === "status")
           fieldValue = getStatusText(fieldValue);
-
         return fieldValue.toLowerCase().includes(query.toLowerCase());
       });
     }
 
-    // Filtro por data
     if (dateRange.startDate && dateRange.endDate) {
       result = result.filter((coleta) => {
         const coletaDate = new Date(coleta.data);
@@ -199,12 +225,12 @@ const InventariosPage: React.FC = () => {
       });
     }
 
-    // Ordenação
     if (sortConfig) {
       result.sort((a, b) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
-
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
         if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
@@ -217,7 +243,7 @@ const InventariosPage: React.FC = () => {
   const handleDeleteColeta = async (codColeta: number) => {
     if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
       try {
-        await deletarColeta(codColeta || 0);
+        await deletarColeta(codColeta);
         alert("Coleta excluída com sucesso!");
         refetch();
       } catch (error) {
@@ -226,7 +252,6 @@ const InventariosPage: React.FC = () => {
     }
   };
 
-  // Outros handlers
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -236,23 +261,6 @@ const InventariosPage: React.FC = () => {
     const { name, value } = e.target;
     setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
-  };
-
-  const handleNextItemPage = (coletaId: number, totalItems: number) => {
-    setCurrentItemPages((prev) => ({
-      ...prev,
-      [coletaId]: Math.min(
-        (prev[coletaId] || 0) + 1,
-        Math.ceil(totalItems / 3) - 1
-      ),
-    }));
-  };
-
-  const handlePrevItemPage = (coletaId: number) => {
-    setCurrentItemPages((prev) => ({
-      ...prev,
-      [coletaId]: Math.max((prev[coletaId] || 0) - 1, 0),
-    }));
   };
 
   const sortData = (key: keyof ColetaExibida) => {
@@ -279,13 +287,9 @@ const InventariosPage: React.FC = () => {
     setPaginaAtual((prev) => prev + 1);
   };
 
-  // Efeitos
   useEffect(() => {
-    if (isLoading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
+    if (isLoading) showLoading();
+    else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
   if (coletasError) {
@@ -297,24 +301,23 @@ const InventariosPage: React.FC = () => {
     );
   }
 
-  // Loading state
-  if (isLoading || !codEmpresa) {
+  if (companyLoading || (!coletas && coletasLoading)) {
     return <div className={styles.container}>Carregando dados...</div>;
   }
 
-  // Colunas da tabela
-  const columns = [
-    { key: "descricao", label: "Descrição" },
-    { key: "data", label: "Data" },
-    { key: "origem", label: "Origem" },
-    { key: "tipoMovimento", label: "Tipo de Movimento" },
+  const columns: ColumnConfig[] = [
+    { key: "status", label: "Status", sortable: false },
+    { key: "data", label: "Data", sortable: true },
+    { key: "descricao", label: "Descrição", sortable: true },
+    { key: "origem", label: "Origem", sortable: true },
+    { key: "tipoMovimento", label: "Tipo de Movimento", sortable: true },
+    { key: "usuario", label: "Responsável", sortable: true },
   ];
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
       <h1 className={styles.title}>INVENTÁRIOS</h1>
-
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual inventário deseja buscar?"
@@ -328,11 +331,10 @@ const InventariosPage: React.FC = () => {
             title="Atualizar inventários"
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-            <FiRefreshCw className={isLoading ? styles.spinning : ""} />
+            <IconRefresh className={coletasLoading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
-
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -365,7 +367,6 @@ const InventariosPage: React.FC = () => {
           </div>
         </div>
       )}
-
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -373,9 +374,13 @@ const InventariosPage: React.FC = () => {
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  onClick={() => sortData(col.key as keyof ColetaExibida)}
+                  onClick={() => col.sortable && sortData(col.key)}
+                  style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
-                  {col.label} <FaSort style={{ marginLeft: "0.5em" }} />
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>{col.label}</span>
+                    {col.sortable && <IconSort />}
+                  </div>
                 </th>
               ))}
               <th>Ações</th>
@@ -386,10 +391,20 @@ const InventariosPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
-                  <td>{row.descricao}</td>
+                  <td>
+                    <span
+                      className={`${styles.statusBadge} ${getStatusClass(
+                        row.status
+                      )}`}
+                    >
+                      {getStatusText(row.status)}
+                    </span>
+                  </td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
+                  <td>{row.descricao}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
+                  <td>{row.usuario}</td>
                   <td className={styles.actionsCell}>
                     {row.origem === "2" && !row.dataFim && (
                       <button
@@ -400,7 +415,7 @@ const InventariosPage: React.FC = () => {
                         }}
                         title="Excluir coleta avulsa"
                       >
-                        <FiTrash2 />
+                        <IconTrash />
                       </button>
                     )}
                   </td>
@@ -416,94 +431,7 @@ const InventariosPage: React.FC = () => {
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
                     <td colSpan={columns.length + 2}>
-                      <div className={styles.additionalInfo}>
-                        <div className={styles.infoSection}>
-                          <h3>Informações Gerais</h3>
-                          <p>
-                            <strong>Código ERP:</strong> {row.codConferenciaErp}
-                          </p>
-                          <p>
-                            <strong>Status:</strong> {getStatusText(row.status)}
-                          </p>
-                          <p>
-                            <strong>Alocação Origem:</strong> {row.alocOrigem}
-                          </p>
-                          <p>
-                            <strong>Alocação Destino:</strong> {row.alocDestino}
-                          </p>
-                        </div>
-                        <div className={styles.infoSection}>
-                          <h3>Responsável</h3>
-                          <p>
-                            <strong>Nome:</strong> {row.usuario}
-                          </p>
-                          <p>
-                            <strong>Data:</strong>{" "}
-                            {new Date(row.data).toLocaleString("pt-BR")}
-                          </p>
-                        </div>
-                        <div className={styles.infoSection}>
-                          <h3>Itens ({row.quantidade})</h3>
-                          <div className={styles.itemsContainer}>
-                            {row.itens
-                              .slice(
-                                (currentItemPages[row.id] || 0) * 3,
-                                ((currentItemPages[row.id] || 0) + 1) * 3
-                              )
-                              .map((item, index) => (
-                                <div key={index} className={styles.itemCard}>
-                                  <p>
-                                    <strong>Item:</strong> {item.descricaoItem}
-                                  </p>
-                                  <p>
-                                    <strong>Cód. Barras:</strong>{" "}
-                                    {item.codBarra}
-                                  </p>
-                                  <p>
-                                    <strong>Qtd.:</strong> {item.qtdConferida}
-                                  </p>
-                                  <p>
-                                    <strong>Responsável Bipagem:</strong>{" "}
-                                    {item.usuarioBipagemNome}
-                                  </p>
-                                  <p>
-                                    <strong>Data/Hora Bipe:</strong>{" "}
-                                    {item.dataHoraBipe
-                                      ? new Date(
-                                          item.dataHoraBipe
-                                        ).toLocaleString("pt-BR")
-                                      : "Item não bipado"}
-                                  </p>
-                                </div>
-                              ))}
-                          </div>
-                          {row.itens.length > 3 && (
-                            <div className={styles.itemPagination}>
-                              <button
-                                onClick={() => handlePrevItemPage(row.id)}
-                                disabled={(currentItemPages[row.id] || 0) === 0}
-                              >
-                                <FiChevronLeft />
-                              </button>
-                              <span>
-                                Página {(currentItemPages[row.id] || 0) + 1} de{" "}
-                                {Math.ceil(row.itens.length / 3)}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  handleNextItemPage(row.id, row.itens.length)
-                                }
-                                disabled={
-                                  (currentItemPages[row.id] || 0) >=
-                                  Math.ceil(row.itens.length / 3) - 1
-                                }
-                              >
-                                <FiChevronRight />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <ExpandedRowContent coletaId={row.id} />
                     </td>
                   </tr>
                 )}
@@ -519,17 +447,17 @@ const InventariosPage: React.FC = () => {
                       onClick={() => setPaginaAtual(1)}
                       disabled={paginaAtual === 1}
                     >
-                      <FiChevronsLeft />
+                      &lt;&lt;
                     </button>
                     <button
                       onClick={handlePrevPage}
                       disabled={paginaAtual === 1}
                     >
-                      <FiChevronLeft />
+                      &lt;
                     </button>
                     <span>{paginaAtual}</span>
                     <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      <FiChevronRight />
+                      &gt;
                     </button>
                   </div>
                   <div className={styles.itemsPerPageContainer}>
