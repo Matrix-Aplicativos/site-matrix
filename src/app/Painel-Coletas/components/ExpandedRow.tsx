@@ -31,7 +31,17 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
     : [];
 
   return (
-    <div className={styles.itemsTableContainer}>
+    // --- ESTILO ATUALIZADO PARA BORDA AZUL ---
+    <div
+      className={styles.itemsTableContainer}
+      style={{
+        padding: "16px",
+        border: "2px solid #a0c4ff", // Borda azul mais visível
+        borderRadius: "8px", // Cantos arredondados
+        marginTop: "8px", // Espaço para separar da linha de cima
+        marginBottom: "8px",
+      }}
+    >
       <table className={styles.itemsTable}>
         <thead>
           <tr>
