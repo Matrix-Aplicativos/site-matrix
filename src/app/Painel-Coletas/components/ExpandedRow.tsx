@@ -110,7 +110,6 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
         </tbody>
       </table>
 
-      {/* A paginação agora é exibida com a nova lógica */}
       {showPagination && (
         <div
           className={styles.itemPagination}
