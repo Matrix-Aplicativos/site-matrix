@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
-// Interfaces baseadas no seu JSON
-
+// Suas interfaces permanecem as mesmas
 interface UsuarioBipagem {
   codUsuario: number;
   nome: string;
@@ -30,8 +29,8 @@ export interface ItemConferenciaDetalhado {
   codFabricante: string;
   qtdAConferir: number;
   qtdConferida: number;
-  usuarioBipagem: UsuarioBipagem | null; // Pode ser nulo se não bipado
-  dataHoraBipe: string | null; // Pode ser nulo se não bipado
+  usuarioBipagem: UsuarioBipagem | null;
+  dataHoraBipe: string | null;
   utilizaLote: boolean;
   utilizaNumSerie: boolean;
   lotes: Lote[];
@@ -46,12 +45,16 @@ interface UseGetColetaItensHook {
 }
 
 /**
- * Hook para buscar os itens detalhados de uma coleta específica.
+ * Hook para buscar os itens detalhados de uma coleta específica com paginação.
  * @param codColeta - O código da conferência/coleta da qual buscar os itens.
- * @param enabled - Se `false`, o hook não fará a busca automaticamente. Padrão é `true`.
+ * @param pagina - O número da página a ser buscada.
+ * @param porPagina - A quantidade de itens por página.
+ * @param enabled - Se `false`, o hook não fará a busca automaticamente.
  */
 const useGetColetaItens = (
   codColeta: number,
+  pagina: number = 1,
+  porPagina: number = 5,
   enabled: boolean = true
 ): UseGetColetaItensHook => {
   const [itens, setItens] = useState<ItemConferenciaDetalhado[] | null>(null);
@@ -59,9 +62,8 @@ const useGetColetaItens = (
   const [error, setError] = useState<string | null>(null);
 
   const fetchItens = useCallback(async () => {
-    // Não executa se não houver codColeta ou se estiver desabilitado
     if (!codColeta || !enabled) {
-      setItens(null); // Limpa os itens se desabilitado
+      setItens(null);
       return;
     }
 
@@ -69,10 +71,17 @@ const useGetColetaItens = (
       setLoading(true);
       setError(null);
 
-      const response = await axiosInstance.get(`/coleta/${codColeta}/itens`);
+      const queryParams = new URLSearchParams({
+        pagina: pagina.toString(),
+        porPagina: porPagina.toString(),
+      });
+
+      const response = await axiosInstance.get(
+        `/coleta/${codColeta}/itens?${queryParams}`
+      );
 
       const responseData = response.data;
-      // Trata tanto respostas que são o array diretamente quanto as que vêm em um campo "dados"
+      // Lógica para extrair os dados, seja de um campo "dados" ou do corpo da resposta
       const dados = Array.isArray(responseData.dados)
         ? responseData.dados
         : Array.isArray(responseData)
@@ -90,7 +99,7 @@ const useGetColetaItens = (
     } finally {
       setLoading(false);
     }
-  }, [codColeta, enabled]);
+  }, [codColeta, pagina, porPagina, enabled]);
 
   useEffect(() => {
     fetchItens();

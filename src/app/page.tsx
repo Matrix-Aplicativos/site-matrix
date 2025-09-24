@@ -19,11 +19,11 @@ import Logo from "./img/Logo.svg";
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
-import HomeColeta from "./img/home-coleta.png";
-import CapaColeta from "./img/capa-coleta.png";
-import MovimentacoesColeta from "./img/movimentacoes-coleta.png";
-import ColetasColeta from "./img/itens-coleta.png";
-import ConferenciasColeta from "./img/conferencias-coleta.png";
+import HomeColeta from "./img/homecoleta.png";
+import CapaColeta from "./img/capacoleta (2).png";
+import ColetasColeta from "./img/itenscoleta.png";
+import ConferenciasColeta from "./img/conferenciacoleta.png";
+import BuscarProdutos from "./img/buscarProdutos.png";
 import HomeFDV from "./img/home-fdv.png";
 import CapaFDV from "./img/capa-fdv.png";
 import ProdutosFDV from "./img/produtos-fdv.png";
@@ -78,8 +78,8 @@ export default function SiteMatrix() {
     CapaColeta,
     HomeColeta,
     ConferenciasColeta,
-    MovimentacoesColeta,
     ColetasColeta,
+    BuscarProdutos,
   ]);
 
   useEffect(() => {
