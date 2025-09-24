@@ -11,34 +11,44 @@ interface ExpandedRowContentProps {
 const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
   coletaId,
 }) => {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const { itens, loading, error } = useGetColetaItens(coletaId);
+
+  // O hook agora busca os dados paginados, mas não retorna mais 'totalPaginas'
+  const { itens, loading, error } = useGetColetaItens(
+    coletaId,
+    currentPage,
+    itemsPerPage
+  );
+
+  // Determinamos se estamos na última página pela quantidade de itens retornados
+  const isLastPage = !itens || itens.length < itemsPerPage;
+
   const handleNextItemPage = () => {
-    if (itens) {
-      const totalPages = Math.ceil(itens.length / itemsPerPage);
-      setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+    // Só avança se não estiver na última página
+    if (!isLastPage) {
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const handlePrevItemPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 0));
+    // Garante que não vá para uma página menor que 1
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
-  const totalPages = itens ? Math.ceil(itens.length / itemsPerPage) : 0;
-  const paginatedItens = itens
-    ? itens.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
-    : [];
+  // Mostra a paginação se não estivermos na primeira página, ou se a primeira página estiver cheia
+  // (o que indica que pode haver uma próxima página)
+  const showPagination =
+    currentPage > 1 || (itens && itens.length === itemsPerPage);
 
   return (
-    // --- ESTILO ATUALIZADO PARA BORDA AZUL ---
     <div
       className={styles.itemsTableContainer}
       style={{
         padding: "16px",
-        border: "2px solid #a0c4ff", // Borda azul mais visível
-        borderRadius: "8px", // Cantos arredondados
-        marginTop: "8px", // Espaço para separar da linha de cima
+        border: "2px solid #a0c4ff",
+        borderRadius: "8px",
+        marginTop: "8px",
         marginBottom: "8px",
       }}
     >
@@ -69,7 +79,7 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
               </td>
             </tr>
           )}
-          {!loading && !error && paginatedItens.length === 0 && (
+          {!loading && !error && (!itens || itens.length === 0) && (
             <tr>
               <td colSpan={7} style={{ textAlign: "center" }}>
                 Nenhum item encontrado para esta coleta.
@@ -78,7 +88,8 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
           )}
           {!loading &&
             !error &&
-            paginatedItens.map((item) => {
+            itens &&
+            itens.map((item) => {
               const difference = item.qtdAConferir - item.qtdConferida;
               return (
                 <tr key={item.codItem}>
@@ -99,19 +110,20 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
         </tbody>
       </table>
 
-      {itens && itens.length > itemsPerPage && (
+      {/* A paginação agora é exibida com a nova lógica */}
+      {showPagination && (
         <div
           className={styles.itemPagination}
           style={{ marginTop: "16px", marginBottom: "8px" }}
         >
-          <button onClick={handlePrevItemPage} disabled={currentPage === 0}>
+          <button
+            onClick={handlePrevItemPage}
+            disabled={currentPage === 1 || loading}
+          >
             &lt;
           </button>
-          <span style={{ margin: "0 12px" }}>{currentPage + 1}</span>
-          <button
-            onClick={handleNextItemPage}
-            disabled={currentPage >= totalPages - 1}
-          >
+          <span style={{ margin: "0 12px" }}> {currentPage}</span>
+          <button onClick={handleNextItemPage} disabled={isLastPage || loading}>
             &gt;
           </button>
         </div>
