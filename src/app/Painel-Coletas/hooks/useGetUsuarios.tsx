@@ -10,12 +10,7 @@ interface UseGetUsuariosHook {
 }
 
 const useGetUsuarios = (
-  codEmpresa: number,
-  pagina: number,
-  porPagina: number,
-  sortKey?: string,
-  sortDirection?: "asc" | "desc"
-): UseGetUsuariosHook => {
+codEmpresa: number, pagina: number, porPagina: number, sortKey?: string, direction?: string | undefined, p0?: boolean, sortDirection?: "asc" | "desc"): UseGetUsuariosHook => {
   const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
