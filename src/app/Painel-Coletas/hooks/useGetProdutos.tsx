@@ -1,32 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
-import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta"; // Ajuste o caminho se necessário
 import { AxiosError } from "axios";
-import { UsuarioGet } from "../utils/types/UsuarioGet";
+import { Produto } from "../utils/types/Produto";
 
-interface UseGetUsuariosHook {
-  usuarios: UsuarioGet[] | null;
+interface UseGetProdutosHook {
+  produtos: Produto[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
 }
 
-const useGetUsuarios = (
+const useGetProdutos = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
   sortKey?: string,
   sortDirection?: "asc" | "desc",
-  // Adicionado o sexto parâmetro `enabled`
-  enabled: boolean = true
-): UseGetUsuariosHook => {
-  const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
+  enabled: boolean = true // Para não fazer a chamada até que o codEmpresa esteja pronto
+): UseGetProdutosHook => {
+  const [produtos, setProdutos] = useState<Produto[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsuarios = useCallback(async () => {
-    // A flag `enabled` impede a chamada da API antes da hora
+  const fetchProdutos = useCallback(async () => {
     if (!enabled) {
-      setUsuarios([]); // Limpa os dados se não estiver habilitado
+      setProdutos([]);
+      setLoading(false);
       return;
     }
 
@@ -42,7 +41,7 @@ const useGetUsuarios = (
         .join("&");
 
       const response = await axiosInstance.get(
-        `/usuario/empresa/${codEmpresa}?${queryParams}`
+        `/item/${codEmpresa}?${queryParams}`
       );
 
       const data = response.data.data || response.data;
@@ -51,26 +50,26 @@ const useGetUsuarios = (
         throw new Error("Formato de dados inválido da API");
       }
 
-      setUsuarios(data);
+      setProdutos(data);
       setError(null);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError
           ? err.response?.data?.message || err.message
-          : "Ocorreu um erro ao buscar os usuários.";
+          : "Ocorreu um erro ao buscar os produtos.";
 
       setError(errorMessage);
-      setUsuarios(null);
+      setProdutos(null);
     } finally {
       setLoading(false);
     }
   }, [codEmpresa, pagina, porPagina, sortKey, sortDirection, enabled]);
 
   useEffect(() => {
-    fetchUsuarios();
-  }, [fetchUsuarios]);
+    fetchProdutos();
+  }, [fetchProdutos]);
 
-  return { usuarios, loading, error, refetch: fetchUsuarios };
+  return { produtos, loading, error, refetch: fetchProdutos };
 };
 
-export default useGetUsuarios;
+export default useGetProdutos;

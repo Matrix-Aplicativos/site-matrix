@@ -107,6 +107,7 @@ interface ColetaExibida {
 }
 
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
+  id: "codColeta", // CORRIGIDO: Este é o nome que a API espera para a ordenação
   descricao: "descricao",
   data: "dataCadastro",
   origem: "origem",
@@ -329,6 +330,7 @@ const TransferenciasPage: React.FC = () => {
 
   const columns: ColumnConfig[] = [
     { key: "status", label: "Status", sortable: false },
+    { key: "id", label: "Código", sortable: true },
     { key: "data", label: "Data", sortable: true },
     { key: "descricao", label: "Descrição", sortable: true },
     { key: "origem", label: "Origem", sortable: true },
@@ -422,6 +424,7 @@ const TransferenciasPage: React.FC = () => {
                       {getStatusText(row.status)}
                     </span>
                   </td>
+                  <td>{row.id}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
                   <td>{getOrigemText(row.origem)}</td>
