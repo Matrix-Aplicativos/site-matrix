@@ -96,6 +96,7 @@ const FuncionariosPage: React.FC = () => {
     usuarios,
     loading: usuariosLoading,
     error: usuariosError,
+    refetch,
   } = useGetUsuarios(
     codEmpresa || 0,
     paginaAtual,

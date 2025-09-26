@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
@@ -7,20 +7,34 @@ interface UseGetUsuariosHook {
   usuarios: UsuarioGet[] | null;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 const useGetUsuarios = (
-codEmpresa: number, pagina: number, porPagina: number, sortKey?: string, direction?: string | undefined, p0?: boolean, sortDirection?: "asc" | "desc"): UseGetUsuariosHook => {
+  codEmpresa: number,
+  pagina: number,
+  porPagina: number,
+  sortKey?: string,
+  sortDirection?: "asc" | "desc",
+  // Adicionado o sexto parâmetro `enabled`
+  enabled: boolean = true
+): UseGetUsuariosHook => {
   const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsuarios = async () => {
+  const fetchUsuarios = useCallback(async () => {
+    // A flag `enabled` impede a chamada da API antes da hora
+    if (!enabled) {
+      setUsuarios([]); // Limpa os dados se não estiver habilitado
+      return;
+    }
+
+    setLoading(true);
     try {
-      setLoading(true);
       const queryParams = [
         `pagina=${pagina}`,
-        `porPagina=${porPagina}`, 
+        `porPagina=${porPagina}`,
         sortKey ? `sortKey=${sortKey}` : null,
         sortDirection ? `sortDirection=${sortDirection}` : null,
       ]
@@ -31,7 +45,6 @@ codEmpresa: number, pagina: number, porPagina: number, sortKey?: string, directi
         `/usuario/empresa/${codEmpresa}?${queryParams}`
       );
 
-      // Verifica diferentes estruturas de resposta
       const data = response.data.data || response.data;
 
       if (!Array.isArray(data)) {
@@ -51,15 +64,13 @@ codEmpresa: number, pagina: number, porPagina: number, sortKey?: string, directi
     } finally {
       setLoading(false);
     }
-  };
+  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection, enabled]);
 
   useEffect(() => {
-    if (codEmpresa) {
-      fetchUsuarios();
-    }
-  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
+    fetchUsuarios();
+  }, [fetchUsuarios]);
 
-  return { usuarios, loading, error };
+  return { usuarios, loading, error, refetch: fetchUsuarios };
 };
 
 export default useGetUsuarios;
