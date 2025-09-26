@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
+// Interfaces from your original code...
 interface Alocacao {
   codAlocEstoqueApi: number;
   codIntegracao: number;
@@ -34,7 +35,6 @@ interface ItemConferencia {
 
 interface Usuario {
   codUsuario: number;
-  codUsuarioErp: string;
   nome: string;
   cpf: string;
   email: string;
@@ -68,6 +68,7 @@ interface Usuario {
   ativo: boolean;
 }
 
+// MODIFICATION: Updated the Coleta interface to match the JSON structure
 interface Coleta {
   codConferencia: number;
   codIntegracao: number;
@@ -82,8 +83,13 @@ interface Coleta {
   dataFim: string;
   alocOrigem: Alocacao;
   alocDestino: Alocacao;
-  itens: ItemConferencia[];
+  qtdItens: number;
+  volumeTotal: number;
+  volumeConferido: number;
+  origemCadastro: string;
+  integradoErp: boolean; // <-- Field added
   dataCadastro: string;
+  itens?: ItemConferencia[]; // Kept as optional
 }
 
 interface UseGetColetasHook {
@@ -101,6 +107,7 @@ const useGetColetas = (
   orderBy?: string,
   sortDirection?: "asc" | "desc",
   tipo?: string | string[],
+  integradoErp?: boolean, // MODIFICATION: Added integradoErp as an optional parameter
   enabled: boolean = true
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);
@@ -130,6 +137,11 @@ const useGetColetas = (
         }
       }
 
+      // MODIFICATION: Append 'integradoErp' to query params if it exists
+      if (integradoErp !== undefined && integradoErp !== null) {
+        queryParams.append("integradoErp", integradoErp.toString());
+      }
+
       const response = await axiosInstance.get(
         `/coleta/empresa/${codEmpresa}?${queryParams}`
       );
@@ -157,7 +169,16 @@ const useGetColetas = (
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, porPagina, orderBy, sortDirection, tipo, enabled]);
+  }, [
+    codEmpresa,
+    pagina,
+    porPagina,
+    orderBy,
+    sortDirection,
+    tipo,
+    integradoErp,
+    enabled,
+  ]);
 
   useEffect(() => {
     if (enabled) {
