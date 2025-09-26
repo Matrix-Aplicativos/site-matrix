@@ -7,12 +7,10 @@ import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetColetas from "../hooks/useGetColetas";
 import useCurrentCompany from "../hooks/useCurrentCompany";
-import { getCookie } from "cookies-next";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { getUserFromToken } from "../../getUserFromToken";
 import ExpandedRowContent from "../components/ExpandedRow";
 
 // --- Componentes SVG para os ícones ---
+
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -31,6 +29,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -47,6 +46,25 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
+
+const IconSync = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.5"
+    stroke="#1565c0"
+    className="size-6"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
+    />
+  </svg>
+);
+
+// --- Interfaces e Constantes ---
 
 interface ColumnConfig {
   key: keyof ColetaExibida;
@@ -66,6 +84,7 @@ interface ColetaExibida {
   status: string;
   alocOrigem: string;
   alocDestino: string;
+  integradoErp: boolean; // Propriedade adicionada
 }
 
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
@@ -78,6 +97,8 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
 };
 
 const TIPOS_DE_COLETA = ["3", "4"];
+
+// --- Componente Principal ---
 
 const ConferenciasPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -108,6 +129,7 @@ const ConferenciasPage: React.FC = () => {
     sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
     sortConfig?.direction,
     TIPOS_DE_COLETA,
+    undefined, // Parametro 'integradoErp' do hook
     !!codEmpresa
   );
 
@@ -183,6 +205,7 @@ const ConferenciasPage: React.FC = () => {
         status: c.status,
         alocOrigem: c.alocOrigem?.descricao || "Não informada",
         alocDestino: c.alocDestino?.descricao || "Não informada",
+        integradoErp: c.integradoErp, // Mapeando o novo campo
       }));
 
     let result = [...convertedData];
@@ -267,7 +290,7 @@ const ConferenciasPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <h2>Erro ao Carregar Conferências</h2>
-        <button onClick={refetch}>Tentar novamente</button>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
   }
@@ -298,7 +321,7 @@ const ConferenciasPage: React.FC = () => {
         <div className={styles.searchActions}>
           <button
             className={styles.refreshButton}
-            onClick={refetch}
+            onClick={() => refetch()}
             title="Atualizar conferências"
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
@@ -345,13 +368,11 @@ const ConferenciasPage: React.FC = () => {
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  // Adiciona o onClick e o cursor de ponteiro apenas se for 'sortable'
                   onClick={() => col.sortable && sortData(col.key)}
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
-                    {/* Renderiza o ícone apenas se for 'sortable' */}
                     {col.sortable && <IconSort />}
                   </div>
                 </th>
@@ -378,7 +399,16 @@ const ConferenciasPage: React.FC = () => {
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
-
+                  <td className={styles.actionsCell}>
+                    {row.integradoErp && (
+                      <span
+                        className={styles.syncIcon}
+                        title="Integrado com ERP"
+                      >
+                        <IconSync />
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <button
                       className={styles.expandButton}
@@ -400,7 +430,7 @@ const ConferenciasPage: React.FC = () => {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={columns.length + 1}>
+              <td colSpan={columns.length + 2}>
                 <div className={styles.paginationContainer}>
                   <div className={styles.paginationControls}>
                     <button
