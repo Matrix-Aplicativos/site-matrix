@@ -59,7 +59,7 @@ interface FuncionarioExibido {
   nome: string;
   cpf: string;
   email: string;
-  login: string;
+ 
   status: boolean;
 }
 
@@ -68,7 +68,7 @@ const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
   nome: "nome",
   cpf: "cpf",
   email: "email",
-  login: "login",
+
   status: "ativo",
 };
 
@@ -116,17 +116,15 @@ const FuncionariosPage: React.FC = () => {
   const filteredData = useMemo(() => {
     if (!usuarios) return [];
 
-    const funcionarios = usuarios
-      // --- IMPORTANTE: Filtra apenas por funcionários (tipoUsuario === 4) ---
-      .filter((u) => u.tipoUsuario?.codTipoUsuario === 4)
-      .map((u) => ({
-        codigo: u.codUsuario,
-        nome: u.nome,
-        cpf: u.cpf,
-        email: u.email,
-        login: u.login,
-        status: u.ativo,
-      }));
+    // ✅ CORREÇÃO APLICADA AQUI: O .filter por tipoUsuario foi removido.
+    const funcionarios = usuarios.map((u) => ({
+      codigo: u.codUsuario,
+      nome: u.nome,
+      cpf: u.cpf,
+      email: u.email,
+
+      status: u.ativo,
+    }));
 
     let result = [...funcionarios];
 
@@ -191,13 +189,11 @@ const FuncionariosPage: React.FC = () => {
     );
   }
 
-  // --- Ordem das colunas atualizada ---
   const columns: ColumnConfig[] = [
     { key: "codigo", label: "Código", sortable: true },
     { key: "nome", label: "Nome", sortable: true },
     { key: "cpf", label: "CPF", sortable: true },
     { key: "email", label: "Email", sortable: true },
-    { key: "login", label: "Login", sortable: true },
     { key: "status", label: "Status", sortable: true },
   ];
 
@@ -233,7 +229,7 @@ const FuncionariosPage: React.FC = () => {
               <option value="nome">Nome</option>
               <option value="cpf">CPF</option>
               <option value="email">Email</option>
-              <option value="login">Login</option>
+
               <option value="codigo">Código</option>
             </select>
           </div>
@@ -272,7 +268,7 @@ const FuncionariosPage: React.FC = () => {
                 <td>{row.nome}</td>
                 <td>{row.cpf}</td>
                 <td>{row.email}</td>
-                <td>{row.login}</td>
+
                 <td>
                   <span
                     className={`${styles.statusBadge} ${getStatusClass(
