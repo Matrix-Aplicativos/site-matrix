@@ -1,14 +1,16 @@
+// Em seu arquivo ProdutosPage.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar"; // Ajuste o caminho se necessário
-import styles from "../Conferencias/Conferencias.module.css"; // Reutilizando o mesmo CSS
+import SearchBar from "../components/SearchBar";
+import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import useGetProdutos from "../hooks/useGetProdutos"; // Nosso hook de produtos
+import useGetProdutos from "../hooks/useGetProdutos";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import { Produto } from "../utils/types/Produto";
 
-// --- Ícones SVG (Reutilizados) ---
+// --- Ícones e Interfaces (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -46,13 +48,11 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes para a Página (Atualizadas) ---
 interface ColumnConfig {
   key: keyof ProdutoExibido;
   label: string;
   sortable: boolean;
 }
-
 interface ProdutoExibido {
   id: number;
   codigoErp: string;
@@ -64,14 +64,16 @@ interface ProdutoExibido {
   codFabricante: string;
 }
 
+// --- CORREÇÃO FINAL NO MAPA ---
+// Usando os valores exatos que a API espera, com base no Swagger.
 const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
-  codigoErp: "codItemErp",
-  descricao: "descricaoItem",
-  unidade: "unidade",
-  marca: "descricaoMarca",
-  codBarra: "codBarra",
-  codReferencia: "codReferencia",
-  codFabricante: "codFabricante",
+  codigoErp: "cadastroItem.codItem", // Ajustado com base na imagem
+  descricao: "cadastroItem.descricaoItem",
+  unidade: "cadastroItem.unidade",
+  marca: "cadastroItem.descricaoMarca",
+  codBarra: "cadastroItem.codBarra",
+  codReferencia: "cadastroItem.codReferencia",
+  codFabricante: "cadastroItem.codFabricante",
 };
 
 // --- Componente Principal ---
@@ -79,7 +81,8 @@ const ProdutosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("descricao");
+  const [selectedFilter, setSelectedFilter] =
+    useState<keyof ProdutoExibido>("descricao");
   const [sortConfig, setSortConfig] = useState<{
     key: keyof ProdutoExibido;
     direction: "asc" | "desc";
@@ -90,27 +93,29 @@ const ProdutosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  // Chamada do hook já está correta, pois passamos o valor mapeado para o parâmetro 'orderBy'
   const {
     produtos,
     loading: produtosLoading,
     error: produtosError,
     refetch,
+    totalPaginas,
   } = useGetProdutos(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
-    sortConfig?.direction,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, // orderBy
+    sortConfig?.direction, // sortDirection
+    query, // descricao
     !!codEmpresa
   );
 
   const isLoading = companyLoading || produtosLoading;
-  const hasMoreData = produtos ? produtos.length >= porPagina : false;
+  const hasMoreData = paginaAtual < totalPaginas;
 
-  const filteredData = useMemo(() => {
+  const displayedData = useMemo(() => {
     if (!produtos) return [];
-
-    const produtosMapeados = produtos.map((p) => ({
+    return produtos.map((p) => ({
       id: p.codItemApi,
       codigoErp: p.codItemErp,
       descricao: p.descricaoItem,
@@ -120,38 +125,7 @@ const ProdutosPage: React.FC = () => {
       codReferencia: p.codReferencia,
       codFabricante: p.codFabricante,
     }));
-
-    // Cria uma cópia mutável para os filtros e ordenação
-    let result = [...produtosMapeados];
-
-    // Aplica o filtro de busca
-    if (query) {
-      result = result.filter((p) => {
-        const fieldValue =
-          p[selectedFilter as keyof ProdutoExibido]?.toString() || "";
-        return fieldValue.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-
-    // --- CORREÇÃO APLICADA AQUI ---
-    // 1. Lógica de ordenação adicionada para reordenar os dados na tela
-    if (sortConfig) {
-      result.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
-        if (aValue < bValue) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return result;
-    // 2. Adicionado `sortConfig` à lista de dependências para re-executar a ordenação
-  }, [produtos, query, selectedFilter, sortConfig]);
+  }, [produtos]);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -166,9 +140,14 @@ const ProdutosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  // O resto do componente não precisa de alterações
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handleNextPage = () => {
+    if (hasMoreData) {
+      setPaginaAtual((prev) => prev + 1);
+    }
+  };
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -179,6 +158,7 @@ const ProdutosPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <h2>Erro ao Carregar Produtos</h2>
+        <p>{produtosError}</p>
         <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
@@ -209,9 +189,10 @@ const ProdutosPage: React.FC = () => {
             className={styles.refreshButton}
             onClick={() => refetch()}
             title="Atualizar produtos"
+            disabled={isLoading}
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-            <IconRefresh className={produtosLoading ? styles.spinning : ""} />
+            <IconRefresh className={isLoading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
@@ -221,7 +202,9 @@ const ProdutosPage: React.FC = () => {
             <label>Buscar por:</label>
             <select
               value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+              onChange={(e) =>
+                setSelectedFilter(e.target.value as keyof ProdutoExibido)
+              }
             >
               <option value="descricao">Descrição</option>
               <option value="codigoErp">Código ERP</option>
@@ -253,7 +236,7 @@ const ProdutosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row) => (
+            {displayedData.map((row) => (
               <tr key={row.id}>
                 <td>{row.codigoErp}</td>
                 <td>{row.descricao}</td>
@@ -272,19 +255,30 @@ const ProdutosPage: React.FC = () => {
                   <div className={styles.paginationControls}>
                     <button
                       onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
+                      disabled={paginaAtual === 1 || isLoading}
                     >
                       &lt;&lt;
                     </button>
                     <button
                       onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
+                      disabled={paginaAtual === 1 || isLoading}
                     >
                       &lt;
                     </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
+                    <span>
+                      Página {paginaAtual} de {totalPaginas || 1}
+                    </span>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasMoreData || isLoading}
+                    >
                       &gt;
+                    </button>
+                    <button
+                      onClick={() => setPaginaAtual(totalPaginas)}
+                      disabled={!hasMoreData || isLoading}
+                    >
+                      &gt;&gt;
                     </button>
                   </div>
                   <div className={styles.itemsPerPageContainer}>

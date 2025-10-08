@@ -1,13 +1,16 @@
+// Em seu arquivo FuncionariosPage.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar"; // Assumindo o caminho do componente SearchBar
-import styles from "../Conferencias/Conferencias.module.css"; // Reutilizando o mesmo CSS module para consistência
+import SearchBar from "../components/SearchBar";
+import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import useGetUsuarios from "../hooks/useGetUsuarios"; // Usando o hook para usuários/funcionários
+import useGetUsuarios from "../hooks/useGetUsuarios";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 
+// --- Ícones e Interfaces (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -27,7 +30,6 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
   </svg>
 );
-
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -46,34 +48,29 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes ---
-
 interface ColumnConfig {
   key: keyof FuncionarioExibido;
   label: string;
   sortable: boolean;
 }
-
 interface FuncionarioExibido {
   codigo: number;
   nome: string;
   cpf: string;
   email: string;
- 
   status: boolean;
 }
 
+// O tipo do valor foi ajustado para 'string' para maior flexibilidade.
 const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
-  codigo: "codUsuario",
+  codigo: "codFuncionario",
   nome: "nome",
   cpf: "cpf",
   email: "email",
-
   status: "ativo",
 };
 
 // --- Componente Principal ---
-
 const FuncionariosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -81,7 +78,8 @@ const FuncionariosPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<
     "todos" | "ativo" | "inativo"
   >("todos");
-  const [selectedFilter, setSelectedFilter] = useState("nome");
+  const [selectedFilter, setSelectedFilter] =
+    useState<keyof FuncionarioExibido>("nome");
   const [sortConfig, setSortConfig] = useState<{
     key: keyof FuncionarioExibido;
     direction: "asc" | "desc";
@@ -92,77 +90,54 @@ const FuncionariosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  // --- CORREÇÃO 1: Passando todos os parâmetros de filtro e ordenação para o hook ---
   const {
     usuarios,
     loading: usuariosLoading,
     error: usuariosError,
     refetch,
+    totalPaginas,
   } = useGetUsuarios(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
-    sortConfig?.direction,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, // orderBy
+    sortConfig?.direction, // sortDirection
+    SORT_COLUMN_MAP[selectedFilter], // filtro (para busca textual)
+    query, // valor (da busca textual)
+    statusFilter === "todos" ? undefined : statusFilter === "ativo", // ativo (boolean)
     !!codEmpresa
   );
 
   const isLoading = companyLoading || usuariosLoading;
-  const hasMoreData = usuarios ? usuarios.length >= porPagina : false;
+  const hasMoreData = paginaAtual < totalPaginas;
 
   const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
   const getStatusClass = (status: boolean) =>
     status ? styles.statusCompleted : styles.statusNotStarted;
 
-  const filteredData = useMemo(() => {
+  // --- CORREÇÃO 2: Simplificando o useMemo para apenas mapear os dados ---
+  const displayedData = useMemo(() => {
     if (!usuarios) return [];
 
-    // ✅ CORREÇÃO APLICADA AQUI: O .filter por tipoUsuario foi removido.
-    const funcionarios = usuarios.map((u) => ({
+    // A API já filtrou e ordenou. Apenas mapeamos para o formato de exibição.
+    return usuarios.map((u) => ({
       codigo: u.codUsuario,
       nome: u.nome,
       cpf: u.cpf,
       email: u.email,
-
       status: u.ativo,
     }));
-
-    let result = [...funcionarios];
-
-    if (statusFilter !== "todos") {
-      result = result.filter((f) => f.status === (statusFilter === "ativo"));
-    }
-
-    if (query) {
-      result = result.filter((func) => {
-        const fieldValue =
-          func[selectedFilter as keyof FuncionarioExibido]?.toString() || "";
-        return fieldValue.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-
-    if (sortConfig) {
-      result.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
-        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return result;
-  }, [usuarios, query, statusFilter, selectedFilter, sortConfig]);
+  }, [usuarios]);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
-
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value as "todos" | "ativo" | "inativo");
     setPaginaAtual(1);
   };
-
   const sortData = (key: keyof FuncionarioExibido) => {
     const direction: "asc" | "desc" =
       sortConfig?.key === key && sortConfig.direction === "asc"
@@ -171,9 +146,12 @@ const FuncionariosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  // O resto do componente não precisa de alterações
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  const handleNextPage = () => {
+    if (hasMoreData) setPaginaAtual((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -184,6 +162,7 @@ const FuncionariosPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <h2>Erro ao Carregar Funcionários</h2>
+        <p>{usuariosError}</p>
         <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
@@ -212,9 +191,10 @@ const FuncionariosPage: React.FC = () => {
             className={styles.refreshButton}
             onClick={() => refetch()}
             title="Atualizar funcionários"
+            disabled={isLoading}
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-            <IconRefresh className={usuariosLoading ? styles.spinning : ""} />
+            <IconRefresh className={isLoading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
@@ -224,12 +204,13 @@ const FuncionariosPage: React.FC = () => {
             <label>Buscar por:</label>
             <select
               value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+              onChange={(e) =>
+                setSelectedFilter(e.target.value as keyof FuncionarioExibido)
+              }
             >
               <option value="nome">Nome</option>
               <option value="cpf">CPF</option>
               <option value="email">Email</option>
-
               <option value="codigo">Código</option>
             </select>
           </div>
@@ -262,13 +243,12 @@ const FuncionariosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row) => (
+            {displayedData.map((row) => (
               <tr key={row.codigo}>
                 <td>{row.codigo}</td>
                 <td>{row.nome}</td>
                 <td>{row.cpf}</td>
                 <td>{row.email}</td>
-
                 <td>
                   <span
                     className={`${styles.statusBadge} ${getStatusClass(
@@ -288,22 +268,30 @@ const FuncionariosPage: React.FC = () => {
                   <div className={styles.paginationControls}>
                     <button
                       onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
+                      disabled={paginaAtual === 1 || isLoading}
                     >
-                      {" "}
-                      &lt;&lt;{" "}
+                      &lt;&lt;
                     </button>
                     <button
                       onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
+                      disabled={paginaAtual === 1 || isLoading}
                     >
-                      {" "}
-                      &lt;{" "}
+                      &lt;
                     </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      {" "}
-                      &gt;{" "}
+                    <span>
+                      Página {paginaAtual} de {totalPaginas || 1}
+                    </span>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasMoreData || isLoading}
+                    >
+                      &gt;
+                    </button>
+                    <button
+                      onClick={() => setPaginaAtual(totalPaginas)}
+                      disabled={!hasMoreData || isLoading}
+                    >
+                      &gt;&gt;
                     </button>
                   </div>
                   <div className={styles.itemsPerPageContainer}>

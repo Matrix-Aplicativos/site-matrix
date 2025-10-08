@@ -1,3 +1,4 @@
+// Em seu arquivo DispositivosPage.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -9,7 +10,6 @@ import {
   FiChevronsLeft,
   FiRefreshCw,
 } from "react-icons/fi";
-// 1. Removida a importação do FaSort
 import styles from "./Dispositivos.module.css";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
@@ -18,7 +18,6 @@ import useConfiguracao from "../hooks/useConfiguracao";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 
-// 2. Adicionado o componente IconSort (igual ao da tela de Inventários)
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -36,19 +35,31 @@ const IconSort = () => (
   </svg>
 );
 
+interface DispositivoExibido {
+  nome: string;
+  codigo: string;
+  status: boolean;
+}
+
+// --- CORREÇÃO APLICADA AQUI ---
+// A mensagem de erro do backend ("Dispositivo.nome") confirma que o
+// parâmetro correto para ordenar por nome é simplesmente "nome".
+const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
+  nome: "nome", // Ajustado de "nomeDispositivo" para "nome"
+  codigo: "id.codDispositivo",
+  status: "ativo",
+};
+
 const DispositivosPage: React.FC = () => {
-  // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
-    key: string;
+    key: keyof DispositivoExibido;
     direction: "asc" | "desc";
-  } | null>(null);
+  } | null>({ key: "nome", direction: "asc" });
 
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-
-  // Contexto de loading
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -61,46 +72,33 @@ const DispositivosPage: React.FC = () => {
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig?.key,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
     !!codEmpresa
   );
 
-  // Hooks de ações
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
   const { maximoDispositivos, loading: loadingConfig } = useConfiguracao(
     codEmpresa || 0
   );
 
-  // Estados combinados
   const isLoading = companyLoading || dispositivosLoading || loadingConfig;
   const hasMoreData = paginaAtual < totalPaginas;
-
-  // Contadores de status
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
 
-  // Colunas da tabela
-  const columns = [
-    { key: "nomeDispositivo", label: "Nome" },
-    { key: "codDispositivo", label: "Código" },
-    { key: "ativo", label: "Status" },
+  const columns: { key: keyof DispositivoExibido; label: string }[] = [
+    { key: "nome", label: "Nome" },
+    { key: "codigo", label: "Código" },
+    { key: "status", label: "Status" },
   ];
 
-  const handleSort = (key: string) => {
-    const fieldMap: { [key: string]: string } = {
-      nomeDispositivo: "nome",
-      codDispositivo: "id.codDispositivo",
-      ativo: "ativo",
-    };
-
-    const apiField = fieldMap[key] || key;
+  const handleSort = (key: keyof DispositivoExibido) => {
     const direction =
-      sortConfig?.key === apiField && sortConfig.direction === "asc"
+      sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
         : "asc";
-
-    setSortConfig({ key: apiField, direction });
+    setSortConfig({ key, direction });
   };
 
   const handleDeleteDevice = async (codDispositivo: string) => {
@@ -127,7 +125,6 @@ const DispositivosPage: React.FC = () => {
   const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
   const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
 
-  // Efeitos
   useEffect(() => {
     if (isLoading) {
       showLoading();
@@ -135,9 +132,6 @@ const DispositivosPage: React.FC = () => {
       hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
-
-  // Renderização de erro, loading, etc...
-  // (O restante da lógica do componente permanece o mesmo)
 
   return (
     <div className={styles.container}>
@@ -156,15 +150,21 @@ const DispositivosPage: React.FC = () => {
       </div>
       <div className={styles.mainContent}>
         <div className={styles.tableContainer}>
-          {isLoading && <p>Carregando dispositivos...</p>}
+          {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
+          {dispositivosError && (
+            <p>Erro ao carregar dispositivos: {dispositivosError}</p>
+          )}
 
           {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
                 <tr>
                   {columns.map((col) => (
-                    // 3. Estrutura do cabeçalho da tabela atualizada para usar o novo ícone e alinhar corretamente
-                    <th key={col.key} onClick={() => handleSort(col.key)}>
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      style={{ cursor: "pointer" }}
+                    >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <span>{col.label}</span>
                         <IconSort />
@@ -234,7 +234,9 @@ const DispositivosPage: React.FC = () => {
                         >
                           <FiChevronLeft />
                         </button>
-                        <span>{paginaAtual}</span>
+                        <span>{`Página ${paginaAtual} de ${
+                          totalPaginas || 1
+                        }`}</span>
                         <button
                           onClick={handleNextPage}
                           disabled={!hasMoreData}
@@ -264,7 +266,6 @@ const DispositivosPage: React.FC = () => {
             </table>
           )}
         </div>
-
         <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
@@ -273,12 +274,11 @@ const DispositivosPage: React.FC = () => {
               {dispositivos?.length ?? 0}
             </span>
           </div>
-
           {!loadingConfig && (
             <div className={styles.situacaoItem}>
               <p>Dispositivos Disponíveis:</p>
               <span className={styles.situacaoValue}>
-                {maximoDispositivos - dispositivosAtivos}{" "}
+                {maximoDispositivos - dispositivosAtivos}
               </span>
             </div>
           )}

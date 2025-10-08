@@ -1,3 +1,6 @@
+// Em seu arquivo hooks/useGetDispositivos.tsx
+// NENHUMA ALTERAÇÃO NECESSÁRIA AQUI. O CÓDIGO JÁ ESTÁ CORRETO.
+
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
@@ -9,18 +12,25 @@ interface Dispositivo {
   ativo: boolean;
 }
 
+interface ApiResponseDispositivos {
+  conteudo: Dispositivo[];
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+}
+
 interface UseGetDispositivosHook {
   dispositivos: Dispositivo[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  totalPaginas: number; // ✅ novo campo para total de páginas
+  totalPaginas: number;
 }
 
 const useGetDispositivos = (
   codEmpresa: number,
   pagina: number = 1,
-  porPagina: number = 5, // ✅ parâmetro porPagina adicionado com valor padrão
+  porPagina: number = 20,
   orderBy?: string,
   sortDirection?: "asc" | "desc",
   enabled: boolean = true
@@ -28,7 +38,7 @@ const useGetDispositivos = (
   const [dispositivos, setDispositivos] = useState<Dispositivo[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [totalPaginas, setTotalPaginas] = useState<number>(0); // ✅ estado para total de páginas
+  const [totalPaginas, setTotalPaginas] = useState<number>(0);
 
   const fetchDispositivos = useCallback(async () => {
     if (!enabled || !codEmpresa) return;
@@ -37,44 +47,31 @@ const useGetDispositivos = (
       setLoading(true);
       setError(null);
 
-      // ✅ Construção dos parâmetros de query igual ao primeiro hook
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
       });
+      if (orderBy) queryParams.append("orderBy", orderBy);
+      if (sortDirection) queryParams.append("sortDirection", sortDirection);
 
-      if (orderBy) {
-        queryParams.append("orderBy", orderBy);
-      }
-
-      if (sortDirection) {
-        queryParams.append("sortDirection", sortDirection);
-      }
-
-      const response = await axiosInstance.get(
+      const response = await axiosInstance.get<ApiResponseDispositivos>(
         `/dispositivo/${codEmpresa}?${queryParams}`
       );
 
-      const responseData = response.data;
-
-      // ✅ Tratamento consistente com o primeiro hook
-      const dados = Array.isArray(responseData.dados)
-        ? responseData.dados
-        : Array.isArray(responseData)
-        ? responseData
-        : [];
-
+      const dados = response.data.conteudo;
+      if (!Array.isArray(dados)) {
+        throw new Error(
+          "Formato de dados inválido da API: 'conteudo' não é um array."
+        );
+      }
       setDispositivos(dados);
-
-      // ✅ Cálculo do total de páginas igual ao primeiro hook
-      const total = responseData.totalItens
-        ? Math.ceil(responseData.totalItens / porPagina)
-        : 1;
-      setTotalPaginas(total);
+      setTotalPaginas(response.data.qtdPaginas || 0);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError
           ? err.response?.data?.message || err.message
+          : err instanceof Error
+          ? err.message
           : "Ocorreu um erro ao buscar os dispositivos.";
       setError(errorMessage);
       setDispositivos(null);
@@ -87,7 +84,7 @@ const useGetDispositivos = (
     if (enabled) {
       fetchDispositivos();
     }
-  }, [fetchDispositivos, enabled]);
+  }, [fetchDispositivos]);
 
   return {
     dispositivos,
