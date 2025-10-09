@@ -1,5 +1,3 @@
-// Em seu arquivo /Conferencias/page.tsx
-
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -12,7 +10,7 @@ import useCurrentCompany from "../hooks/useCurrentCompany";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 
-// --- Componentes SVG (sem alterações) ---
+// --- Componentes SVG ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -26,10 +24,9 @@ const IconRefresh = ({ className }: { className?: string }) => (
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -45,8 +42,7 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 const IconSync = () => (
@@ -58,12 +54,11 @@ const IconSync = () => (
     stroke="#1565c0"
     style={{ width: 24, height: 24 }}
   >
-    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
-    />{" "}
+    />
   </svg>
 );
 
@@ -73,7 +68,6 @@ interface ColumnConfig {
   label: string;
   sortable: boolean;
 }
-
 interface ColetaExibida {
   id: number;
   codConferenciaErp: string;
@@ -88,24 +82,19 @@ interface ColetaExibida {
   qtdItens: number;
   volumeTotal: number;
 }
-
-// --- CORREÇÃO APLICADA AQUI ---
-// Alteramos a tipagem do valor de `keyof Coleta` para `string`,
-// permitindo que o mapa contenha os nomes exatos que a API espera, como "situacao".
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
   data: "dataCadastro",
   origem: "origem",
   tipoMovimento: "tipo",
-  status: "situacao", // Agora o TypeScript aceita o valor "situacao"
+  status: "situacao",
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
 };
 
 const TIPOS_DE_COLETA = ["3", "4"];
 
-// --- Componente Principal (sem mais alterações) ---
 const ConferenciasPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -134,7 +123,7 @@ const ConferenciasPage: React.FC = () => {
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, // orderBy (nome do parâmetro usado no hook useGetColetas)
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
     TIPOS_DE_COLETA,
     undefined,
@@ -237,8 +226,8 @@ const ConferenciasPage: React.FC = () => {
   if (coletasError) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Conferências</h2>{" "}
-        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
+        <h2>Erro ao Carregar Conferências</h2>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
   }
@@ -260,152 +249,136 @@ const ConferenciasPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay /> <h1 className={styles.title}>CONFERÊNCIAS</h1>{" "}
+      <LoadingOverlay />
+      <h1 className={styles.title}>CONFERÊNCIAS</h1>
       <div className={styles.searchContainer}>
-        {" "}
         <SearchBar
           placeholder="Qual conferência deseja buscar?"
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
-        />{" "}
+        />
         <div className={styles.searchActions}>
-          {" "}
           <button
             className={styles.refreshButton}
             onClick={() => refetch()}
             title="Atualizar conferências"
             disabled={isLoading}
           >
-            {" "}
-            <span style={{ marginRight: 5, color: "#1769e3" }}>
-              Atualizar
-            </span>{" "}
-            <IconRefresh className={isLoading ? styles.spinning : ""} />{" "}
-          </button>{" "}
-        </div>{" "}
-      </div>{" "}
+            <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+            <IconRefresh className={isLoading ? styles.spinning : ""} />
+          </button>
+        </div>
+      </div>
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          {" "}
           <div className={styles.filterSection}>
-            <label>Buscar por:</label>{" "}
+            <label>Buscar por:</label>
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
             >
-              {" "}
-              <option value="descricao">Descrição</option>{" "}
-              <option value="origem">Origem</option>{" "}
-              <option value="status">Status</option>{" "}
-            </select>{" "}
-          </div>{" "}
+              <option value="descricao">Descrição</option>
+              <option value="origem">Origem</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
           <div className={styles.filterSection}>
-            <label>Período:</label>{" "}
+            <label>Período:</label>
             <div className={styles.dateRange}>
-              {" "}
               <input
                 type="date"
                 name="startDate"
                 value={dateRange.startDate}
                 onChange={handleDateChange}
-              />{" "}
+              />
               <input
                 type="date"
                 name="endDate"
                 value={dateRange.endDate}
                 onChange={handleDateChange}
-              />{" "}
-            </div>{" "}
-          </div>{" "}
+              />
+            </div>
+          </div>
         </div>
-      )}{" "}
+      )}
       <div className={styles.tableContainer}>
-        {" "}
         <table className={styles.table}>
-          {" "}
           <thead>
-            {" "}
             <tr>
-              {" "}
               {columns.map((col) => (
                 <th
                   key={col.key}
                   onClick={() => col.sortable && sortData(col.key)}
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
-                  {" "}
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>{col.label}</span> {col.sortable && <IconSort />}{" "}
-                  </div>{" "}
+                    <span>{col.label}</span> {col.sortable && <IconSort />}
+                  </div>
                 </th>
               ))}
-              <th>Ações</th> <th></th>{" "}
-            </tr>{" "}
-          </thead>{" "}
+              <th>Ações</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
-            {" "}
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
-                {" "}
                 <tr>
-                  {" "}
                   <td>
-                    {" "}
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
                         row.status
                       )}`}
                     >
-                      {getStatusText(row.status)}{" "}
-                    </span>{" "}
+                      {getStatusText(row.status)}
+                    </span>
                   </td>
-                  <td>{row.qtdItens}</td> <td>{row.volumeTotal}</td>{" "}
-                  <td>{row.id}</td>{" "}
-                  <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>{" "}
-                  <td>{row.descricao}</td> <td>{getOrigemText(row.origem)}</td>
-                  <td>{getTipoMovimentoText(row.tipoMovimento)}</td>{" "}
-                  <td>{row.usuario}</td>{" "}
+                  <td>{row.qtdItens}</td>
+                  <td>{row.volumeTotal}</td>
+                  <td>{row.id}</td>
+                  <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
+                  <td>{row.descricao}</td>
+                  <td>{getOrigemText(row.origem)}</td>
+                  <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
+                  <td>{row.usuario}</td>
                   <td className={styles.actionsCell}>
-                    {" "}
                     {row.integradoErp && (
                       <span
                         className={styles.syncIcon}
                         title="Integrado com ERP"
                       >
-                        <IconSync />{" "}
+                        <IconSync />
                       </span>
-                    )}{" "}
-                  </td>{" "}
+                    )}
+                  </td>
                   <td>
-                    {" "}
                     <button
                       className={styles.expandButton}
                       onClick={() => toggleExpandRow(rowIndex)}
                     >
-                      {expandedRow === rowIndex ? "▲" : "▼"}{" "}
-                    </button>{" "}
-                  </td>{" "}
-                </tr>{" "}
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
+                </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    {" "}
                     <td colSpan={columns.length + 2}>
-                      <ExpandedRowContent coletaId={row.id} />{" "}
-                    </td>{" "}
+                      <ExpandedRowContent coletaId={row.id} />
+                    </td>
                   </tr>
-                )}{" "}
+                )}
               </React.Fragment>
-            ))}{" "}
-          </tbody>{" "}
-        </table>{" "}
-      </div>{" "}
+            ))}
+          </tbody>
+        </table>
+      </div>
       <PaginationControls
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
         totalElementos={totalElementos}
         porPagina={porPagina}
         onPageChange={setPaginaAtual}
-      />{" "}
+      />
     </div>
   );
 };

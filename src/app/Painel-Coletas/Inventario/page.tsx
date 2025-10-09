@@ -11,7 +11,7 @@ import useCurrentCompany from "../hooks/useCurrentCompany";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 
-// --- Componentes SVG (sem alterações) ---
+// --- Componentes SVG ---
 const IconTrash = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -24,11 +24,10 @@ const IconTrash = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {" "}
-    <polyline points="3 6 5 6 21 6"></polyline>{" "}
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>{" "}
-    <line x1="10" y1="11" x2="10" y2="17"></line>{" "}
-    <line x1="14" y1="11" x2="14" y2="17"></line>{" "}
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
   </svg>
 );
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -44,10 +43,9 @@ const IconRefresh = ({ className }: { className?: string }) => (
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -63,8 +61,7 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 const IconSync = () => (
@@ -76,12 +73,11 @@ const IconSync = () => (
     stroke="#1565c0"
     style={{ width: 24, height: 24 }}
   >
-    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
-    />{" "}
+    />
   </svg>
 );
 
@@ -106,8 +102,6 @@ interface ColetaExibida {
   volumeTotal: number;
 }
 
-// --- CORREÇÃO APLICADA AQUI ---
-// Alteramos a tipagem do valor de `keyof Coleta` para `string` para resolver o erro.
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
@@ -119,7 +113,6 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   volumeTotal: "volumeTotal",
 };
 
-// --- Componente Principal (sem mais alterações) ---
 const InventariosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -150,13 +143,13 @@ const InventariosPage: React.FC = () => {
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    "1", // tipo
-    undefined, // integradoErp
-    selectedFilter, // filtro
-    query, // valor
-    dateRange.startDate, // dataInicial
-    dateRange.endDate, // dataFinal
-    !!codEmpresa // enabled
+    "1",
+    undefined,
+    selectedFilter,
+    query,
+    dateRange.startDate,
+    dateRange.endDate,
+    !!codEmpresa
   );
 
   const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
@@ -224,6 +217,7 @@ const InventariosPage: React.FC = () => {
       }
     }
   };
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -255,8 +249,8 @@ const InventariosPage: React.FC = () => {
   if (coletasError) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar inventários</h2>{" "}
-        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
+        <h2>Erro ao Carregar inventários</h2>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
   }
@@ -278,117 +272,106 @@ const InventariosPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay /> <h1 className={styles.title}>INVENTÁRIOS</h1>{" "}
+      <LoadingOverlay />
+      <h1 className={styles.title}>INVENTÁRIOS</h1>
       <div className={styles.searchContainer}>
-        {" "}
         <SearchBar
           placeholder="Qual inventário deseja buscar?"
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
-        />{" "}
+        />
         <div className={styles.searchActions}>
-          {" "}
           <button
             className={styles.refreshButton}
             onClick={() => refetch()}
             title="Atualizar inventários"
           >
-            {" "}
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-            <IconRefresh className={isLoading ? styles.spinning : ""} />{" "}
-          </button>{" "}
-        </div>{" "}
-      </div>{" "}
+            <IconRefresh className={isLoading ? styles.spinning : ""} />
+          </button>
+        </div>
+      </div>
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          {" "}
           <div className={styles.filterSection}>
-            <label>Buscar por:</label>{" "}
+            <label>Buscar por:</label>
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
             >
-              <option value="descricao">Descrição</option>{" "}
-              <option value="origem">Origem</option>{" "}
-              <option value="status">Status</option>{" "}
-            </select>{" "}
-          </div>{" "}
+              <option value="descricao">Descrição</option>
+              <option value="origem">Origem</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
           <div className={styles.filterSection}>
-            <label>Período:</label>{" "}
+            <label>Período:</label>
             <div className={styles.dateRange}>
-              {" "}
               <input
                 type="date"
                 name="startDate"
                 value={dateRange.startDate}
                 onChange={handleDateChange}
-              />{" "}
+              />
               <input
                 type="date"
                 name="endDate"
                 value={dateRange.endDate}
                 onChange={handleDateChange}
-              />{" "}
-            </div>{" "}
-          </div>{" "}
+              />
+            </div>
+          </div>
         </div>
-      )}{" "}
+      )}
       <div className={styles.tableContainer}>
-        {" "}
         <table className={styles.table}>
-          {" "}
           <thead>
-            {" "}
             <tr>
-              {" "}
               {columns.map((col) => (
                 <th
                   key={col.key}
                   onClick={() => col.sortable && sortData(col.key)}
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
-                  {" "}
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>{col.label}</span> {col.sortable && <IconSort />}{" "}
-                  </div>{" "}
+                    <span>{col.label}</span> {col.sortable && <IconSort />}
+                  </div>
                 </th>
               ))}
-              <th>Ações</th> <th></th>{" "}
-            </tr>{" "}
-          </thead>{" "}
+              <th>Ações</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
-            {" "}
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
-                {" "}
                 <tr>
-                  {" "}
                   <td>
-                    {" "}
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
                         row.status
                       )}`}
                     >
-                      {getStatusText(row.status)}{" "}
-                    </span>{" "}
+                      {getStatusText(row.status)}
+                    </span>
                   </td>
-                  <td>{row.qtdItens}</td> <td>{row.volumeTotal}</td>{" "}
-                  <td>{row.id}</td>{" "}
-                  <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>{" "}
-                  <td>{row.descricao}</td> <td>{getOrigemText(row.origem)}</td>
-                  <td>{getTipoMovimentoText(row.tipoMovimento)}</td>{" "}
-                  <td>{row.usuario}</td>{" "}
+                  <td>{row.qtdItens}</td>
+                  <td>{row.volumeTotal}</td>
+                  <td>{row.id}</td>
+                  <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
+                  <td>{row.descricao}</td>
+                  <td>{getOrigemText(row.origem)}</td>
+                  <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
+                  <td>{row.usuario}</td>
                   <td className={styles.actionsCell}>
-                    {" "}
                     {row.integradoErp && (
                       <span
                         className={styles.syncIcon}
                         title="Integrado com ERP"
                       >
-                        <IconSync />{" "}
+                        <IconSync />
                       </span>
-                    )}{" "}
+                    )}
                     {row.origem === "2" && !row.dataFim && (
                       <button
                         className={styles.deleteButton}
@@ -398,40 +381,38 @@ const InventariosPage: React.FC = () => {
                         }}
                         title="Excluir coleta avulsa"
                       >
-                        <IconTrash />{" "}
+                        <IconTrash />
                       </button>
-                    )}{" "}
-                  </td>{" "}
+                    )}
+                  </td>
                   <td>
-                    {" "}
                     <button
                       className={styles.expandButton}
                       onClick={() => toggleExpandRow(rowIndex)}
                     >
-                      {expandedRow === rowIndex ? "▲" : "▼"}{" "}
-                    </button>{" "}
-                  </td>{" "}
-                </tr>{" "}
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
+                </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    {" "}
                     <td colSpan={columns.length + 2}>
-                      <ExpandedRowContent coletaId={row.id} />{" "}
-                    </td>{" "}
+                      <ExpandedRowContent coletaId={row.id} />
+                    </td>
                   </tr>
-                )}{" "}
+                )}
               </React.Fragment>
-            ))}{" "}
-          </tbody>{" "}
-        </table>{" "}
-      </div>{" "}
+            ))}
+          </tbody>
+        </table>
+      </div>
       <PaginationControls
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
         totalElementos={totalElementos}
         porPagina={porPagina}
         onPageChange={setPaginaAtual}
-      />{" "}
+      />
     </div>
   );
 };

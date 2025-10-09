@@ -48,6 +48,24 @@
   margin: 0;
   width: 100%;
   flex-grow: 1;
+  /* --- CORREÇÃO APLICADA AQUI --- */
+  /* Adiciona uma barra de rolagem vertical apenas se o conteúdo ultrapassar a altura */
+  overflow-y: auto;
+}
+
+/* --- ESTILOS OPCIONAIS PARA DEIXAR A BARRA DE ROLAGEM MAIS BONITA --- */
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+.menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.menu::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+.menu::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
 }
 
 .user-info {
@@ -76,9 +94,13 @@
   transition: all 0.3s;
   overflow: hidden;
   white-space: nowrap;
+  /* Adicionado para que o botão se comporte como os links */
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
 }
 
-/* Remove margin from the dropdown wrapper */
 .menu-item-wrapper .menu-item {
   margin: 0;
 }
@@ -115,6 +137,8 @@
 
 .bottom-section {
   border-top: 1px solid #ddd;
+  /* Garante que a seção inferior não seja empurrada para fora */
+  flex-shrink: 0;
 }
 
 .logout {
@@ -137,8 +161,6 @@
   color: white;
 }
 
-/* --- New CSS for Dropdown Menu --- */
-
 .menu-item-wrapper {
   display: flex;
   flex-direction: column;
@@ -149,7 +171,7 @@
 }
 
 .dropdown-icon {
-  margin-left: auto; /* Pushes the arrow icon to the right */
+  margin-left: auto;
   display: flex;
   align-items: center;
   transition: transform 0.3s ease;
@@ -159,22 +181,22 @@
   list-style-type: none;
   padding: 0;
   margin: 0;
-  max-height: 0; /* Initially collapsed */
+  max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-in-out;
 }
 
 .submenu.open {
-  max-height: 200px; /* Adjust as needed for more items */
+  max-height: 200px;
 }
 
 .submenu-item {
   margin: 2px 0 !important;
-  padding-left: 30px !important; /* Indent sub-items */
-  background-color: #f8f9fa; /* Slightly different background */
+  padding-left: 30px !important;
+  background-color: #f8f9fa;
 }
 
 .submenu-item:hover {
-  background-color: #e9ecef; /* Different hover color for sub-items */
+  background-color: #e9ecef;
   color: #1769e3;
 }
