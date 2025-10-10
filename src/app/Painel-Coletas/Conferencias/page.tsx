@@ -122,7 +122,6 @@ const ConferenciasPage: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  // Estados para os filtros de rádio
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
 
@@ -245,6 +244,12 @@ const ConferenciasPage: React.FC = () => {
   };
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
+  };
+
+  // ADICIONADO: Função para lidar com a mudança de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1);
   };
 
   useEffect(() => {
@@ -451,6 +456,7 @@ const ConferenciasPage: React.FC = () => {
         totalElementos={totalElementos}
         porPagina={porPagina}
         onPageChange={setPaginaAtual}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
     </div>
   );

@@ -1,5 +1,3 @@
-// ProdutosPage.tsx (ATUALIZADO)
-
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -73,12 +71,11 @@ const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
   codFabricante: "cadastroItem.codFabricante",
 };
 
-// ADICIONADO: Mapa para traduzir o filtro do frontend para o parâmetro da API
 const FILTER_TO_API_PARAM: Record<string, string> = {
   codigoErp: "codErp",
   descricao: "descricao",
   marca: "marca",
-  codBarra: "codBarras", // Note: "codBarras" no plural, como na imagem do Swagger
+  codBarra: "codBarras",
   codReferencia: "codReferencia",
   codFabricante: "codFabricante",
 };
@@ -100,10 +97,9 @@ const ProdutosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // ADICIONADO: Memoização para criar o objeto de filtro para a API
   const filtrosParaApi = useMemo(() => {
     if (!query) {
-      return {}; // Retorna objeto vazio se a busca estiver vazia
+      return {};
     }
     const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
     if (apiParamKey) {
@@ -125,7 +121,7 @@ const ProdutosPage: React.FC = () => {
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    filtrosParaApi, // ALTERADO: Passando o objeto de filtros dinâmico
+    filtrosParaApi,
     !!codEmpresa
   );
 
@@ -148,6 +144,12 @@ const ProdutosPage: React.FC = () => {
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
+  };
+
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
   };
 
   const sortData = (key: keyof ProdutoExibido) => {
@@ -219,7 +221,6 @@ const ProdutosPage: React.FC = () => {
             >
               <option value="descricao">Descrição</option>
               <option value="codigoErp">Código ERP</option>
-              {/* REMOVIDO: A opção de unidade foi retirada daqui */}
               <option value="marca">Marca</option>
               <option value="codBarra">Cód. Barras</option>
               <option value="codReferencia">Cód. Referência</option>
@@ -264,12 +265,14 @@ const ProdutosPage: React.FC = () => {
 
       {totalElementos > 0 && (
         <div className="footerControls">
+          {/* ATUALIZADO: A chamada do componente de paginação */}
           <PaginationControls
             paginaAtual={paginaAtual}
             totalPaginas={totalPaginas}
             totalElementos={totalElementos}
             porPagina={porPagina}
             onPageChange={setPaginaAtual}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </div>
       )}

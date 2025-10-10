@@ -256,6 +256,13 @@ const InventariosPage: React.FC = () => {
     setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
   };
+
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
+  };
+
   const sortData = (key: keyof ColetaExibida) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -482,12 +489,15 @@ const InventariosPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* ATUALIZADO: A chamada do componente de paginação */}
       <PaginationControls
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
         totalElementos={totalElementos}
         porPagina={porPagina}
         onPageChange={setPaginaAtual}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
     </div>
   );

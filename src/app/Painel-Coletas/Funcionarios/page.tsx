@@ -1,5 +1,3 @@
-// FuncionariosPage.tsx (ATUALIZADO)
-
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -61,14 +59,13 @@ interface FuncionarioExibido {
   status: boolean;
 }
 const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
-  codigo: "codUsuarioErp",
+  codigo: "codFuncionarioErp",
   nome: "nome",
   cpf: "cpf",
   email: "email",
   status: "ativo",
 };
 
-// ADICIONADO: Mapa para traduzir o filtro do frontend para o parâmetro da API
 const FILTER_TO_API_PARAM: Record<string, string> = {
   nome: "nomeUsuario",
   cpf: "cpfusuario",
@@ -95,11 +92,9 @@ const FuncionariosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // ADICIONADO: Memoização para criar o objeto de filtro para a API
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
 
-    // Adiciona o filtro de texto (nome, cpf, etc.)
     if (query) {
       const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
       if (apiParamKey) {
@@ -107,7 +102,6 @@ const FuncionariosPage: React.FC = () => {
       }
     }
 
-    // Adiciona o filtro de status
     if (statusFilter !== "todos") {
       filtros.ativo = statusFilter === "ativo";
     }
@@ -128,7 +122,7 @@ const FuncionariosPage: React.FC = () => {
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    filtrosParaApi, // ALTERADO: Passando o objeto de filtros dinâmico
+    filtrosParaApi,
     !!codEmpresa
   );
 
@@ -157,6 +151,12 @@ const FuncionariosPage: React.FC = () => {
   const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
     setStatusFilter(newStatus);
     setPaginaAtual(1);
+  };
+
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
   };
 
   const sortData = (key: keyof FuncionarioExibido) => {
@@ -308,12 +308,14 @@ const FuncionariosPage: React.FC = () => {
 
       {totalElementos > 0 && (
         <div className="footerControls">
+          {/* ATUALIZADO: A chamada do componente de paginação */}
           <PaginationControls
             paginaAtual={paginaAtual}
             totalPaginas={totalPaginas}
             totalElementos={totalElementos}
             porPagina={porPagina}
             onPageChange={setPaginaAtual}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </div>
       )}

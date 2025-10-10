@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import useGetGraficoFuncionarios from "../hooks/useGetGraficoFuncionarios";
 import styles from "./RelatorioFuncionarios.module.css";
@@ -21,7 +22,8 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 const toISODateString = (date: Date) => date.toISOString().split("T")[0];
@@ -35,6 +37,12 @@ const titulosMetricas = {
   coletasRealizadas: "Coletas Realizadas",
   itensDistintosBipados: "Itens Bipados",
   volumeTotalBipado: "Volume Total",
+};
+
+const coresMetricas = {
+  coletasRealizadas: "rgb(54, 162, 235)",
+  itensDistintosBipados: "rgb(75, 192, 192)",
+  volumeTotalBipado: "rgb(255, 206, 86)",
 };
 
 const OPCOES_TIPO = {
@@ -57,13 +65,11 @@ export default function RelatorioFuncionarios() {
     new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
   );
 
-  // Estados para os inputs da UI (sem alteração)
   const [dataInicioInput, setDataInicioInput] = useState(inicioDoMesCorrente);
   const [dataFimInput, setDataFimInput] = useState(fimDoMesCorrente);
   const [tiposSelecionados, setTiposSelecionados] =
     useState<number[]>(TODOS_OS_TIPOS);
 
-  // NOVO: Estado para controlar apenas o período de datas ativo na busca
   const [dateRangeAtivo, setDateRangeAtivo] = useState({
     inicio: inicioDoMesCorrente,
     fim: fimDoMesCorrente,
@@ -75,10 +81,6 @@ export default function RelatorioFuncionarios() {
     volumeTotalBipado: true,
   });
 
-  // ALTERADO: O hook agora usa o estado 'dateRangeAtivo' para as datas
-  // e 'tiposSelecionados' para os tipos.
-  // Assim, a mudança em 'tiposSelecionados' reflete na hora,
-  // mas a mudança nas datas só reflete quando 'dateRangeAtivo' é atualizado.
   const { dados, loading, error } = useGetGraficoFuncionarios(
     codEmpresa,
     dateRangeAtivo.inicio,
@@ -86,7 +88,6 @@ export default function RelatorioFuncionarios() {
     tiposSelecionados
   );
 
-  // NOVO: A função 'handlePesquisar' está de volta
   const handlePesquisar = () => {
     setDateRangeAtivo({
       inicio: dataInicioInput,
@@ -117,7 +118,6 @@ export default function RelatorioFuncionarios() {
     }
   };
 
-  // Nenhuma alteração necessária em chartData, options ou renderContent
   const chartData = useMemo(() => {
     if (!dados || dados.length === 0) return { labels: [], datasets: [] };
     const dadosOrdenados = [...dados].sort((a, b) =>
@@ -128,21 +128,21 @@ export default function RelatorioFuncionarios() {
         id: "coletasRealizadas",
         label: "Coletas Realizadas",
         data: dadosOrdenados.map((d) => d.coletasRealizadas),
-        backgroundColor: "rgba(54, 162, 235, 0.7)",
+        backgroundColor: coresMetricas.coletasRealizadas,
         yAxisID: "y",
       },
       {
         id: "itensDistintosBipados",
         label: "Itens Bipados",
         data: dadosOrdenados.map((d) => d.itensDistintosBipados),
-        backgroundColor: "rgba(75, 192, 192, 0.7)",
+        backgroundColor: coresMetricas.itensDistintosBipados,
         yAxisID: "y",
       },
       {
         id: "volumeTotalBipado",
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
-        backgroundColor: "rgba(255, 206, 86, 0.7)",
+        backgroundColor: coresMetricas.volumeTotalBipado,
         yAxisID: "y1",
       },
     ];
@@ -160,6 +160,18 @@ export default function RelatorioFuncionarios() {
     plugins: {
       legend: { display: false },
       title: { display: false },
+      datalabels: {
+        anchor: "center" as const,
+        align: "center" as const,
+        color: "white",
+        font: {
+          weight: "bold" as const,
+          size: 14, // ALTERADO: Fonte aumentada
+        },
+        formatter: (value: number) => {
+          return value > 0 ? value : "";
+        },
+      },
     },
     scales: {
       x: {
@@ -227,7 +239,6 @@ export default function RelatorioFuncionarios() {
 
       <div className={styles.filterSection}>
         <div className={styles.metricAndTypeFilters}>
-          {/* Métricas e Tipos (sem alteração) */}
           <div className={styles.filterGroup}>
             <span className={styles.filterGroupLabel}>Exibir Métricas:</span>
             <div className={styles.controlsContainer}>
@@ -296,7 +307,6 @@ export default function RelatorioFuncionarios() {
               className={styles.dateInput}
             />
           </div>
-          {/* NOVO: O botão de pesquisar está de volta */}
           <button
             onClick={handlePesquisar}
             disabled={loading}
@@ -305,6 +315,21 @@ export default function RelatorioFuncionarios() {
             {loading ? "..." : "Pesquisar"}
           </button>
         </div>
+      </div>
+
+      <div className={styles.legendContainer}>
+        {(Object.keys(visibilidade) as TipoMetrica[]).map(
+          (metrica) =>
+            visibilidade[metrica] && (
+              <div key={metrica} className={styles.legendItem}>
+                <span
+                  className={styles.legendColorBox}
+                  style={{ backgroundColor: coresMetricas[metrica] }}
+                ></span>
+                <span>{titulosMetricas[metrica]}</span>
+              </div>
+            )
+        )}
       </div>
 
       <div className={styles.chartWrapper}>{renderContent()}</div>

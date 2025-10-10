@@ -96,7 +96,6 @@
   height: 40px;
 }
 
-/* NOVO: Estilos do botão de pesquisa foram adicionados de volta */
 .searchButton {
   padding: 10px 18px;
   background: var(--button-primary-bg);
@@ -128,4 +127,30 @@
   height: 100%;
   color: var(--text-placeholder-color);
   text-align: center;
+}
+
+/* ADICIONADO: Estilos para a legenda separada */
+.legendContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px; /* Aumentado o espaçamento entre os itens */
+  margin-bottom: 20px;
+  padding-top: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-secondary-color);
+}
+
+.legendColorBox {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border-radius: 3px;
 }

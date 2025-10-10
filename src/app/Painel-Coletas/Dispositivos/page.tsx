@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi"; // Ícones de paginação removidos
+import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
@@ -9,9 +9,9 @@ import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useCurrentCompany from "../hooks/useCurrentCompany";
-import PaginationControls from "../components/PaginationControls"; // <-- IMPORTADO
+import PaginationControls from "../components/PaginationControls";
 
-// Componente IconSort (sem alterações)
+// Componente IconSort
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes (sem alterações) ---
+// --- Interfaces e Constantes ---
 interface DispositivoExibido {
   nome: string;
   codigo: string;
@@ -42,7 +42,7 @@ const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   status: "ativo",
 };
 
-// --- Componente da Página (ATUALIZADO) ---
+// --- Componente da Página ---
 const DispositivosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -55,14 +55,13 @@ const DispositivosPage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
-  // --- Chamada do Hook (ATUALIZADA) ---
   const {
     dispositivos,
     loading: dispositivosLoading,
     error: dispositivosError,
     refetch,
     totalPaginas,
-    totalElementos, // <-- ADICIONADO
+    totalElementos,
   } = useGetDispositivos(
     codEmpresa || 0,
     paginaAtual,
@@ -116,7 +115,11 @@ const DispositivosPage: React.FC = () => {
     await refetch();
   };
 
-  // Funções de paginação antigas (handlePrevPage, handleNextPage) foram removidas
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
+  };
 
   useEffect(() => {
     if (isLoading) {
@@ -210,12 +213,10 @@ const DispositivosPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
-              {/* --- O ANTIGO TFOOT FOI REMOVIDO DAQUI --- */}
             </table>
           )}
         </div>
         <div className={styles.situacaoContainer}>
-          {/* ... (código da situação do dispositivo sem alterações) ... */}
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
             <p>Total de Dispositivos:</p>
@@ -238,7 +239,7 @@ const DispositivosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* --- NOVO COMPONENTE DE PAGINAÇÃO ADICIONADO AQUI --- */}
+      {/* ATUALIZADO: A chamada do componente de paginação */}
       {totalElementos > 0 && (
         <div className={styles.footerControls}>
           <PaginationControls
@@ -247,6 +248,8 @@ const DispositivosPage: React.FC = () => {
             totalElementos={totalElementos}
             porPagina={porPagina}
             onPageChange={setPaginaAtual}
+            // ADICIONADO: Passando a nova função para a prop
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </div>
       )}

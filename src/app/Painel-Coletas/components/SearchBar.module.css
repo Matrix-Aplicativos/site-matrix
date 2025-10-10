@@ -34,7 +34,7 @@
 
 .searchButton {
   padding: 8px 15px;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: bold;
   color: white;
   background-color: #0070f3;
@@ -42,8 +42,9 @@
   border-radius: 0 4px 4px 0;
   cursor: pointer;
   transition: background-color 0.2s;
-  height: 39px;
+  height: 40px;
   box-sizing: border-box;
+  width: 90px;
 }
 
 .searchButton:hover {
