@@ -48,14 +48,17 @@
   color: #555;
 }
 
-.dateInputGroup input {
+/* ALTERADO: Adicionado 'select' para aplicar os mesmos estilos do 'input' */
+.dateInputGroup input,
+.dateInputGroup select {
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
   font-size: 1rem;
+  background-color: white; /* Garante fundo branco para o select */
 }
 
-/* --- NOVOS ESTILOS PARA OS CHECKBOXES --- */
+/* --- ESTILOS PARA OS CHECKBOXES --- */
 .optionsContainer {
   display: flex;
   flex-direction: column;

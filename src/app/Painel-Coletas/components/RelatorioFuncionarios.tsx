@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import useGetGraficoFuncionarios from "../hooks/useGetGraficoFuncionarios";
+import styles from "./RelatorioFuncionarios.module.css";
 
 ChartJS.register(
   CategoryScale,
@@ -36,6 +37,14 @@ const titulosMetricas = {
   volumeTotalBipado: "Volume Total",
 };
 
+const OPCOES_TIPO = {
+  Inventario: 1,
+  Transferencia: 2,
+  "Conf. Venda": 3,
+  "Conf. Compra": 4,
+};
+const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
+
 export default function RelatorioFuncionarios() {
   const { empresa } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
@@ -48,9 +57,14 @@ export default function RelatorioFuncionarios() {
     new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
   );
 
+  // Estados para os inputs da UI (sem alteração)
   const [dataInicioInput, setDataInicioInput] = useState(inicioDoMesCorrente);
   const [dataFimInput, setDataFimInput] = useState(fimDoMesCorrente);
-  const [periodoAtivo, setPeriodoAtivo] = useState({
+  const [tiposSelecionados, setTiposSelecionados] =
+    useState<number[]>(TODOS_OS_TIPOS);
+
+  // NOVO: Estado para controlar apenas o período de datas ativo na busca
+  const [dateRangeAtivo, setDateRangeAtivo] = useState({
     inicio: inicioDoMesCorrente,
     fim: fimDoMesCorrente,
   });
@@ -61,14 +75,23 @@ export default function RelatorioFuncionarios() {
     volumeTotalBipado: true,
   });
 
+  // ALTERADO: O hook agora usa o estado 'dateRangeAtivo' para as datas
+  // e 'tiposSelecionados' para os tipos.
+  // Assim, a mudança em 'tiposSelecionados' reflete na hora,
+  // mas a mudança nas datas só reflete quando 'dateRangeAtivo' é atualizado.
   const { dados, loading, error } = useGetGraficoFuncionarios(
     codEmpresa,
-    periodoAtivo.inicio,
-    periodoAtivo.fim
+    dateRangeAtivo.inicio,
+    dateRangeAtivo.fim,
+    tiposSelecionados
   );
 
+  // NOVO: A função 'handlePesquisar' está de volta
   const handlePesquisar = () => {
-    setPeriodoAtivo({ inicio: dataInicioInput, fim: dataFimInput });
+    setDateRangeAtivo({
+      inicio: dataInicioInput,
+      fim: dataFimInput,
+    });
   };
 
   const handleVisibilidadeChange = (metrica: TipoMetrica) => {
@@ -78,6 +101,23 @@ export default function RelatorioFuncionarios() {
     }));
   };
 
+  const handleTipoChange = (tipoValor: number) => {
+    setTiposSelecionados((prev) =>
+      prev.includes(tipoValor)
+        ? prev.filter((t) => t !== tipoValor)
+        : [...prev, tipoValor]
+    );
+  };
+
+  const handleToggleTodosTipos = () => {
+    if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
+      setTiposSelecionados([]);
+    } else {
+      setTiposSelecionados(TODOS_OS_TIPOS);
+    }
+  };
+
+  // Nenhuma alteração necessária em chartData, options ou renderContent
   const chartData = useMemo(() => {
     if (!dados || dados.length === 0) return { labels: [], datasets: [] };
     const dadosOrdenados = [...dados].sort((a, b) =>
@@ -155,19 +195,15 @@ export default function RelatorioFuncionarios() {
     },
   } as const;
 
-  const placeholderStyle: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
-    color: "#666",
-    textAlign: "center",
-  };
-
   const renderContent = (): ReactNode => {
-    if (loading) return <div style={placeholderStyle}>Carregando dados...</div>;
+    if (loading)
+      return <div className={styles.placeholder}>Carregando dados...</div>;
     if (error)
-      return <div style={placeholderStyle}>Erro ao buscar dados: {error}</div>;
+      return (
+        <div className={styles.placeholder}>
+          Erro ao buscar dados: {error.toString()}
+        </div>
+      );
     if (
       !chartData ||
       !chartData.datasets.length ||
@@ -175,7 +211,7 @@ export default function RelatorioFuncionarios() {
       chartData.labels.length === 0
     ) {
       return (
-        <div style={placeholderStyle}>
+        <div className={styles.placeholder}>
           Nenhum dado encontrado para os filtros selecionados.
         </div>
       );
@@ -184,138 +220,94 @@ export default function RelatorioFuncionarios() {
   };
 
   return (
-    <div style={{ padding: "20px", width: "100%" }}>
-      {/* Cabeçalho e controles */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          marginBottom: "20px",
-        }}
-      >
-        <h2 style={{ color: "#000", fontSize: "1.7rem", margin: 0 }}>
-          Relatório por Funcionários
-        </h2>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Relatório por Funcionários</h2>
+      </div>
 
-        {/* Checkboxes + Datas juntos */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "20px",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              fontWeight: "bold",
-              fontSize: "16px",
-              color: "#333",
-              marginRight: "8px",
-            }}
-          >
-            Exibir:
-          </span>
-
-          {(Object.keys(visibilidade) as TipoMetrica[]).map((metrica) => (
-            <label
-              key={metrica}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={visibilidade[metrica]}
-                onChange={() => handleVisibilidadeChange(metrica)}
-                style={{ marginRight: "8px", transform: "scale(1.2)" }}
-              />
-              {titulosMetricas[metrica]}
-            </label>
-          ))}
-
-          {/* Datas e botão na mesma linha */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              marginLeft: "24px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label
-                htmlFor="dataInicioFunc"
-                style={{ fontSize: "14px", marginBottom: "4px" }}
-              >
-                Início
-              </label>
-              <input
-                id="dataInicioFunc"
-                type="date"
-                value={dataInicioInput}
-                onChange={(e) => setDataInicioInput(e.target.value)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  fontSize: "15px",
-                }}
-              />
+      <div className={styles.filterSection}>
+        <div className={styles.metricAndTypeFilters}>
+          {/* Métricas e Tipos (sem alteração) */}
+          <div className={styles.filterGroup}>
+            <span className={styles.filterGroupLabel}>Exibir Métricas:</span>
+            <div className={styles.controlsContainer}>
+              {(Object.keys(visibilidade) as TipoMetrica[]).map((metrica) => (
+                <label key={metrica} className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={visibilidade[metrica]}
+                    onChange={() => handleVisibilidadeChange(metrica)}
+                    className={styles.checkboxInput}
+                  />
+                  {titulosMetricas[metrica]}
+                </label>
+              ))}
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label
-                htmlFor="dataFimFunc"
-                style={{ fontSize: "14px", marginBottom: "4px" }}
-              >
-                Fim
-              </label>
-              <input
-                id="dataFimFunc"
-                type="date"
-                value={dataFimInput}
-                onChange={(e) => setDataFimInput(e.target.value)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  fontSize: "15px",
-                }}
-              />
-            </div>
-            <button
-              onClick={handlePesquisar}
-              disabled={loading}
-              style={{
-                padding: "10px 18px",
-                background: loading ? "#ccc" : "#1769e3",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: loading ? "not-allowed" : "pointer",
-                fontSize: "15px",
-                fontWeight: "bold",
-                height: "40px",
-                marginTop: "14px",
-              }}
-            >
-              {loading ? "Pesquisando..." : "Pesquisar"}
-            </button>
           </div>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterGroupLabel}>Tipos de Coleta:</span>
+            <div className={styles.controlsContainer}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  onChange={handleToggleTodosTipos}
+                  checked={tiposSelecionados.length === TODOS_OS_TIPOS.length}
+                  className={styles.checkboxInput}
+                />
+                Todos
+              </label>
+              {Object.entries(OPCOES_TIPO).map(([nome, valor]) => (
+                <label key={valor} className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={tiposSelecionados.includes(valor)}
+                    onChange={() => handleTipoChange(valor)}
+                    className={styles.checkboxInput}
+                  />
+                  {nome}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.dateFilters}>
+          <div className={styles.dateInputGroup}>
+            <label htmlFor="dataInicioFunc" className={styles.dateLabel}>
+              Início
+            </label>
+            <input
+              id="dataInicioFunc"
+              type="date"
+              value={dataInicioInput}
+              onChange={(e) => setDataInicioInput(e.target.value)}
+              className={styles.dateInput}
+            />
+          </div>
+          <div className={styles.dateInputGroup}>
+            <label htmlFor="dataFimFunc" className={styles.dateLabel}>
+              Fim
+            </label>
+            <input
+              id="dataFimFunc"
+              type="date"
+              value={dataFimInput}
+              onChange={(e) => setDataFimInput(e.target.value)}
+              className={styles.dateInput}
+            />
+          </div>
+          {/* NOVO: O botão de pesquisar está de volta */}
+          <button
+            onClick={handlePesquisar}
+            disabled={loading}
+            className={styles.searchButton}
+          >
+            {loading ? "..." : "Pesquisar"}
+          </button>
         </div>
       </div>
 
-      {/* Gráfico */}
-      <div style={{ height: "400px", width: "100%", position: "relative" }}>
-        {renderContent()}
-      </div>
+      <div className={styles.chartWrapper}>{renderContent()}</div>
     </div>
   );
 }

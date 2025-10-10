@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
-// --- Interfaces de Tipagem (sem alterações) ---
+// --- Interfaces de Tipagem ---
 interface Alocacao {
   codAlocEstoqueApi: number;
   codIntegracao: number;
@@ -23,7 +23,7 @@ interface UsuarioNaColeta {
 
 export interface Coleta {
   codConferencia: number;
-  codColeta: number; // Adicionado para consistência com a ordenação
+  codColeta: number;
   codIntegracao: number;
   codEmpresa: number;
   codConferenciaErp: string;
@@ -60,20 +60,20 @@ interface UseGetColetasHook {
   totalElementos: number;
 }
 
-// --- Hook Atualizado ---
+// --- Hook Atualizado para aceitar valores únicos de filtro ---
 const useGetColetas = (
   codEmpresa: number,
   pagina: number = 1,
   porPagina: number = 100,
   orderBy?: string,
-  sortDirection?: "asc" | "desc",
+  direction?: "asc" | "desc",
   tipo?: string | string[],
-  integradoErp?: boolean,
-  // --- NOVOS PARÂMETROS PARA BUSCA NA API ---
-  filtro?: string, // Ex: 'descricao', 'status'
-  valor?: string, // Ex: 'minha busca', '1'
-  dataInicial?: string, // Ex: '2025-10-01'
-  dataFinal?: string, // Ex: '2025-10-08'
+  status?: string,
+  origem?: string,
+  filtro?: string,
+  valor?: string,
+  dataInicial?: string,
+  dataFinal?: string,
   enabled: boolean = true
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);
@@ -94,12 +94,9 @@ const useGetColetas = (
         porPagina: porPagina.toString(),
       });
 
-      // Parâmetros existentes
       if (orderBy) queryParams.append("orderBy", orderBy);
-      if (sortDirection) queryParams.append("sortDirection", sortDirection);
-      if (integradoErp !== undefined)
-        queryParams.append("integradoErp", integradoErp.toString());
-      // Tratamento para 'tipo' (individual ou array)
+      if (direction) queryParams.append("direction", direction);
+
       if (tipo) {
         if (Array.isArray(tipo)) {
           tipo.forEach((t) => queryParams.append("tipo", t));
@@ -108,10 +105,18 @@ const useGetColetas = (
         }
       }
 
-      // --- Adiciona os novos parâmetros de filtro à query da API ---
+      // Lógica simplificada para valor único
+      if (status) {
+        queryParams.append("situacao", status);
+      }
+      if (origem) {
+        queryParams.append("origem", origem);
+      }
+
       if (filtro && valor) {
         queryParams.append(filtro, valor);
       }
+
       if (dataInicial) {
         queryParams.append("dataInicial", dataInicial);
       }
@@ -143,13 +148,14 @@ const useGetColetas = (
     pagina,
     porPagina,
     orderBy,
-    sortDirection,
+    direction,
     tipo,
-    integradoErp,
-    filtro, // <-- Nova dependência
-    valor, // <-- Nova dependência
-    dataInicial, // <-- Nova dependência
-    dataFinal, // <-- Nova dependência
+    status,
+    origem,
+    filtro,
+    valor,
+    dataInicial,
+    dataFinal,
     enabled,
   ]);
 

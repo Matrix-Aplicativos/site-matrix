@@ -1,8 +1,8 @@
 .container {
   padding: 10px;
-  width: 100%;
   margin: 0 auto;
   min-height: 100vh;
+  width: 100%;
 }
 
 .title {
@@ -47,24 +47,6 @@
   background-color: #f1f1f1;
 }
 
-.table tfoot tr:last-child td {
-  border-bottom: 0;
-}
-
-.additionalInfo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  background: #fdfdfd;
-  padding: 15px;
-}
-
-.additionalInfo p {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #333;
-}
-
 .filterExpansion {
   display: flex;
   flex-direction: column;
@@ -89,7 +71,6 @@
   color: #333;
 }
 
-.filterSection select,
 .filterSection input {
   padding: 8px;
   font-size: 13px;
@@ -100,6 +81,21 @@
 .dateRange {
   display: flex;
   gap: 10px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .expandButton {
@@ -158,78 +154,9 @@
   user-select: none;
 }
 
-.itemsPerPageContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.itemsPerPageSelect {
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: white;
-  cursor: pointer;
-}
-
-.deleteButton {
-  background: none;
-  border: none;
-  color: #ff4444;
-  cursor: pointer;
-  font-size: 1.2em;
-  padding: 0.5em;
-  transition: color 0.2s;
-}
-
-.deleteButton:hover {
-  color: #cc0000;
-}
-
 .actionsCell {
   width: 50px;
   padding: 0 5px !important;
-}
-
-.itemsContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.itemCard {
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 12px;
-  min-width: 300px;
-  max-width: 300px;
-  min-height: 100px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.itemCard p {
-  margin: 4px 0;
-  font-size: 13px;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.itemCard p strong {
-  font-weight: 500;
-  color: #555;
-}
-.moreItems {
-  display: flex;
-  align-items: center;
-  color: #666;
-  font-style: italic;
 }
 
 .searchContainer {
@@ -260,16 +187,6 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.refreshButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.refreshButton svg {
-  font-size: 1.2rem;
-  color: #1769e3;
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -281,125 +198,30 @@
 
 .spinning {
   animation: spin 1s linear infinite;
-  color: #1769e3;
 }
 
-.itemPagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.itemPagination button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.itemPagination button:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.itemPagination span {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* --- ESTILOS PARA STATUS --- */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: 500;
   display: inline-block;
+  white-space: nowrap;
 }
 
 .statusCompleted {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
-
 .statusPartial {
   background-color: #fffde7;
   color: #f57f17;
 }
-
 .statusInProgress {
   background-color: #e3f2fd;
   color: #1565c0;
 }
-
 .statusNotStarted {
   background-color: #ffebee;
   color: #c62828;
-}
-
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: #ffffff;
-  }
-
-  .title,
-  .table th,
-  .table td,
-  .additionalInfo p,
-  .filterSection label,
-  .filterSection select,
-  .filterSection input,
-  .paginationControls button,
-  .itemsPerPageSelect,
-  .itemCard p strong,
-  .moreItems,
-  .itemPagination button,
-  .itemPagination span {
-    color: #000000;
-  }
-
-  .table th,
-  .additionalInfo,
-  .filterExpansion,
-  .expandedRow > td,
-  .paginationControls button,
-  .itemsPerPageSelect,
-  .itemCard {
-    background: #ffffff;
-  }
-
-  .table tbody tr:nth-child(even) {
-    background-color: #f0f0f0;
-  }
-
-  .table tbody tr:hover {
-    background-color: #e0e0e0;
-  }
-
-  .paginationControls button:hover:not(:disabled) {
-    background-color: #1769e3;
-    color: #ffffff;
-  }
-
-  .deleteButton {
-    color: #ff0000;
-  }
-
-  .refreshButton svg {
-    color: #1769e3;
-  }
-
-  .itemPagination button:disabled {
-    color: #666666;
-  }
-
-  .positive {
-    color: #008000;
-  }
-
-  .negative {
-    color: #ff0000;
-  }
 }

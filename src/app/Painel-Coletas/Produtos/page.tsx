@@ -1,4 +1,3 @@
-// Em seu arquivo ProdutosPage.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -9,6 +8,7 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { Produto } from "../utils/types/Produto";
+import PaginationControls from "../components/PaginationControls"; // <-- IMPORTADO
 
 // --- Ícones e Interfaces (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -24,10 +24,9 @@ const IconRefresh = ({ className }: { className?: string }) => (
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -43,8 +42,7 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 
@@ -63,11 +61,8 @@ interface ProdutoExibido {
   codReferencia: string;
   codFabricante: string;
 }
-
-// --- CORREÇÃO FINAL NO MAPA ---
-// Usando os valores exatos que a API espera, com base no Swagger.
 const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
-  codigoErp: "cadastroItem.codItem", // Ajustado com base na imagem
+  codigoErp: "cadastroItem.codItemErp",
   descricao: "cadastroItem.descricaoItem",
   unidade: "cadastroItem.unidade",
   marca: "cadastroItem.descricaoMarca",
@@ -93,25 +88,25 @@ const ProdutosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // Chamada do hook já está correta, pois passamos o valor mapeado para o parâmetro 'orderBy'
+  // --- Chamada do Hook (ATUALIZADA PARA RECEBER totalElementos) ---
   const {
     produtos,
     loading: produtosLoading,
     error: produtosError,
     refetch,
     totalPaginas,
+    totalElementos, // <-- ADICIONADO
   } = useGetProdutos(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, // orderBy
-    sortConfig?.direction, // sortDirection
-    query, // descricao
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
+    sortConfig?.direction,
+    query, // <-- LÓGICA ORIGINAL MANTIDA
     !!codEmpresa
   );
 
   const isLoading = companyLoading || produtosLoading;
-  const hasMoreData = paginaAtual < totalPaginas;
 
   const displayedData = useMemo(() => {
     if (!produtos) return [];
@@ -140,14 +135,9 @@ const ProdutosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  // O resto do componente não precisa de alterações
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => {
-    if (hasMoreData) {
-      setPaginaAtual((prev) => prev + 1);
-    }
-  };
+
+  // Funções de paginação antigas foram removidas
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -248,60 +238,24 @@ const ProdutosPage: React.FC = () => {
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={columns.length}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1 || isLoading}
-                    >
-                      &lt;&lt;
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1 || isLoading}
-                    >
-                      &lt;
-                    </button>
-                    <span>
-                      Página {paginaAtual} de {totalPaginas || 1}
-                    </span>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!hasMoreData || isLoading}
-                    >
-                      &gt;
-                    </button>
-                    <button
-                      onClick={() => setPaginaAtual(totalPaginas)}
-                      disabled={!hasMoreData || isLoading}
-                    >
-                      &gt;&gt;
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Itens por página: </span>
-                    <select
-                      value={porPagina}
-                      onChange={(e) => {
-                        setPorPagina(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
+          {/* --- O ANTIGO TFOOT FOI REMOVIDO DAQUI --- */}
         </table>
       </div>
+
+      {/* --- NOVO COMPONENTE DE PAGINAÇÃO ADICIONADO AQUI --- */}
+      {totalElementos > 0 && (
+        <div
+          className="footerControls" /* Usando classe genérica para estilo */
+        >
+          <PaginationControls
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            totalElementos={totalElementos}
+            porPagina={porPagina}
+            onPageChange={setPaginaAtual}
+          />
+        </div>
+      )}
     </div>
   );
 };

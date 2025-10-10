@@ -18,15 +18,16 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke="#1565c0"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    <polyline points="23 4 23 10 17 10"></polyline>
-    <polyline points="1 20 1 14 7 14"></polyline>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+    {" "}
+    <polyline points="23 4 23 10 17 10"></polyline>{" "}
+    <polyline points="1 20 1 14 7 14"></polyline>{" "}
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
   </svg>
 );
 const IconSort = () => (
@@ -42,7 +43,8 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+    {" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
   </svg>
 );
 const IconSync = () => (
@@ -54,11 +56,12 @@ const IconSync = () => (
     stroke="#1565c0"
     style={{ width: 24, height: 24 }}
   >
+    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
-    />
+    />{" "}
   </svg>
 );
 
@@ -95,18 +98,33 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
 
 const TIPOS_DE_COLETA = ["3", "4"];
 
+const OPCOES_STATUS = {
+  "Não Iniciada": "1",
+  "Em Andamento": "4",
+  "Finalizada Parcialmente": "2",
+  "Finalizada Completa": "3",
+};
+
+const OPCOES_ORIGEM = {
+  "Sob Demanda": "1",
+  Avulsa: "2",
+};
+
 const ConferenciasPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-  const [selectedFilter, setSelectedFilter] = useState("descricao");
   const [sortConfig, setSortConfig] = useState<{
     key: keyof ColetaExibida;
     direction: "asc" | "desc";
   } | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  // Estados para os filtros de rádio
+  const [statusFiltro, setStatusFiltro] = useState<string>("");
+  const [origemFiltro, setOrigemFiltro] = useState<string>("");
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -126,8 +144,9 @@ const ConferenciasPage: React.FC = () => {
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
     TIPOS_DE_COLETA,
-    undefined,
-    selectedFilter,
+    statusFiltro || undefined,
+    origemFiltro || undefined,
+    "descricao",
     query,
     dateRange.startDate,
     dateRange.endDate,
@@ -195,6 +214,16 @@ const ConferenciasPage: React.FC = () => {
     }));
   }, [coletas]);
 
+  const handleStatusChange = (statusValue: string) => {
+    setStatusFiltro(statusValue);
+    setPaginaAtual(1);
+  };
+
+  const handleOrigemChange = (origemValue: string) => {
+    setOrigemFiltro(origemValue);
+    setPaginaAtual(1);
+  };
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -226,8 +255,9 @@ const ConferenciasPage: React.FC = () => {
   if (coletasError) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Conferências</h2>
-        <button onClick={() => refetch()}>Tentar novamente</button>
+        {" "}
+        <h2>Erro ao Carregar Conferências</h2>{" "}
+        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
       </div>
     );
   }
@@ -236,7 +266,7 @@ const ConferenciasPage: React.FC = () => {
   }
 
   const columns: ColumnConfig[] = [
-    { key: "status", label: "Status", sortable: true },
+    { key: "status", label: "Status", sortable: false },
     { key: "qtdItens", label: "Qtd. Itens", sortable: false },
     { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
     { key: "id", label: "Código", sortable: true },
@@ -269,19 +299,61 @@ const ConferenciasPage: React.FC = () => {
           </button>
         </div>
       </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
-            <label>Buscar por:</label>
-            <select
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-            >
-              <option value="descricao">Descrição</option>
-              <option value="origem">Origem</option>
-              <option value="status">Status</option>
-            </select>
+            <label>Status:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="status-filter"
+                  checked={statusFiltro === ""}
+                  onChange={() => handleStatusChange("")}
+                />
+                Todos
+              </label>
+              {Object.entries(OPCOES_STATUS).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="status-filter"
+                    checked={statusFiltro === value}
+                    onChange={() => handleStatusChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
           </div>
+
+          <div className={styles.filterSection}>
+            <label>Origem:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="origem-filter"
+                  checked={origemFiltro === ""}
+                  onChange={() => handleOrigemChange("")}
+                />
+                Todas
+              </label>
+              {Object.entries(OPCOES_ORIGEM).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="origem-filter"
+                    checked={origemFiltro === value}
+                    onChange={() => handleOrigemChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.filterSection}>
             <label>Período:</label>
             <div className={styles.dateRange}>
@@ -301,6 +373,7 @@ const ConferenciasPage: React.FC = () => {
           </div>
         </div>
       )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>

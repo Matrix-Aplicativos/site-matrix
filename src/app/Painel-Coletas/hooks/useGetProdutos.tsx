@@ -1,19 +1,9 @@
-// Em seu arquivo hooks/useGetProdutos.tsx
-
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 import { Produto } from "../utils/types/Produto";
 
-// --- Interfaces (sem alterações) ---
-interface UseGetProdutosHook {
-  produtos: Produto[] | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-  totalPaginas: number;
-}
-
+// --- Interfaces ---
 interface ApiResponseProdutos {
   conteudo: Produto[];
   paginaAtual: number;
@@ -21,19 +11,31 @@ interface ApiResponseProdutos {
   qtdElementos: number;
 }
 
+// --- Interface do Hook (ATUALIZADA) ---
+interface UseGetProdutosHook {
+  produtos: Produto[] | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  totalPaginas: number;
+  totalElementos: number; // <-- ÚNICA ADIÇÃO LÓGICA
+}
+
+// --- Hook (CORRIGIDO PARA MANTER A LÓGICA ORIGINAL) ---
 const useGetProdutos = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
   orderBy?: string,
-  sortDirection?: "asc" | "desc",
-  descricao?: string,
+  direction?: "asc" | "desc",
+  descricao?: string, // <-- MANTIDO O PARÂMETRO ORIGINAL
   enabled: boolean = true
 ): UseGetProdutosHook => {
   const [produtos, setProdutos] = useState<Produto[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalPaginas, setTotalPaginas] = useState<number>(0);
+  const [totalElementos, setTotalElementos] = useState<number>(0); // <-- ADICIONADO
 
   const fetchProdutos = useCallback(async () => {
     if (!enabled || !codEmpresa) {
@@ -43,40 +45,33 @@ const useGetProdutos = (
     }
 
     setLoading(true);
+    setError(null);
     try {
-      // --- CORREÇÃO APLICADA AQUI ---
-      // Removido o 'new' duplicado que estava causando o erro "is not a constructor".
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
       });
 
       if (orderBy) queryParams.append("orderBy", orderBy);
-      if (sortDirection) queryParams.append("sortDirection", sortDirection);
-      if (descricao) queryParams.append("descricao", descricao);
+      if (direction) queryParams.append("direction", direction);
+      if (descricao) queryParams.append("descricao", descricao); // <-- LÓGICA ORIGINAL MANTIDA
 
       const response = await axiosInstance.get<ApiResponseProdutos>(
         `/item/${codEmpresa}?${queryParams}`
       );
 
-      const data = response.data.conteudo;
-      if (!Array.isArray(data)) {
-        throw new Error(
-          "Formato de dados inválido da API: 'conteudo' não é um array."
-        );
+      const { conteudo, qtdPaginas, qtdElementos } = response.data;
+
+      if (!Array.isArray(conteudo)) {
+        throw new Error("Formato de dados inválido da API.");
       }
 
-      setProdutos(data);
-      setTotalPaginas(response.data.qtdPaginas || 0);
-      setError(null);
+      setProdutos(conteudo);
+      setTotalPaginas(qtdPaginas || 0);
+      setTotalElementos(qtdElementos || 0); // <-- ADICIONADO
     } catch (err) {
       const errorMessage =
-        err instanceof AxiosError
-          ? err.response?.data?.message || err.message
-          : err instanceof Error
-          ? err.message
-          : "Ocorreu um erro ao buscar os produtos.";
-
+        err instanceof Error ? err.message : "Ocorreu um erro.";
       setError(errorMessage);
       setProdutos(null);
     } finally {
@@ -87,7 +82,7 @@ const useGetProdutos = (
     pagina,
     porPagina,
     orderBy,
-    sortDirection,
+    direction,
     descricao,
     enabled,
   ]);
@@ -96,7 +91,14 @@ const useGetProdutos = (
     fetchProdutos();
   }, [fetchProdutos]);
 
-  return { produtos, loading, error, refetch: fetchProdutos, totalPaginas };
+  return {
+    produtos,
+    loading,
+    error,
+    refetch: fetchProdutos,
+    totalPaginas,
+    totalElementos, // <-- ADICIONADO
+  };
 };
 
 export default useGetProdutos;

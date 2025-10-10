@@ -1,5 +1,3 @@
-// Crie este novo arquivo em: ../hooks/useExportColetasCSV.tsx
-
 import { useState } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
@@ -9,7 +7,7 @@ interface ExportParams {
   codEmpresa: number;
   dataInicial?: string;
   dataFinal?: string;
-  // Parâmetros do endpoint de relatório
+  formatoRelatorio: "csv" | "excel"; // Espera 'csv' ou 'excel'
   incluirItens?: boolean;
   incluirLotes?: boolean;
   incluirNumerosSerie?: boolean;
@@ -28,7 +26,8 @@ const useExportColetasCSV = (): UseExportColetasCSVHook => {
     codEmpresa,
     dataInicial,
     dataFinal,
-    incluirItens = false, // Valores padrão baseados no Swagger
+    formatoRelatorio,
+    incluirItens = false,
     incluirLotes = false,
     incluirNumerosSerie = false,
   }: ExportParams) => {
@@ -36,9 +35,19 @@ const useExportColetasCSV = (): UseExportColetasCSVHook => {
       alert("Código da empresa não encontrado.");
       return;
     }
-    // Validação de datas
     if (!dataInicial || !dataFinal) {
       alert("Por favor, selecione um período de datas para exportar.");
+      return;
+    }
+
+    // Validação do período máximo de 90 dias
+    const dtInicial = new Date(dataInicial);
+    const dtFinal = new Date(dataFinal);
+    const diffTime = Math.abs(dtFinal.getTime() - dtInicial.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 90) {
+      alert("O período selecionado não pode exceder 90 dias.");
       return;
     }
 
@@ -47,7 +56,7 @@ const useExportColetasCSV = (): UseExportColetasCSVHook => {
       const queryParams = new URLSearchParams({
         periodoIni: dataInicial,
         periodoFim: dataFinal,
-        formatoRelatorio: "csv",
+        formatoRelatorio: formatoRelatorio, // Envia 'csv' ou 'excel' para a API
         incluirItens: String(incluirItens),
         incluirLotes: String(incluirLotes),
         incluirNumerosSerie: String(incluirNumerosSerie),
@@ -65,8 +74,14 @@ const useExportColetasCSV = (): UseExportColetasCSVHook => {
       const link = document.createElement("a");
       link.href = url;
 
+      // Define a extensão do arquivo para download corretamente (.xlsx para excel)
+      const fileExtension = formatoRelatorio === "excel" ? "xlsx" : "csv";
       const dataFormatada = new Date().toISOString().slice(0, 10);
-      link.setAttribute("download", `relatorio_coletas_${dataFormatada}.csv`);
+
+      link.setAttribute(
+        "download",
+        `relatorio_coletas_${dataFormatada}.${fileExtension}`
+      );
 
       document.body.appendChild(link);
       link.click();

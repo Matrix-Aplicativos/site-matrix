@@ -13,7 +13,7 @@ import useExportColetasCSV from "../hooks/useExportColetasCSV";
 
 // Componentes e Utils
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import ExportCSVModal, { ExportOptions } from "./ExportCsvModal";
+import ExportCSVModal, { ExportOptions } from "./ExportCsvModal"; // Ajustei o nome do arquivo para o padrão (primeira letra maiúscula)
 
 // Ícones
 import {
@@ -70,6 +70,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     }
   };
 
+  // 👇 FUNÇÃO CORRIGIDA 👇
   const handleExportConfirm = (options: ExportOptions) => {
     if (!codEmpresa) {
       alert("Por favor, selecione uma empresa antes de exportar.");
@@ -79,6 +80,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       codEmpresa: codEmpresa,
       dataInicial: options.startDate,
       dataFinal: options.endDate,
+      formatoRelatorio: options.formato, // ✨ CORREÇÃO: Adicionada esta linha
       incluirItens: options.incluirItens,
       incluirLotes: options.incluirLotes,
       incluirNumerosSerie: options.incluirNumerosSerie,

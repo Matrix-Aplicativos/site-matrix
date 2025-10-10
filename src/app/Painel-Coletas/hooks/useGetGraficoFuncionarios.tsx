@@ -14,11 +14,16 @@ export interface DadosFuncionario {
 export default function useGetGraficoFuncionarios(
   codEmpresa: number | undefined,
   dataInicio: string | null,
-  dataFim: string | null
+  dataFim: string | null,
+  tipos: number[] | undefined // O hook ainda recebe um array para simplicidade
 ) {
   const [dados, setDados] = useState<DadosFuncionario[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Usamos JSON.stringify para que o useEffect não entre em loop infinito
+  // devido à recriação do array 'tipos' a cada renderização.
+  const tiposString = JSON.stringify(tipos);
 
   useEffect(() => {
     if (!codEmpresa || !dataInicio || !dataFim) {
@@ -31,7 +36,6 @@ export default function useGetGraficoFuncionarios(
       setLoading(true);
       setError(null);
 
-      // 🔹 Verificação: intervalo de datas não pode ser maior que 90 dias
       const inicio = new Date(dataInicio);
       const fim = new Date(dataFim);
       const diffDias =
@@ -45,12 +49,24 @@ export default function useGetGraficoFuncionarios(
       }
 
       try {
+        // ✅ Constrói os parâmetros da URL usando URLSearchParams
+        const params = new URLSearchParams();
+        params.append("dataInicio", dataInicio);
+        params.append("dataFim", dataFim);
+
+        const tiposParsed = tiposString ? JSON.parse(tiposString) : [];
+        if (tiposParsed && tiposParsed.length > 0) {
+          tiposParsed.forEach((tipo: number) => {
+            // Isso irá gerar &tipo=1&tipo=2 etc.
+            params.append("tipo", tipo.toString());
+          });
+        }
+
         const response = await axiosInstance.get<DadosFuncionario[]>(
           `/usuario/grafico/${codEmpresa}`,
-          { params: { dataInicio, dataFim } }
+          { params } // Passa o objeto URLSearchParams para o Axios
         );
 
-        // 🔹 Truncar nomes longos (máx. 12 caracteres)
         const dadosAjustados = response.data.map((func) => ({
           ...func,
           nomeFuncionario:
@@ -73,7 +89,7 @@ export default function useGetGraficoFuncionarios(
     };
 
     fetchData();
-  }, [codEmpresa, dataInicio, dataFim]);
+  }, [codEmpresa, dataInicio, dataFim, tiposString]); // A dependência continua sendo a string
 
   return { dados, loading, error };
 }

@@ -1,15 +1,18 @@
+/* Este arquivo agora contém APENAS os estilos locais para o componente */
+
 .paginationWrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
   width: 100%;
-  border-top: 1px solid #e0e0e0;
+  /* Usa a variável de cor da borda definida globalmente */
+  border-top: 1px solid var(--wrapper-border-color);
 }
 
 .itemCount {
-  font-size: 1,4rem;
-  color: #000;
+  font-size: 1.4rem;
+  color: var(--item-count-text-color);
 }
 
 .paginationControls {
@@ -19,8 +22,9 @@
 
 .paginationControls button {
   padding: 0.5rem 0.8rem;
-  border: 1px solid #ccc;
-  background-color: #fff;
+  border: 1px solid var(--button-border-color);
+  background-color: var(--button-bg-color);
+  color: var(--item-count-text-color);
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.2s;
@@ -28,17 +32,17 @@
 
 .paginationControls button:disabled {
   cursor: not-allowed;
-  background-color: #f0f0f0;
-  color: #aaa;
+  background-color: var(--button-disabled-bg-color);
+  color: var(--button-disabled-text-color);
 }
 
 .paginationControls button:not(:disabled):hover {
-  background-color: #f5f5f5;
+  background-color: var(--button-hover-bg-color);
 }
 
-.paginationControls .activePage {
-  background-color: #1769e3;
-  color: #fff;
-  border-color: #1769e3;
+.paginationControls button.activePage {
+  background-color: var(--button-active-bg-color);
+  color: var(--button-active-text-color);
+  border-color: var(--button-active-bg-color);
   font-weight: bold;
 }

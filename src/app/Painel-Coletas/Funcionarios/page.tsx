@@ -1,4 +1,3 @@
-// Em seu arquivo FuncionariosPage.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -9,8 +8,9 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetUsuarios from "../hooks/useGetUsuarios";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
+import PaginationControls from "../components/PaginationControls";
 
-// --- Ícones e Interfaces (sem alterações) ---
+// --- Ícones e Interfaces ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -60,17 +60,14 @@ interface FuncionarioExibido {
   email: string;
   status: boolean;
 }
-
-// O tipo do valor foi ajustado para 'string' para maior flexibilidade.
 const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
-  codigo: "codFuncionario",
+  codigo: "codUsuarioErp",
   nome: "nome",
   cpf: "cpf",
   email: "email",
   status: "ativo",
 };
 
-// --- Componente Principal ---
 const FuncionariosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -90,39 +87,35 @@ const FuncionariosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // --- CORREÇÃO 1: Passando todos os parâmetros de filtro e ordenação para o hook ---
   const {
     usuarios,
     loading: usuariosLoading,
     error: usuariosError,
     refetch,
     totalPaginas,
+    totalElementos,
   } = useGetUsuarios(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined, // orderBy
-    sortConfig?.direction, // sortDirection
-    SORT_COLUMN_MAP[selectedFilter], // filtro (para busca textual)
-    query, // valor (da busca textual)
-    statusFilter === "todos" ? undefined : statusFilter === "ativo", // ativo (boolean)
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
+    sortConfig?.direction,
+    SORT_COLUMN_MAP[selectedFilter],
+    query,
+    statusFilter === "todos" ? undefined : statusFilter === "ativo",
     !!codEmpresa
   );
 
   const isLoading = companyLoading || usuariosLoading;
-  const hasMoreData = paginaAtual < totalPaginas;
 
   const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
   const getStatusClass = (status: boolean) =>
     status ? styles.statusCompleted : styles.statusNotStarted;
 
-  // --- CORREÇÃO 2: Simplificando o useMemo para apenas mapear os dados ---
   const displayedData = useMemo(() => {
     if (!usuarios) return [];
-
-    // A API já filtrou e ordenou. Apenas mapeamos para o formato de exibição.
     return usuarios.map((u) => ({
-      codigo: u.codUsuario,
+      codigo: u.codUsuarioErp,
       nome: u.nome,
       cpf: u.cpf,
       email: u.email,
@@ -134,10 +127,13 @@ const FuncionariosPage: React.FC = () => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value as "todos" | "ativo" | "inativo");
+
+  // Função de handler ajustada para os botões de rádio
+  const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
+    setStatusFilter(newStatus);
     setPaginaAtual(1);
   };
+
   const sortData = (key: keyof FuncionarioExibido) => {
     const direction: "asc" | "desc" =
       sortConfig?.key === key && sortConfig.direction === "asc"
@@ -146,12 +142,7 @@ const FuncionariosPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  // O resto do componente não precisa de alterações
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => {
-    if (hasMoreData) setPaginaAtual((prev) => prev + 1);
-  };
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -161,9 +152,9 @@ const FuncionariosPage: React.FC = () => {
   if (usuariosError) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Funcionários</h2>
-        <p>{usuariosError}</p>
-        <button onClick={() => refetch()}>Tentar novamente</button>
+        {" "}
+        <h2>Erro ao Carregar Funcionários</h2> <p>{usuariosError}</p>{" "}
+        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
       </div>
     );
   }
@@ -198,6 +189,7 @@ const FuncionariosPage: React.FC = () => {
           </button>
         </div>
       </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -214,16 +206,43 @@ const FuncionariosPage: React.FC = () => {
               <option value="codigo">Código</option>
             </select>
           </div>
+
+          {/* --- ALTERADO: Filtro de Status com botões de rádio --- */}
           <div className={styles.filterSection}>
             <label>Filtrar por Status:</label>
-            <select value={statusFilter} onChange={handleStatusChange}>
-              <option value="todos">Todos</option>
-              <option value="ativo">Ativo</option>
-              <option value="inativo">Inativo</option>
-            </select>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="status-funcionario"
+                  checked={statusFilter === "todos"}
+                  onChange={() => handleStatusChange("todos")}
+                />
+                Todos
+              </label>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="status-funcionario"
+                  checked={statusFilter === "ativo"}
+                  onChange={() => handleStatusChange("ativo")}
+                />
+                Ativo
+              </label>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="status-funcionario"
+                  checked={statusFilter === "inativo"}
+                  onChange={() => handleStatusChange("inativo")}
+                />
+                Inativo
+              </label>
+            </div>
           </div>
         </div>
       )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -261,60 +280,20 @@ const FuncionariosPage: React.FC = () => {
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={columns.length}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1 || isLoading}
-                    >
-                      &lt;&lt;
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1 || isLoading}
-                    >
-                      &lt;
-                    </button>
-                    <span>
-                      Página {paginaAtual} de {totalPaginas || 1}
-                    </span>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!hasMoreData || isLoading}
-                    >
-                      &gt;
-                    </button>
-                    <button
-                      onClick={() => setPaginaAtual(totalPaginas)}
-                      disabled={!hasMoreData || isLoading}
-                    >
-                      &gt;&gt;
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Itens por página: </span>
-                    <select
-                      value={porPagina}
-                      onChange={(e) => {
-                        setPorPagina(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
         </table>
       </div>
+
+      {totalElementos > 0 && (
+        <div className="footerControls">
+          <PaginationControls
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            totalElementos={totalElementos}
+            porPagina={porPagina}
+            onPageChange={setPaginaAtual}
+          />
+        </div>
+      )}
     </div>
   );
 };

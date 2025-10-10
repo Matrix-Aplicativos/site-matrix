@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import styles from "./ExportCSVModal.module.css";
 
-// --- CORREÇÃO 1: Criando uma interface para as opções de confirmação ---
+// Interface para as opções de confirmação
 export interface ExportOptions {
   startDate: string;
   endDate: string;
+  formato: "csv" | "excel";
   incluirItens: boolean;
   incluirLotes: boolean;
   incluirNumerosSerie: boolean;
@@ -15,7 +16,6 @@ export interface ExportOptions {
 interface ExportCSVModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // --- CORREÇÃO 2: A função onConfirm agora recebe o objeto de opções ---
   onConfirm: (options: ExportOptions) => void;
   isExporting: boolean;
 }
@@ -28,7 +28,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
 }) => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  // --- CORREÇÃO 3: Estados para os novos checkboxes ---
+  const [formato, setFormato] = useState<"csv" | "excel">("csv");
   const [incluirItens, setIncluirItens] = useState(false);
   const [incluirLotes, setIncluirLotes] = useState(false);
   const [incluirNumerosSerie, setIncluirNumerosSerie] = useState(false);
@@ -42,10 +42,25 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
       alert("Por favor, selecione a data de início e a data de fim.");
       return;
     }
-    // --- CORREÇÃO 4: Passando todas as opções para a função onConfirm ---
+
+    // Validação do período de 90 dias no modal para feedback rápido ao usuário
+    const dtInicial = new Date(startDate);
+    const dtFinal = new Date(endDate);
+    const diffTime = Math.abs(dtFinal.getTime() - dtInicial.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 90) {
+      alert(
+        "O período selecionado não pode exceder 90 dias. Por favor, ajuste as datas."
+      );
+      return;
+    }
+
+    // Passando todas as opções, incluindo o formato, para a função onConfirm
     onConfirm({
       startDate,
       endDate,
+      formato,
       incluirItens,
       incluirLotes,
       incluirNumerosSerie,
@@ -55,7 +70,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <h2>Selecione a data para exportar os dados</h2>
+        <h2>Selecione o período e formato para exportar</h2>
         <div className={styles.datePickers}>
           <div className={styles.dateInputGroup}>
             <label htmlFor="startDate">Data de Início</label>
@@ -77,7 +92,20 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
           </div>
         </div>
 
-        {/* --- CORREÇÃO 5: Adicionando a seção de checkboxes --- */}
+        {/* Seletor de formato do relatório */}
+        <div className={styles.dateInputGroup}>
+          <label htmlFor="formatoRelatorio">Formato</label>
+          <select
+            id="formatoRelatorio"
+            value={formato}
+            onChange={(e) => setFormato(e.target.value as "csv" | "excel")}
+          >
+            <option value="csv">CSV</option>
+            <option value="excel">Excel (XLSX)</option>
+          </select>
+        </div>
+
+        {/* Seção de checkboxes para inclusão de dados */}
         <div className={styles.optionsContainer}>
           <div className={styles.optionItem}>
             <input
