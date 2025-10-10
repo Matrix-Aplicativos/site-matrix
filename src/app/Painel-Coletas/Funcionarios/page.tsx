@@ -1,3 +1,5 @@
+// FuncionariosPage.tsx (ATUALIZADO)
+
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -18,16 +20,15 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke="#1565c0"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -43,8 +44,7 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 
@@ -68,6 +68,14 @@ const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
   status: "ativo",
 };
 
+// ADICIONADO: Mapa para traduzir o filtro do frontend para o parâmetro da API
+const FILTER_TO_API_PARAM: Record<string, string> = {
+  nome: "nomeUsuario",
+  cpf: "cpfusuario",
+  email: "emailUsuario",
+  codigo: "codUsuarioErp",
+};
+
 const FuncionariosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -87,6 +95,26 @@ const FuncionariosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  // ADICIONADO: Memoização para criar o objeto de filtro para a API
+  const filtrosParaApi = useMemo(() => {
+    const filtros: Record<string, string | boolean> = {};
+
+    // Adiciona o filtro de texto (nome, cpf, etc.)
+    if (query) {
+      const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
+      if (apiParamKey) {
+        filtros[apiParamKey] = query;
+      }
+    }
+
+    // Adiciona o filtro de status
+    if (statusFilter !== "todos") {
+      filtros.ativo = statusFilter === "ativo";
+    }
+
+    return filtros;
+  }, [query, selectedFilter, statusFilter]);
+
   const {
     usuarios,
     loading: usuariosLoading,
@@ -100,9 +128,7 @@ const FuncionariosPage: React.FC = () => {
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    SORT_COLUMN_MAP[selectedFilter],
-    query,
-    statusFilter === "todos" ? undefined : statusFilter === "ativo",
+    filtrosParaApi, // ALTERADO: Passando o objeto de filtros dinâmico
     !!codEmpresa
   );
 
@@ -128,7 +154,6 @@ const FuncionariosPage: React.FC = () => {
     setPaginaAtual(1);
   };
 
-  // Função de handler ajustada para os botões de rádio
   const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
     setStatusFilter(newStatus);
     setPaginaAtual(1);
@@ -152,9 +177,8 @@ const FuncionariosPage: React.FC = () => {
   if (usuariosError) {
     return (
       <div className={styles.container}>
-        {" "}
-        <h2>Erro ao Carregar Funcionários</h2> <p>{usuariosError}</p>{" "}
-        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
+        <h2>Erro ao Carregar Funcionários</h2> <p>{usuariosError}</p>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
   }
@@ -207,7 +231,6 @@ const FuncionariosPage: React.FC = () => {
             </select>
           </div>
 
-          {/* --- ALTERADO: Filtro de Status com botões de rádio --- */}
           <div className={styles.filterSection}>
             <label>Filtrar por Status:</label>
             <div className={styles.radioGroup}>

@@ -1,3 +1,5 @@
+// ProdutosPage.tsx (ATUALIZADO)
+
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -8,7 +10,7 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { Produto } from "../utils/types/Produto";
-import PaginationControls from "../components/PaginationControls"; // <-- IMPORTADO
+import PaginationControls from "../components/PaginationControls";
 
 // --- Ícones e Interfaces (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -18,7 +20,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke="#1565c0"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -71,6 +73,16 @@ const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
   codFabricante: "cadastroItem.codFabricante",
 };
 
+// ADICIONADO: Mapa para traduzir o filtro do frontend para o parâmetro da API
+const FILTER_TO_API_PARAM: Record<string, string> = {
+  codigoErp: "codErp",
+  descricao: "descricao",
+  marca: "marca",
+  codBarra: "codBarras", // Note: "codBarras" no plural, como na imagem do Swagger
+  codReferencia: "codReferencia",
+  codFabricante: "codFabricante",
+};
+
 // --- Componente Principal ---
 const ProdutosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -88,21 +100,32 @@ const ProdutosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // --- Chamada do Hook (ATUALIZADA PARA RECEBER totalElementos) ---
+  // ADICIONADO: Memoização para criar o objeto de filtro para a API
+  const filtrosParaApi = useMemo(() => {
+    if (!query) {
+      return {}; // Retorna objeto vazio se a busca estiver vazia
+    }
+    const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
+    if (apiParamKey) {
+      return { [apiParamKey]: query };
+    }
+    return {};
+  }, [query, selectedFilter]);
+
   const {
     produtos,
     loading: produtosLoading,
     error: produtosError,
     refetch,
     totalPaginas,
-    totalElementos, // <-- ADICIONADO
+    totalElementos,
   } = useGetProdutos(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    query, // <-- LÓGICA ORIGINAL MANTIDA
+    filtrosParaApi, // ALTERADO: Passando o objeto de filtros dinâmico
     !!codEmpresa
   );
 
@@ -136,8 +159,6 @@ const ProdutosPage: React.FC = () => {
   };
 
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
-
-  // Funções de paginação antigas foram removidas
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -198,7 +219,7 @@ const ProdutosPage: React.FC = () => {
             >
               <option value="descricao">Descrição</option>
               <option value="codigoErp">Código ERP</option>
-              <option value="unidade">Unidade</option>
+              {/* REMOVIDO: A opção de unidade foi retirada daqui */}
               <option value="marca">Marca</option>
               <option value="codBarra">Cód. Barras</option>
               <option value="codReferencia">Cód. Referência</option>
@@ -238,15 +259,11 @@ const ProdutosPage: React.FC = () => {
               </tr>
             ))}
           </tbody>
-          {/* --- O ANTIGO TFOOT FOI REMOVIDO DAQUI --- */}
         </table>
       </div>
 
-      {/* --- NOVO COMPONENTE DE PAGINAÇÃO ADICIONADO AQUI --- */}
       {totalElementos > 0 && (
-        <div
-          className="footerControls" /* Usando classe genérica para estilo */
-        >
+        <div className="footerControls">
           <PaginationControls
             paginaAtual={paginaAtual}
             totalPaginas={totalPaginas}

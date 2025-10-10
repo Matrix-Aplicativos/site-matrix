@@ -1,9 +1,10 @@
+// hooks/useGetUsuarios.ts (ATUALIZADO)
+
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 
-// --- Interfaces ---
 interface ApiResponseUsuarios {
   conteudo: UsuarioGet[];
   paginaAtual: number;
@@ -11,33 +12,30 @@ interface ApiResponseUsuarios {
   qtdElementos: number;
 }
 
-// --- Interface do Hook (ATUALIZADA) ---
 interface UseGetUsuariosHook {
   usuarios: UsuarioGet[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
   totalPaginas: number;
-  totalElementos: number; // <-- ADICIONADO
+  totalElementos: number;
 }
 
-// --- Hook (CORRIGIDO) ---
 const useGetUsuarios = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
   orderBy?: string,
   direction?: "asc" | "desc",
-  filtro?: string,
-  valor?: string,
-  ativo?: boolean,
+  // ALTERADO: Em vez de 'filtro' e 'valor', agora aceitamos um objeto genérico
+  filtros?: Record<string, string | boolean>,
   enabled: boolean = true
 ): UseGetUsuariosHook => {
   const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalPaginas, setTotalPaginas] = useState<number>(0);
-  const [totalElementos, setTotalElementos] = useState<number>(0); // <-- ADICIONADO
+  const [totalElementos, setTotalElementos] = useState<number>(0);
 
   const fetchUsuarios = useCallback(async () => {
     if (!enabled || !codEmpresa) {
@@ -56,8 +54,16 @@ const useGetUsuarios = (
 
       if (orderBy) queryParams.append("orderBy", orderBy);
       if (direction) queryParams.append("direction", direction);
-      if (filtro && valor) queryParams.append(filtro, valor);
-      if (ativo !== undefined) queryParams.append("ativo", String(ativo));
+
+      // ADICIONADO: Lógica para adicionar dinamicamente os filtros à URL
+      if (filtros) {
+        Object.entries(filtros).forEach(([key, value]) => {
+          // Checa se o valor não é nulo ou indefinido antes de adicionar
+          if (value !== null && value !== undefined) {
+            queryParams.append(key, String(value));
+          }
+        });
+      }
 
       const response = await axiosInstance.get<ApiResponseUsuarios>(
         `/usuario/empresa/${codEmpresa}?${queryParams}`
@@ -71,7 +77,7 @@ const useGetUsuarios = (
 
       setUsuarios(conteudo);
       setTotalPaginas(qtdPaginas || 0);
-      setTotalElementos(qtdElementos || 0); // <-- ADICIONADO
+      setTotalElementos(qtdElementos || 0);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Ocorreu um erro.";
@@ -86,9 +92,7 @@ const useGetUsuarios = (
     porPagina,
     orderBy,
     direction,
-    filtro,
-    valor,
-    ativo,
+    filtros, // ALTERADO: A dependência agora é o objeto de filtros
     enabled,
   ]);
 
@@ -102,7 +106,7 @@ const useGetUsuarios = (
     error,
     refetch: fetchUsuarios,
     totalPaginas,
-    totalElementos, // <-- ADICIONADO
+    totalElementos,
   };
 };
 
