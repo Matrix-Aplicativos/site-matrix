@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import styles from "./ExportCSVModal.module.css";
+import styles from "./ExportCsvModal.module.css";
 
-// Interface para as opções de confirmação
+// Interface para as opções de exportação
 export interface ExportOptions {
   startDate: string;
   endDate: string;
@@ -43,7 +43,6 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
       return;
     }
 
-    // Validação do período de 90 dias no modal para feedback rápido ao usuário
     const dtInicial = new Date(startDate);
     const dtFinal = new Date(endDate);
     const diffTime = Math.abs(dtFinal.getTime() - dtInicial.getTime());
@@ -56,7 +55,6 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
       return;
     }
 
-    // Passando todas as opções, incluindo o formato, para a função onConfirm
     onConfirm({
       startDate,
       endDate,
@@ -68,11 +66,14 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
   };
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h2>Selecione o período e formato para exportar</h2>
-        <div className={styles.datePickers}>
-          <div className={styles.dateInputGroup}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer}>
+        <h2 className={styles.modalTitle}>
+          Selecione o período e formato para exportar
+        </h2>
+
+        <div className={styles.datePickerGroup}>
+          <div className={styles.dateField}>
             <label htmlFor="startDate">Data de Início</label>
             <input
               type="date"
@@ -81,7 +82,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
-          <div className={styles.dateInputGroup}>
+          <div className={styles.dateField}>
             <label htmlFor="endDate">Data de Fim</label>
             <input
               type="date"
@@ -92,8 +93,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
           </div>
         </div>
 
-        {/* Seletor de formato do relatório */}
-        <div className={styles.dateInputGroup}>
+        <div className={styles.dateField}>
           <label htmlFor="formatoRelatorio">Formato</label>
           <select
             id="formatoRelatorio"
@@ -105,9 +105,8 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
           </select>
         </div>
 
-        {/* Seção de checkboxes para inclusão de dados */}
-        <div className={styles.optionsContainer}>
-          <div className={styles.optionItem}>
+        <div className={styles.checkboxContainer}>
+          <div className={styles.checkboxItem}>
             <input
               type="checkbox"
               id="incluirItens"
@@ -116,7 +115,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
             />
             <label htmlFor="incluirItens">Incluir Itens da Coleta</label>
           </div>
-          <div className={styles.optionItem}>
+          <div className={styles.checkboxItem}>
             <input
               type="checkbox"
               id="incluirLotes"
@@ -125,7 +124,7 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
             />
             <label htmlFor="incluirLotes">Incluir Lotes</label>
           </div>
-          <div className={styles.optionItem}>
+          <div className={styles.checkboxItem}>
             <input
               type="checkbox"
               id="incluirNumerosSerie"
@@ -138,13 +137,16 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
           </div>
         </div>
 
-        <div className={styles.footer}>
-          <button onClick={onClose} className={styles.cancelButton}>
+        <div className={styles.modalFooter}>
+          <button
+            onClick={onClose}
+            className={`${styles.modalButton} ${styles.cancelBtn}`}
+          >
             Cancelar
           </button>
           <button
             onClick={handleConfirm}
-            className={styles.confirmButton}
+            className={`${styles.modalButton} ${styles.confirmBtn}`}
             disabled={isExporting}
           >
             {isExporting ? "Exportando..." : "Exportar"}
