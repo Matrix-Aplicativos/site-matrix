@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar"; // Ajuste o caminho se necessário
-import styles from "../Conferencias/Conferencias.module.css"; // Reutilizando o mesmo CSS
+import SearchBar from "../components/SearchBar";
+import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import useGetProdutos from "../hooks/useGetProdutos"; // Nosso hook de produtos
+import useGetProdutos from "../hooks/useGetProdutos";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import { Produto } from "../utils/types/Produto";
+import PaginationControls from "../components/PaginationControls";
 
-// --- Ícones SVG (Reutilizados) ---
+// --- Ícones e Interfaces (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -16,16 +18,15 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke="#1565c0"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -41,18 +42,15 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 
-// --- Interfaces e Constantes para a Página (Atualizadas) ---
 interface ColumnConfig {
   key: keyof ProdutoExibido;
   label: string;
   sortable: boolean;
 }
-
 interface ProdutoExibido {
   id: number;
   codigoErp: string;
@@ -63,13 +61,21 @@ interface ProdutoExibido {
   codReferencia: string;
   codFabricante: string;
 }
-
 const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
-  codigoErp: "codItemErp",
-  descricao: "descricaoItem",
-  unidade: "unidade",
-  marca: "descricaoMarca",
-  codBarra: "codBarra",
+  codigoErp: "cadastroItem.codItemErp",
+  descricao: "cadastroItem.descricaoItem",
+  unidade: "cadastroItem.unidade",
+  marca: "cadastroItem.descricaoMarca",
+  codBarra: "cadastroItem.codBarra",
+  codReferencia: "cadastroItem.codReferencia",
+  codFabricante: "cadastroItem.codFabricante",
+};
+
+const FILTER_TO_API_PARAM: Record<string, string> = {
+  codigoErp: "codErp",
+  descricao: "descricao",
+  marca: "marca",
+  codBarra: "codBarras",
   codReferencia: "codReferencia",
   codFabricante: "codFabricante",
 };
@@ -79,7 +85,8 @@ const ProdutosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("descricao");
+  const [selectedFilter, setSelectedFilter] =
+    useState<keyof ProdutoExibido>("descricao");
   const [sortConfig, setSortConfig] = useState<{
     key: keyof ProdutoExibido;
     direction: "asc" | "desc";
@@ -90,27 +97,39 @@ const ProdutosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  const filtrosParaApi = useMemo(() => {
+    if (!query) {
+      return {};
+    }
+    const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
+    if (apiParamKey) {
+      return { [apiParamKey]: query };
+    }
+    return {};
+  }, [query, selectedFilter]);
+
   const {
     produtos,
     loading: produtosLoading,
     error: produtosError,
     refetch,
+    totalPaginas,
+    totalElementos,
   } = useGetProdutos(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig ? String(SORT_COLUMN_MAP[sortConfig.key]) : undefined,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
+    filtrosParaApi,
     !!codEmpresa
   );
 
   const isLoading = companyLoading || produtosLoading;
-  const hasMoreData = produtos ? produtos.length >= porPagina : false;
 
-  const filteredData = useMemo(() => {
+  const displayedData = useMemo(() => {
     if (!produtos) return [];
-
-    const produtosMapeados = produtos.map((p) => ({
+    return produtos.map((p) => ({
       id: p.codItemApi,
       codigoErp: p.codItemErp,
       descricao: p.descricaoItem,
@@ -120,42 +139,17 @@ const ProdutosPage: React.FC = () => {
       codReferencia: p.codReferencia,
       codFabricante: p.codFabricante,
     }));
-
-    // Cria uma cópia mutável para os filtros e ordenação
-    let result = [...produtosMapeados];
-
-    // Aplica o filtro de busca
-    if (query) {
-      result = result.filter((p) => {
-        const fieldValue =
-          p[selectedFilter as keyof ProdutoExibido]?.toString() || "";
-        return fieldValue.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-
-    // --- CORREÇÃO APLICADA AQUI ---
-    // 1. Lógica de ordenação adicionada para reordenar os dados na tela
-    if (sortConfig) {
-      result.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
-        if (aValue < bValue) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return result;
-    // 2. Adicionado `sortConfig` à lista de dependências para re-executar a ordenação
-  }, [produtos, query, selectedFilter, sortConfig]);
+  }, [produtos]);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
+  };
+
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
   };
 
   const sortData = (key: keyof ProdutoExibido) => {
@@ -167,8 +161,6 @@ const ProdutosPage: React.FC = () => {
   };
 
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -179,6 +171,7 @@ const ProdutosPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <h2>Erro ao Carregar Produtos</h2>
+        <p>{produtosError}</p>
         <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
@@ -209,9 +202,10 @@ const ProdutosPage: React.FC = () => {
             className={styles.refreshButton}
             onClick={() => refetch()}
             title="Atualizar produtos"
+            disabled={isLoading}
           >
             <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-            <IconRefresh className={produtosLoading ? styles.spinning : ""} />
+            <IconRefresh className={isLoading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
@@ -221,11 +215,12 @@ const ProdutosPage: React.FC = () => {
             <label>Buscar por:</label>
             <select
               value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+              onChange={(e) =>
+                setSelectedFilter(e.target.value as keyof ProdutoExibido)
+              }
             >
               <option value="descricao">Descrição</option>
               <option value="codigoErp">Código ERP</option>
-              <option value="unidade">Unidade</option>
               <option value="marca">Marca</option>
               <option value="codBarra">Cód. Barras</option>
               <option value="codReferencia">Cód. Referência</option>
@@ -253,7 +248,7 @@ const ProdutosPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row) => (
+            {displayedData.map((row) => (
               <tr key={row.id}>
                 <td>{row.codigoErp}</td>
                 <td>{row.descricao}</td>
@@ -265,49 +260,22 @@ const ProdutosPage: React.FC = () => {
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={columns.length}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
-                    >
-                      &lt;&lt;
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
-                    >
-                      &lt;
-                    </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      &gt;
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Itens por página: </span>
-                    <select
-                      value={porPagina}
-                      onChange={(e) => {
-                        setPorPagina(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
         </table>
       </div>
+
+      {totalElementos > 0 && (
+        <div className="footerControls">
+          {/* ATUALIZADO: A chamada do componente de paginação */}
+          <PaginationControls
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            totalElementos={totalElementos}
+            porPagina={porPagina}
+            onPageChange={setPaginaAtual}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

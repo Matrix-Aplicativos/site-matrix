@@ -9,6 +9,9 @@ import useGetColetas from "./hooks/useGetColetas";
 import useCurrentCompany from "./hooks/useCurrentCompany";
 import { isSameMonth, subMonths, isSameYear } from "date-fns"; // Import para datas
 
+// NOVO: Importe o novo componente do gráfico de funcionários
+import RelatorioFuncionarios from "./components/RelatorioFuncionarios";
+
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
@@ -16,7 +19,7 @@ export default function HomePage() {
   const { empresa, loading: companyLoading } = useCurrentCompany();
 
   const codEmpresa = empresa?.codEmpresa;
-  
+
   const { coletas, loading: coletasLoading } = useGetColetas(
     codEmpresa || 0,
     1
@@ -108,7 +111,6 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      {/* --- CORREÇÃO 3: Título dinâmico --- */}
       <h1 className={styles.title}>
         SEU PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
       </h1>
@@ -180,6 +182,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* NOVO: Componente do gráfico de funcionários adicionado aqui */}
+      <div className={styles.border}>
+        <RelatorioFuncionarios />
       </div>
     </div>
   );

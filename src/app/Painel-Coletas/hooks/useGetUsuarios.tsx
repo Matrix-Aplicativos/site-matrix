@@ -1,76 +1,113 @@
+// hooks/useGetUsuarios.ts (ATUALIZADO)
+
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
+
+interface ApiResponseUsuarios {
+  conteudo: UsuarioGet[];
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+}
 
 interface UseGetUsuariosHook {
   usuarios: UsuarioGet[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  totalPaginas: number;
+  totalElementos: number;
 }
 
 const useGetUsuarios = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
-  sortKey?: string,
-  sortDirection?: "asc" | "desc",
-  // Adicionado o sexto parâmetro `enabled`
+  orderBy?: string,
+  direction?: "asc" | "desc",
+  // ALTERADO: Em vez de 'filtro' e 'valor', agora aceitamos um objeto genérico
+  filtros?: Record<string, string | boolean>,
   enabled: boolean = true
 ): UseGetUsuariosHook => {
   const [usuarios, setUsuarios] = useState<UsuarioGet[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalPaginas, setTotalPaginas] = useState<number>(0);
+  const [totalElementos, setTotalElementos] = useState<number>(0);
 
   const fetchUsuarios = useCallback(async () => {
-    // A flag `enabled` impede a chamada da API antes da hora
-    if (!enabled) {
-      setUsuarios([]); // Limpa os dados se não estiver habilitado
+    if (!enabled || !codEmpresa) {
+      setUsuarios([]);
+      setLoading(false);
       return;
     }
 
     setLoading(true);
+    setError(null);
     try {
-      const queryParams = [
-        `pagina=${pagina}`,
-        `porPagina=${porPagina}`,
-        sortKey ? `sortKey=${sortKey}` : null,
-        sortDirection ? `sortDirection=${sortDirection}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+      const queryParams = new URLSearchParams({
+        pagina: pagina.toString(),
+        porPagina: porPagina.toString(),
+      });
 
-      const response = await axiosInstance.get(
+      if (orderBy) queryParams.append("orderBy", orderBy);
+      if (direction) queryParams.append("direction", direction);
+
+      // ADICIONADO: Lógica para adicionar dinamicamente os filtros à URL
+      if (filtros) {
+        Object.entries(filtros).forEach(([key, value]) => {
+          // Checa se o valor não é nulo ou indefinido antes de adicionar
+          if (value !== null && value !== undefined) {
+            queryParams.append(key, String(value));
+          }
+        });
+      }
+
+      const response = await axiosInstance.get<ApiResponseUsuarios>(
         `/usuario/empresa/${codEmpresa}?${queryParams}`
       );
 
-      const data = response.data.data || response.data;
+      const { conteudo, qtdPaginas, qtdElementos } = response.data;
 
-      if (!Array.isArray(data)) {
-        throw new Error("Formato de dados inválido da API");
+      if (!Array.isArray(conteudo)) {
+        throw new Error("Formato de dados inválido da API.");
       }
 
-      setUsuarios(data);
-      setError(null);
+      setUsuarios(conteudo);
+      setTotalPaginas(qtdPaginas || 0);
+      setTotalElementos(qtdElementos || 0);
     } catch (err) {
       const errorMessage =
-        err instanceof AxiosError
-          ? err.response?.data?.message || err.message
-          : "Ocorreu um erro ao buscar os usuários.";
-
+        err instanceof Error ? err.message : "Ocorreu um erro.";
       setError(errorMessage);
       setUsuarios(null);
     } finally {
       setLoading(false);
     }
-  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection, enabled]);
+  }, [
+    codEmpresa,
+    pagina,
+    porPagina,
+    orderBy,
+    direction,
+    filtros, // ALTERADO: A dependência agora é o objeto de filtros
+    enabled,
+  ]);
 
   useEffect(() => {
     fetchUsuarios();
   }, [fetchUsuarios]);
 
-  return { usuarios, loading, error, refetch: fetchUsuarios };
+  return {
+    usuarios,
+    loading,
+    error,
+    refetch: fetchUsuarios,
+    totalPaginas,
+    totalElementos,
+  };
 };
 
 export default useGetUsuarios;

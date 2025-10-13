@@ -118,9 +118,12 @@ export default function LoginPage() {
             "/usuario/" + getUserFromToken(token)
           );
           const usuario: Usuario = response.data;
-          const codTipo = usuario.tipoUsuario?.codTipoUsuario;
 
-          if (codTipo !== 1 && codTipo !== 5) {
+          const temPermissao = usuario.cargos?.some(
+            (cargo: any) => cargo.nome === "ROLE_MOVIX_GESTOR"
+          );
+
+          if (!temPermissao) {
             setTextoIdentificacao(
               "Acesso negado. Seu perfil de usuário não tem permissão para acessar o painel."
             );
@@ -161,9 +164,6 @@ export default function LoginPage() {
     if (forca === 2 || forca === 3) return 2;
     return 3;
   };
-
-  // O restante do seu componente (o return com o JSX) permanece o mesmo.
-  // Cole o código acima e mantenha seu JSX original.
 
   return (
     <div className="container">

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import useGetColetas from "../hooks/useGetColetas";
 import useGraficoColetas from "../hooks/useGraficoColetas";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
@@ -22,7 +23,8 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 interface RelatorioColetasProps {
@@ -43,6 +45,22 @@ export default function RelatorioColetas({
   );
   const chartData = useGraficoColetas(coletas, view);
 
+  const finalChartData = useMemo(() => {
+    if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+      return chartData;
+    }
+
+    const newData = { ...chartData };
+    newData.datasets = chartData.datasets.map((dataset) => ({
+      ...dataset,
+      // ALTERADO: Cor padronizada com o outro gráfico
+      backgroundColor: "rgb(54, 162, 235)",
+      borderColor: "rgb(54, 162, 235)",
+    }));
+
+    return newData;
+  }, [chartData]);
+
   const isLoading = companyLoading || coletasLoading;
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -50,10 +68,10 @@ export default function RelatorioColetas({
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // garante que use toda a largura/altura do container
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false, // removemos a legenda pois só temos um dataset
+        display: false,
       },
       title: {
         display: true,
@@ -72,6 +90,18 @@ export default function RelatorioColetas({
           },
         },
       },
+      datalabels: {
+        anchor: "center" as const,
+        align: "center" as const,
+        color: "white",
+        font: {
+          weight: "bold" as const,
+          size: 14, // ALTERADO: Fonte aumentada
+        },
+        formatter: (value: number) => {
+          return value > 0 ? value : "";
+        },
+      },
     },
     scales: {
       x: {
@@ -79,7 +109,7 @@ export default function RelatorioColetas({
           display: true,
           text: view === "mensal" ? "Dias do Mês" : "Meses",
           font: {
-            weight: "bold" as const, // 👈 evita erro de tipagem
+            weight: "bold" as const,
           },
         },
         grid: {
@@ -91,7 +121,7 @@ export default function RelatorioColetas({
           display: true,
           text: "Quantidade de Coletas",
           font: {
-            weight: "bold" as const, // 👈 idem
+            weight: "bold" as const,
           },
         },
         beginAtZero: true,
@@ -134,7 +164,7 @@ export default function RelatorioColetas({
       );
     }
 
-    if (!chartData?.labels?.length) {
+    if (!finalChartData?.labels?.length) {
       return (
         <div style={placeholderStyle}>
           Nenhuma movimentação registrada no período selecionado.
@@ -142,7 +172,7 @@ export default function RelatorioColetas({
       );
     }
 
-    return <Bar data={chartData} options={options} />;
+    return <Bar data={finalChartData} options={options} />;
   };
 
   return (
@@ -162,7 +192,7 @@ export default function RelatorioColetas({
           <button
             style={{
               padding: "8px 16px",
-              background: view === "mensal" ? "#1769e3" : "#f0f0f0",
+              background: view === "mensal" ? "rgb(54, 162, 235)" : "#f0f0f0", // ALTERADO
               color: view === "mensal" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
@@ -177,7 +207,7 @@ export default function RelatorioColetas({
           <button
             style={{
               padding: "8px 16px",
-              background: view === "anual" ? "#1769e3" : "#f0f0f0",
+              background: view === "anual" ? "rgb(54, 162, 235)" : "#f0f0f0", // ALTERADO
               color: view === "anual" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",

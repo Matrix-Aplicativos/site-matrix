@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  FiTrash2,
-  FiPower,
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiRefreshCw,
-} from "react-icons/fi";
-// 1. Removida a importação do FaSort
+import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
@@ -17,8 +9,9 @@ import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import PaginationControls from "../components/PaginationControls";
 
-// 2. Adicionado o componente IconSort (igual ao da tela de Inventários)
+// Componente IconSort
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -36,19 +29,30 @@ const IconSort = () => (
   </svg>
 );
 
+// --- Interfaces e Constantes ---
+interface DispositivoExibido {
+  nome: string;
+  codigo: string;
+  status: boolean;
+}
+
+const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
+  nome: "nome",
+  codigo: "id.codDispositivo",
+  status: "ativo",
+};
+
+// --- Componente da Página ---
 const DispositivosPage: React.FC = () => {
-  // Estados da página
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
-    key: string;
+    key: keyof DispositivoExibido;
     direction: "asc" | "desc";
-  } | null>(null);
+  } | null>({ key: "nome", direction: "asc" });
 
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-
-  // Contexto de loading
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -57,50 +61,37 @@ const DispositivosPage: React.FC = () => {
     error: dispositivosError,
     refetch,
     totalPaginas,
+    totalElementos,
   } = useGetDispositivos(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
-    sortConfig?.key,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
     !!codEmpresa
   );
 
-  // Hooks de ações
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
   const { maximoDispositivos, loading: loadingConfig } = useConfiguracao(
     codEmpresa || 0
   );
 
-  // Estados combinados
   const isLoading = companyLoading || dispositivosLoading || loadingConfig;
-  const hasMoreData = paginaAtual < totalPaginas;
-
-  // Contadores de status
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
 
-  // Colunas da tabela
-  const columns = [
-    { key: "nomeDispositivo", label: "Nome" },
-    { key: "codDispositivo", label: "Código" },
-    { key: "ativo", label: "Status" },
+  const columns: { key: keyof DispositivoExibido; label: string }[] = [
+    { key: "nome", label: "Nome" },
+    { key: "codigo", label: "Código" },
+    { key: "status", label: "Status" },
   ];
 
-  const handleSort = (key: string) => {
-    const fieldMap: { [key: string]: string } = {
-      nomeDispositivo: "nome",
-      codDispositivo: "id.codDispositivo",
-      ativo: "ativo",
-    };
-
-    const apiField = fieldMap[key] || key;
+  const handleSort = (key: keyof DispositivoExibido) => {
     const direction =
-      sortConfig?.key === apiField && sortConfig.direction === "asc"
+      sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
         : "asc";
-
-    setSortConfig({ key: apiField, direction });
+    setSortConfig({ key, direction });
   };
 
   const handleDeleteDevice = async (codDispositivo: string) => {
@@ -124,10 +115,12 @@ const DispositivosPage: React.FC = () => {
     await refetch();
   };
 
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
+  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Essencial: Volta para a primeira página
+  };
 
-  // Efeitos
   useEffect(() => {
     if (isLoading) {
       showLoading();
@@ -135,9 +128,6 @@ const DispositivosPage: React.FC = () => {
       hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
-
-  // Renderização de erro, loading, etc...
-  // (O restante da lógica do componente permanece o mesmo)
 
   return (
     <div className={styles.container}>
@@ -156,15 +146,21 @@ const DispositivosPage: React.FC = () => {
       </div>
       <div className={styles.mainContent}>
         <div className={styles.tableContainer}>
-          {isLoading && <p>Carregando dispositivos...</p>}
+          {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
+          {dispositivosError && (
+            <p>Erro ao carregar dispositivos: {dispositivosError}</p>
+          )}
 
           {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
                 <tr>
                   {columns.map((col) => (
-                    // 3. Estrutura do cabeçalho da tabela atualizada para usar o novo ícone e alinhar corretamente
-                    <th key={col.key} onClick={() => handleSort(col.key)}>
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      style={{ cursor: "pointer" }}
+                    >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <span>{col.label}</span>
                         <IconSort />
@@ -217,54 +213,9 @@ const DispositivosPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={columns.length + 1}>
-                    <div className={styles.paginationContainer}>
-                      <div className={styles.paginationControls}>
-                        <button
-                          onClick={() => setPaginaAtual(1)}
-                          disabled={paginaAtual === 1}
-                        >
-                          <FiChevronsLeft />
-                        </button>
-                        <button
-                          onClick={handlePrevPage}
-                          disabled={paginaAtual === 1}
-                        >
-                          <FiChevronLeft />
-                        </button>
-                        <span>{paginaAtual}</span>
-                        <button
-                          onClick={handleNextPage}
-                          disabled={!hasMoreData}
-                        >
-                          <FiChevronRight />
-                        </button>
-                      </div>
-                      <div className={styles.itemsPerPageContainer}>
-                        <span>Itens por página: </span>
-                        <select
-                          value={porPagina}
-                          onChange={(e) => {
-                            setPorPagina(Number(e.target.value));
-                            setPaginaAtual(1);
-                          }}
-                          className={styles.itemsPerPageSelect}
-                        >
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           )}
         </div>
-
         <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
@@ -273,12 +224,11 @@ const DispositivosPage: React.FC = () => {
               {dispositivos?.length ?? 0}
             </span>
           </div>
-
           {!loadingConfig && (
             <div className={styles.situacaoItem}>
               <p>Dispositivos Disponíveis:</p>
               <span className={styles.situacaoValue}>
-                {maximoDispositivos - dispositivosAtivos}{" "}
+                {maximoDispositivos - dispositivosAtivos}
               </span>
             </div>
           )}
@@ -288,6 +238,21 @@ const DispositivosPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ATUALIZADO: A chamada do componente de paginação */}
+      {totalElementos > 0 && (
+        <div className={styles.footerControls}>
+          <PaginationControls
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            totalElementos={totalElementos}
+            porPagina={porPagina}
+            onPageChange={setPaginaAtual}
+            // ADICIONADO: Passando a nova função para a prop
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

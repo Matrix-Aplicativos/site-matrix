@@ -1,8 +1,8 @@
 .container {
   padding: 10px;
-  width: 100%;
   margin: 0 auto;
   min-height: 100vh;
+  width: 100%;
 }
 
 .title {
@@ -51,20 +51,6 @@
   border-bottom: 0;
 }
 
-.additionalInfo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  background: #fdfdfd;
-  padding: 15px;
-}
-
-.additionalInfo p {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #333;
-}
-
 .filterExpansion {
   display: flex;
   flex-direction: column;
@@ -100,6 +86,21 @@
 .dateRange {
   display: flex;
   gap: 10px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .expandButton {
@@ -172,7 +173,6 @@
   cursor: pointer;
 }
 
-/* New styles for delete button and actions */
 .deleteButton {
   background: none;
   border: none;
@@ -190,47 +190,6 @@
 .actionsCell {
   width: 50px;
   padding: 0 5px !important;
-}
-
-.itemsContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.itemCard {
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 12px;
-  min-width: 300px;
-  max-width: 300px; /* Largura fixa /
-min-height: 100px; / Altura mínima para uniformidade */
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.itemCard p {
-  margin: 4px 0;
-  font-size: 13px;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.itemCard p strong {
-  font-weight: 500;
-  color: #555;
-}
-.moreItems {
-  display: flex;
-  align-items: center;
-  color: #666;
-  font-style: italic;
 }
 
 .searchContainer {
@@ -271,7 +230,6 @@ min-height: 100px; / Altura mínima para uniformidade */
   color: #1769e3;
 }
 
-/* ANIMAÇÃO DE ROTAÇÃO */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -286,33 +244,7 @@ min-height: 100px; / Altura mínima para uniformidade */
   color: #1769e3;
 }
 
-.itemPagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.itemPagination button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.itemPagination button:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.itemPagination span {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* --- INÍCIO DA ADIÇÃO DOS ESTILOS DE STATUS --- */
+/* --- ESTILOS PARA STATUS --- */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 16px;
@@ -340,106 +272,50 @@ min-height: 100px; / Altura mínima para uniformidade */
   color: #1565c0;
 }
 
-.title {
-  color: #000000;
+/* Não Iniciada - Vermelho */
+.statusNotStarted {
+  background-color: #ffebee;
+  color: #c62828;
 }
 
-.table th,
-.table td {
-  color: #000000;
-}
+/* Modo Escuro */
+@media (prefers-color-scheme: dark) {
+  .container,
+  .table th,
+  .filterExpansion,
+  .filterSection select,
+  .filterSection input,
+  .expandedRow > td,
+  .paginationControls button,
+  .itemsPerPageSelect {
+    background-color: #ffffff;
+  }
 
-.table th {
-  background-color: #ffffff;
-}
+  .title,
+  .table th,
+  .table td,
+  .filterSection label,
+  .filterSection select,
+  .filterSection input,
+  .paginationControls button,
+  .itemsPerPageSelect,
+  .deleteButton,
+  .refreshButton svg {
+    color: #000000;
+  }
 
-.table tbody tr:nth-child(even) {
-  background-color: #f0f0f0;
-}
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+  .table tbody tr:hover {
+    background-color: #e0e0e0;
+  }
 
-.table tbody tr:hover {
-  background-color: #e0e0e0;
-}
-
-.additionalInfo {
-  background: #ffffff;
-}
-
-.additionalInfo p {
-  color: #000000;
-}
-
-.filterExpansion {
-  background: #ffffff;
-}
-
-.filterSection label {
-  color: #000000;
-}
-
-.filterSection select,
-.filterSection input {
-  background-color: #ffffff;
-
-  color: #000000;
-}
-
-.expandedRow > td {
-  background-color: #ffffff;
-}
-
-.paginationControls button {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-.paginationControls button:hover:not(:disabled) {
-  background-color: #1769e3;
-  color: #ffffff;
-}
-
-.itemsPerPageSelect {
-  background-color: #ffffff;
-
-  color: #000000;
-}
-
-.deleteButton {
-  color: #ff0000; /* Mantém vermelho para destaque */
-}
-
-.itemCard {
-  background: #ffffff;
-}
-
-.itemCard p strong {
-  color: #000000;
-}
-
-.moreItems {
-  color: #000000;
-}
-
-.refreshButton svg {
-  color: #1769e3; /* Mantém azul para consistência */
-}
-
-.itemPagination button {
-  color: #000000;
-}
-
-.itemPagination button:disabled {
-  color: #666666;
-}
-
-.itemPagination span {
-  color: #000000;
-}
-
-/* Mantém cores semânticas (positivo/negativo) /
-.positive {
-color: #008000; / Verde mais escuro para melhor contraste */
-
-.negative {
-  color: #ff0000; /* Vermelho mais escuro */
+  .paginationControls button:hover:not(:disabled) {
+    background-color: #1769e3;
+    color: #ffffff;
+  }
+  .deleteButton {
+    color: #ff0000;
+  }
 }
