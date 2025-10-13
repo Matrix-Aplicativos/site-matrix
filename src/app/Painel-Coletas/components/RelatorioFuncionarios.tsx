@@ -33,13 +33,13 @@ type TipoMetrica =
   | "itensDistintosBipados"
   | "volumeTotalBipado";
 
-const titulosMetricas = {
+const titulosMetricas: Record<TipoMetrica, string> = {
   coletasRealizadas: "Coletas Realizadas",
   itensDistintosBipados: "Itens Bipados",
   volumeTotalBipado: "Volume Total",
 };
 
-const coresMetricas = {
+const coresMetricas: Record<TipoMetrica, string> = {
   coletasRealizadas: "rgb(54, 162, 235)",
   itensDistintosBipados: "rgb(75, 192, 192)",
   volumeTotalBipado: "rgb(255, 206, 86)",
@@ -75,11 +75,9 @@ export default function RelatorioFuncionarios() {
     fim: fimDoMesCorrente,
   });
 
-  const [visibilidade, setVisibilidade] = useState({
-    coletasRealizadas: true,
-    itensDistintosBipados: true,
-    volumeTotalBipado: true,
-  });
+  // AJUSTE: Alterado para estado de string única para radio buttons
+  const [metricaSelecionada, setMetricaSelecionada] =
+    useState<TipoMetrica>("coletasRealizadas");
 
   const { dados, loading, error } = useGetGraficoFuncionarios(
     codEmpresa,
@@ -95,25 +93,13 @@ export default function RelatorioFuncionarios() {
     });
   };
 
-  const handleVisibilidadeChange = (metrica: TipoMetrica) => {
-    const totalVisiveis = Object.values(visibilidade).filter(Boolean).length;
-    const estaTentandoDesmarcar = visibilidade[metrica];
-
-    if (estaTentandoDesmarcar && totalVisiveis === 1) {
-      return;
-    }
-
-    setVisibilidade((prevState) => ({
-      ...prevState,
-      [metrica]: !prevState[metrica],
-    }));
-  };
-
+  // AJUSTE: Lógica para não permitir desmarcar o último tipo
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
 
       if (estaTentandoDesmarcar && prev.length === 1) {
+        // Impede a desmarcação do último tipo selecionado
         return prev;
       }
 
@@ -123,10 +109,15 @@ export default function RelatorioFuncionarios() {
     });
   };
 
+  // AJUSTE: Lógica para o checkbox "Todos" não desmarcar tudo
   const handleToggleTodosTipos = () => {
+    // Esta função agora apenas seleciona todos. A desmarcação deve ser feita individualmente.
     if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
+      // Se todos já estão marcados, desmarcar o "Todos" não fará nada,
+      // pois é preciso manter pelo menos um selecionado.
       return;
     } else {
+      // Se nem todos estão marcados, esta ação marcará todos.
       setTiposSelecionados(TODOS_OS_TIPOS);
     }
   };
@@ -142,33 +133,33 @@ export default function RelatorioFuncionarios() {
         label: "Coletas Realizadas",
         data: dadosOrdenados.map((d) => d.coletasRealizadas),
         backgroundColor: coresMetricas.coletasRealizadas,
-        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
+        yAxisID: "y",
       },
       {
         id: "itensDistintosBipados",
         label: "Itens Bipados",
         data: dadosOrdenados.map((d) => d.itensDistintosBipados),
         backgroundColor: coresMetricas.itensDistintosBipados,
-        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
+        yAxisID: "y",
       },
       {
         id: "volumeTotalBipado",
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
         backgroundColor: coresMetricas.volumeTotalBipado,
-        xAxisID: "x1", // ALTERADO: de yAxisID: "y1" para xAxisID: "x1"
+        yAxisID: "y1",
       },
     ];
     return {
       labels: dadosOrdenados.map((d) => d.nomeFuncionario),
+      // AJUSTE: Filtra os datasets baseado na métrica única selecionada
       datasets: todosOsDatasets.filter(
-        (dataset) => visibilidade[dataset.id as TipoMetrica]
+        (dataset) => dataset.id === metricaSelecionada
       ),
     };
-  }, [dados, visibilidade]);
+  }, [dados, metricaSelecionada]);
 
   const options = {
-    indexAxis: "y" as const,
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -189,9 +180,16 @@ export default function RelatorioFuncionarios() {
     },
     scales: {
       x: {
+        title: {
+          display: true,
+          text: "Funcionário",
+          font: { weight: "bold" as const },
+        },
+      },
+      y: {
         type: "linear" as const,
         display: true,
-        position: "bottom" as const,
+        position: "left" as const,
         beginAtZero: true,
         title: {
           display: true,
@@ -199,10 +197,10 @@ export default function RelatorioFuncionarios() {
           font: { weight: "bold" as const },
         },
       },
-      x1: {
+      y1: {
         type: "linear" as const,
         display: true,
-        position: "top" as const,
+        position: "right" as const,
         beginAtZero: true,
         title: {
           display: true,
@@ -210,17 +208,6 @@ export default function RelatorioFuncionarios() {
           font: { weight: "bold" as const },
         },
         grid: { drawOnChartArea: false },
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Funcionário",
-          font: { weight: "bold" as const },
-        },
-        // ADICIONADO: Remove as linhas de grade e a etiqueta duplicada
-        grid: {
-          display: false,
-        },
       },
     },
   } as const;
@@ -258,19 +245,24 @@ export default function RelatorioFuncionarios() {
       <div className={styles.filterSection}>
         <div className={styles.metricAndTypeFilters}>
           <div className={styles.filterGroup}>
-            <span className={styles.filterGroupLabel}>Exibir Métricas:</span>
+            <span className={styles.filterGroupLabel}>Exibir Métrica:</span>
             <div className={styles.controlsContainer}>
-              {(Object.keys(visibilidade) as TipoMetrica[]).map((metrica) => (
-                <label key={metrica} className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={visibilidade[metrica]}
-                    onChange={() => handleVisibilidadeChange(metrica)}
-                    className={styles.checkboxInput}
-                  />
-                  {titulosMetricas[metrica]}
-                </label>
-              ))}
+              {/* AJUSTE: Mapeia para criar radio buttons */}
+              {(Object.keys(titulosMetricas) as TipoMetrica[]).map(
+                (metrica) => (
+                  <label key={metrica} className={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="metrica"
+                      value={metrica}
+                      checked={metricaSelecionada === metrica}
+                      onChange={() => setMetricaSelecionada(metrica)}
+                      className={styles.radioInput}
+                    />
+                    {titulosMetricas[metrica]}
+                  </label>
+                )
+              )}
             </div>
           </div>
           <div className={styles.filterGroup}>
@@ -335,19 +327,15 @@ export default function RelatorioFuncionarios() {
         </div>
       </div>
 
+      {/* A legenda customizada pode ser removida se apenas uma métrica for exibida */}
       <div className={styles.legendContainer}>
-        {(Object.keys(visibilidade) as TipoMetrica[]).map(
-          (metrica) =>
-            visibilidade[metrica] && (
-              <div key={metrica} className={styles.legendItem}>
-                <span
-                  className={styles.legendColorBox}
-                  style={{ backgroundColor: coresMetricas[metrica] }}
-                ></span>
-                <span>{titulosMetricas[metrica]}</span>
-              </div>
-            )
-        )}
+        <div className={styles.legendItem}>
+          <span
+            className={styles.legendColorBox}
+            style={{ backgroundColor: coresMetricas[metricaSelecionada] }}
+          ></span>
+          <span>{titulosMetricas[metricaSelecionada]}</span>
+        </div>
       </div>
 
       <div className={styles.chartWrapper}>{renderContent()}</div>
