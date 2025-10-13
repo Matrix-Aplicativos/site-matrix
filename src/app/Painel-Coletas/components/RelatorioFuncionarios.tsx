@@ -75,7 +75,6 @@ export default function RelatorioFuncionarios() {
     fim: fimDoMesCorrente,
   });
 
-  // AJUSTE: Alterado para estado de string única para radio buttons
   const [metricaSelecionada, setMetricaSelecionada] =
     useState<TipoMetrica>("coletasRealizadas");
 
@@ -93,31 +92,22 @@ export default function RelatorioFuncionarios() {
     });
   };
 
-  // AJUSTE: Lógica para não permitir desmarcar o último tipo
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
-
       if (estaTentandoDesmarcar && prev.length === 1) {
-        // Impede a desmarcação do último tipo selecionado
         return prev;
       }
-
       return estaTentandoDesmarcar
         ? prev.filter((t) => t !== tipoValor)
         : [...prev, tipoValor];
     });
   };
 
-  // AJUSTE: Lógica para o checkbox "Todos" não desmarcar tudo
   const handleToggleTodosTipos = () => {
-    // Esta função agora apenas seleciona todos. A desmarcação deve ser feita individualmente.
     if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
-      // Se todos já estão marcados, desmarcar o "Todos" não fará nada,
-      // pois é preciso manter pelo menos um selecionado.
       return;
     } else {
-      // Se nem todos estão marcados, esta ação marcará todos.
       setTiposSelecionados(TODOS_OS_TIPOS);
     }
   };
@@ -147,70 +137,61 @@ export default function RelatorioFuncionarios() {
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
         backgroundColor: coresMetricas.volumeTotalBipado,
-        yAxisID: "y1",
+        // AJUSTE: Apontado para o eixo 'y' da esquerda
+        yAxisID: "y",
       },
     ];
     return {
       labels: dadosOrdenados.map((d) => d.nomeFuncionario),
-      // AJUSTE: Filtra os datasets baseado na métrica única selecionada
       datasets: todosOsDatasets.filter(
         (dataset) => dataset.id === metricaSelecionada
       ),
     };
   }, [dados, metricaSelecionada]);
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      datalabels: {
-        anchor: "center" as const,
-        align: "center" as const,
-        color: "black",
-        font: {
-          weight: "bold" as const,
-          size: 14,
-        },
-        formatter: (value: number) => {
-          return value > 0 ? value : "";
+  const options = useMemo(() => {
+    const yAxisTitle = titulosMetricas[metricaSelecionada];
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: false },
+        datalabels: {
+          anchor: "center" as const,
+          align: "center" as const,
+          color: "black",
+          font: {
+            weight: "bold" as const,
+            size: 14,
+          },
+          formatter: (value: number) => (value > 0 ? value : ""),
         },
       },
-    },
-    scales: {
-      x: {
-        title: {
+      // AJUSTE: Simplificado para ter sempre um único eixo Y à esquerda
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Funcionário",
+            font: { weight: "bold" as const },
+          },
+        },
+        y: {
+          type: "linear" as const,
           display: true,
-          text: "Funcionário",
-          font: { weight: "bold" as const },
+          position: "left" as const,
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: yAxisTitle, // O título continua dinâmico
+            font: { weight: "bold" as const },
+          },
         },
       },
-      y: {
-        type: "linear" as const,
-        display: true,
-        position: "left" as const,
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Quantidade (Coletas e Itens)",
-          font: { weight: "bold" as const },
-        },
-      },
-      y1: {
-        type: "linear" as const,
-        display: true,
-        position: "right" as const,
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Volume Total",
-          font: { weight: "bold" as const },
-        },
-        grid: { drawOnChartArea: false },
-      },
-    },
-  } as const;
+    };
+  }, [metricaSelecionada]);
 
   const renderContent = (): ReactNode => {
     if (loading)
@@ -247,7 +228,6 @@ export default function RelatorioFuncionarios() {
           <div className={styles.filterGroup}>
             <span className={styles.filterGroupLabel}>Exibir Métrica:</span>
             <div className={styles.controlsContainer}>
-              {/* AJUSTE: Mapeia para criar radio buttons */}
               {(Object.keys(titulosMetricas) as TipoMetrica[]).map(
                 (metrica) => (
                   <label key={metrica} className={styles.radioLabel}>
@@ -327,7 +307,6 @@ export default function RelatorioFuncionarios() {
         </div>
       </div>
 
-      {/* A legenda customizada pode ser removida se apenas uma métrica for exibida */}
       <div className={styles.legendContainer}>
         <div className={styles.legendItem}>
           <span
