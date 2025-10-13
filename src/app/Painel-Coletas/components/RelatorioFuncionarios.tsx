@@ -33,13 +33,13 @@ type TipoMetrica =
   | "itensDistintosBipados"
   | "volumeTotalBipado";
 
-const titulosMetricas = {
+const titulosMetricas: Record<TipoMetrica, string> = {
   coletasRealizadas: "Coletas Realizadas",
   itensDistintosBipados: "Itens Bipados",
   volumeTotalBipado: "Volume Total",
 };
 
-const coresMetricas = {
+const coresMetricas: Record<TipoMetrica, string> = {
   coletasRealizadas: "rgb(54, 162, 235)",
   itensDistintosBipados: "rgb(75, 192, 192)",
   volumeTotalBipado: "rgb(255, 206, 86)",
@@ -75,11 +75,8 @@ export default function RelatorioFuncionarios() {
     fim: fimDoMesCorrente,
   });
 
-  const [visibilidade, setVisibilidade] = useState({
-    coletasRealizadas: true,
-    itensDistintosBipados: true,
-    volumeTotalBipado: true,
-  });
+  const [metricaSelecionada, setMetricaSelecionada] =
+    useState<TipoMetrica>("coletasRealizadas");
 
   const { dados, loading, error } = useGetGraficoFuncionarios(
     codEmpresa,
@@ -95,28 +92,12 @@ export default function RelatorioFuncionarios() {
     });
   };
 
-  const handleVisibilidadeChange = (metrica: TipoMetrica) => {
-    const totalVisiveis = Object.values(visibilidade).filter(Boolean).length;
-    const estaTentandoDesmarcar = visibilidade[metrica];
-
-    if (estaTentandoDesmarcar && totalVisiveis === 1) {
-      return;
-    }
-
-    setVisibilidade((prevState) => ({
-      ...prevState,
-      [metrica]: !prevState[metrica],
-    }));
-  };
-
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
-
       if (estaTentandoDesmarcar && prev.length === 1) {
         return prev;
       }
-
       return estaTentandoDesmarcar
         ? prev.filter((t) => t !== tipoValor)
         : [...prev, tipoValor];
@@ -142,88 +123,75 @@ export default function RelatorioFuncionarios() {
         label: "Coletas Realizadas",
         data: dadosOrdenados.map((d) => d.coletasRealizadas),
         backgroundColor: coresMetricas.coletasRealizadas,
-        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
+        yAxisID: "y",
       },
       {
         id: "itensDistintosBipados",
         label: "Itens Bipados",
         data: dadosOrdenados.map((d) => d.itensDistintosBipados),
         backgroundColor: coresMetricas.itensDistintosBipados,
-        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
+        yAxisID: "y",
       },
       {
         id: "volumeTotalBipado",
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
         backgroundColor: coresMetricas.volumeTotalBipado,
-        xAxisID: "x1", // ALTERADO: de yAxisID: "y1" para xAxisID: "x1"
+        // AJUSTE: Apontado para o eixo 'y' da esquerda
+        yAxisID: "y",
       },
     ];
     return {
       labels: dadosOrdenados.map((d) => d.nomeFuncionario),
       datasets: todosOsDatasets.filter(
-        (dataset) => visibilidade[dataset.id as TipoMetrica]
+        (dataset) => dataset.id === metricaSelecionada
       ),
     };
-  }, [dados, visibilidade]);
+  }, [dados, metricaSelecionada]);
 
-  const options = {
-    indexAxis: "y" as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      datalabels: {
-        anchor: "center" as const,
-        align: "center" as const,
-        color: "black",
-        font: {
-          weight: "bold" as const,
-          size: 14,
-        },
-        formatter: (value: number) => {
-          return value > 0 ? value : "";
+  const options = useMemo(() => {
+    const yAxisTitle = titulosMetricas[metricaSelecionada];
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: false },
+        datalabels: {
+          anchor: "center" as const,
+          align: "center" as const,
+          color: "black",
+          font: {
+            weight: "bold" as const,
+            size: 14,
+          },
+          formatter: (value: number) => (value > 0 ? value : ""),
         },
       },
-    },
-    scales: {
-      x: {
-        type: "linear" as const,
-        display: true,
-        position: "bottom" as const,
-        beginAtZero: true,
-        title: {
+      // AJUSTE: Simplificado para ter sempre um único eixo Y à esquerda
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Funcionário",
+            font: { weight: "bold" as const },
+          },
+        },
+        y: {
+          type: "linear" as const,
           display: true,
-          text: "Quantidade (Coletas e Itens)",
-          font: { weight: "bold" as const },
+          position: "left" as const,
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: yAxisTitle, // O título continua dinâmico
+            font: { weight: "bold" as const },
+          },
         },
       },
-      x1: {
-        type: "linear" as const,
-        display: true,
-        position: "top" as const,
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Volume Total",
-          font: { weight: "bold" as const },
-        },
-        grid: { drawOnChartArea: false },
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Funcionário",
-          font: { weight: "bold" as const },
-        },
-        // ADICIONADO: Remove as linhas de grade e a etiqueta duplicada
-        grid: {
-          display: false,
-        },
-      },
-    },
-  } as const;
+    };
+  }, [metricaSelecionada]);
 
   const renderContent = (): ReactNode => {
     if (loading)
@@ -258,19 +226,23 @@ export default function RelatorioFuncionarios() {
       <div className={styles.filterSection}>
         <div className={styles.metricAndTypeFilters}>
           <div className={styles.filterGroup}>
-            <span className={styles.filterGroupLabel}>Exibir Métricas:</span>
+            <span className={styles.filterGroupLabel}>Exibir Métrica:</span>
             <div className={styles.controlsContainer}>
-              {(Object.keys(visibilidade) as TipoMetrica[]).map((metrica) => (
-                <label key={metrica} className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={visibilidade[metrica]}
-                    onChange={() => handleVisibilidadeChange(metrica)}
-                    className={styles.checkboxInput}
-                  />
-                  {titulosMetricas[metrica]}
-                </label>
-              ))}
+              {(Object.keys(titulosMetricas) as TipoMetrica[]).map(
+                (metrica) => (
+                  <label key={metrica} className={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="metrica"
+                      value={metrica}
+                      checked={metricaSelecionada === metrica}
+                      onChange={() => setMetricaSelecionada(metrica)}
+                      className={styles.radioInput}
+                    />
+                    {titulosMetricas[metrica]}
+                  </label>
+                )
+              )}
             </div>
           </div>
           <div className={styles.filterGroup}>
@@ -336,18 +308,13 @@ export default function RelatorioFuncionarios() {
       </div>
 
       <div className={styles.legendContainer}>
-        {(Object.keys(visibilidade) as TipoMetrica[]).map(
-          (metrica) =>
-            visibilidade[metrica] && (
-              <div key={metrica} className={styles.legendItem}>
-                <span
-                  className={styles.legendColorBox}
-                  style={{ backgroundColor: coresMetricas[metrica] }}
-                ></span>
-                <span>{titulosMetricas[metrica]}</span>
-              </div>
-            )
-        )}
+        <div className={styles.legendItem}>
+          <span
+            className={styles.legendColorBox}
+            style={{ backgroundColor: coresMetricas[metricaSelecionada] }}
+          ></span>
+          <span>{titulosMetricas[metricaSelecionada]}</span>
+        </div>
       </div>
 
       <div className={styles.chartWrapper}>{renderContent()}</div>

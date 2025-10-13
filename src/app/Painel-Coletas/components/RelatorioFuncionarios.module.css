@@ -69,6 +69,24 @@
   cursor: pointer;
 }
 
+/* --- AJUSTE ADICIONADO --- */
+/* Estilos para os Radio Buttons */
+.radioLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-secondary-color);
+}
+
+.radioInput {
+  /* Define o espaçamento entre o botão e o texto */
+  margin-right: 5px; /* Ajustado para 5px para melhor visibilidade, 2px pode ser muito pouco */
+  transform: scale(1.2);
+  cursor: pointer;
+}
+/* --- FIM DO AJUSTE --- */
+
 .dateFilters {
   display: flex;
   gap: 16px;
@@ -129,13 +147,12 @@
   text-align: center;
 }
 
-/* ADICIONADO: Estilos para a legenda separada */
 .legendContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 24px; /* Aumentado o espaçamento entre os itens */
+  gap: 24px;
   margin-bottom: 20px;
   padding-top: 10px;
 }
