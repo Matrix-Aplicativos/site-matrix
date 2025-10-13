@@ -93,7 +93,7 @@ export default function RelatorioColetas({
       datalabels: {
         anchor: "center" as const,
         align: "center" as const,
-        color: "white",
+        color: "black",
         font: {
           weight: "bold" as const,
           size: 14, // ALTERADO: Fonte aumentada

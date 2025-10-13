@@ -95,13 +95,11 @@ export default function RelatorioFuncionarios() {
     });
   };
 
-  // AJUSTE: Lógica para não permitir desmarcar a última métrica
   const handleVisibilidadeChange = (metrica: TipoMetrica) => {
     const totalVisiveis = Object.values(visibilidade).filter(Boolean).length;
     const estaTentandoDesmarcar = visibilidade[metrica];
 
     if (estaTentandoDesmarcar && totalVisiveis === 1) {
-      // Impede a desmarcação da última métrica visível
       return;
     }
 
@@ -111,13 +109,11 @@ export default function RelatorioFuncionarios() {
     }));
   };
 
-  // AJUSTE: Lógica para não permitir desmarcar o último tipo
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
 
       if (estaTentandoDesmarcar && prev.length === 1) {
-        // Impede a desmarcação do último tipo selecionado
         return prev;
       }
 
@@ -127,15 +123,10 @@ export default function RelatorioFuncionarios() {
     });
   };
 
-  // AJUSTE: Lógica para o checkbox "Todos" não desmarcar tudo
   const handleToggleTodosTipos = () => {
-    // Esta função agora apenas seleciona todos. A desmarcação deve ser feita individualmente.
     if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
-      // Se todos já estão marcados, desmarcar o "Todos" não fará nada,
-      // pois é preciso manter pelo menos um selecionado.
       return;
     } else {
-      // Se nem todos estão marcados, esta ação marcará todos.
       setTiposSelecionados(TODOS_OS_TIPOS);
     }
   };
@@ -151,21 +142,21 @@ export default function RelatorioFuncionarios() {
         label: "Coletas Realizadas",
         data: dadosOrdenados.map((d) => d.coletasRealizadas),
         backgroundColor: coresMetricas.coletasRealizadas,
-        yAxisID: "y",
+        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
       },
       {
         id: "itensDistintosBipados",
         label: "Itens Bipados",
         data: dadosOrdenados.map((d) => d.itensDistintosBipados),
         backgroundColor: coresMetricas.itensDistintosBipados,
-        yAxisID: "y",
+        xAxisID: "x", // ALTERADO: de yAxisID para xAxisID
       },
       {
         id: "volumeTotalBipado",
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
         backgroundColor: coresMetricas.volumeTotalBipado,
-        yAxisID: "y1",
+        xAxisID: "x1", // ALTERADO: de yAxisID: "y1" para xAxisID: "x1"
       },
     ];
     return {
@@ -177,6 +168,7 @@ export default function RelatorioFuncionarios() {
   }, [dados, visibilidade]);
 
   const options = {
+    indexAxis: "y" as const,
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -185,7 +177,7 @@ export default function RelatorioFuncionarios() {
       datalabels: {
         anchor: "center" as const,
         align: "center" as const,
-        color: "white",
+        color: "black",
         font: {
           weight: "bold" as const,
           size: 14,
@@ -197,16 +189,9 @@ export default function RelatorioFuncionarios() {
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Funcionário",
-          font: { weight: "bold" as const },
-        },
-      },
-      y: {
         type: "linear" as const,
         display: true,
-        position: "left" as const,
+        position: "bottom" as const,
         beginAtZero: true,
         title: {
           display: true,
@@ -214,10 +199,10 @@ export default function RelatorioFuncionarios() {
           font: { weight: "bold" as const },
         },
       },
-      y1: {
+      x1: {
         type: "linear" as const,
         display: true,
-        position: "right" as const,
+        position: "top" as const,
         beginAtZero: true,
         title: {
           display: true,
@@ -225,6 +210,17 @@ export default function RelatorioFuncionarios() {
           font: { weight: "bold" as const },
         },
         grid: { drawOnChartArea: false },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Funcionário",
+          font: { weight: "bold" as const },
+        },
+        // ADICIONADO: Remove as linhas de grade e a etiqueta duplicada
+        grid: {
+          display: false,
+        },
       },
     },
   } as const;
