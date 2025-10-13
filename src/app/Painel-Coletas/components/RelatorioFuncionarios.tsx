@@ -95,25 +95,47 @@ export default function RelatorioFuncionarios() {
     });
   };
 
+  // AJUSTE: Lógica para não permitir desmarcar a última métrica
   const handleVisibilidadeChange = (metrica: TipoMetrica) => {
+    const totalVisiveis = Object.values(visibilidade).filter(Boolean).length;
+    const estaTentandoDesmarcar = visibilidade[metrica];
+
+    if (estaTentandoDesmarcar && totalVisiveis === 1) {
+      // Impede a desmarcação da última métrica visível
+      return;
+    }
+
     setVisibilidade((prevState) => ({
       ...prevState,
       [metrica]: !prevState[metrica],
     }));
   };
 
+  // AJUSTE: Lógica para não permitir desmarcar o último tipo
   const handleTipoChange = (tipoValor: number) => {
-    setTiposSelecionados((prev) =>
-      prev.includes(tipoValor)
+    setTiposSelecionados((prev) => {
+      const estaTentandoDesmarcar = prev.includes(tipoValor);
+
+      if (estaTentandoDesmarcar && prev.length === 1) {
+        // Impede a desmarcação do último tipo selecionado
+        return prev;
+      }
+
+      return estaTentandoDesmarcar
         ? prev.filter((t) => t !== tipoValor)
-        : [...prev, tipoValor]
-    );
+        : [...prev, tipoValor];
+    });
   };
 
+  // AJUSTE: Lógica para o checkbox "Todos" não desmarcar tudo
   const handleToggleTodosTipos = () => {
+    // Esta função agora apenas seleciona todos. A desmarcação deve ser feita individualmente.
     if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
-      setTiposSelecionados([]);
+      // Se todos já estão marcados, desmarcar o "Todos" não fará nada,
+      // pois é preciso manter pelo menos um selecionado.
+      return;
     } else {
+      // Se nem todos estão marcados, esta ação marcará todos.
       setTiposSelecionados(TODOS_OS_TIPOS);
     }
   };
@@ -166,7 +188,7 @@ export default function RelatorioFuncionarios() {
         color: "white",
         font: {
           weight: "bold" as const,
-          size: 14, // ALTERADO: Fonte aumentada
+          size: 14,
         },
         formatter: (value: number) => {
           return value > 0 ? value : "";
