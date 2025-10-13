@@ -752,7 +752,7 @@ export default function SiteMatrix() {
           <div className="text-center">
             <p className="mb-2 text-base">Nossas redes</p>
             <div className="flex justify-center space-x-6">
-              <Link href="https://www.instagram.com/matrixxapp" target="_blank">
+              <Link href="https://www.instagram.com/matrixaplicativos" target="_blank">
                 <FaInstagram className="text-2xl hover:text-gray-400" />
               </Link>
               <Link
