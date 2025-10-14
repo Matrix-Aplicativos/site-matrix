@@ -211,6 +211,7 @@
   flex-grow: 1;
 }
 
+/* --- [NOVO] Estilo unificado para os botões de ação --- */
 .actionButton {
   display: flex;
   align-items: center;
@@ -221,7 +222,7 @@
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  color: #1769e3;
+  color: #1769e3; /* Cor azul do texto e ícone */
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -248,6 +249,7 @@
   animation: spin 1s linear infinite;
 }
 
+/* --- ESTILOS PARA STATUS --- */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 16px;
@@ -273,6 +275,43 @@
   color: #c62828;
 }
 
+/* Modo Escuro */
 @media (prefers-color-scheme: dark) {
-  /* Seus estilos de modo escuro aqui... */
+  .container,
+  .table th,
+  .filterExpansion,
+  .filterSection select,
+  .filterSection input,
+  .expandedRow > td,
+  .paginationControls button,
+  .itemsPerPageSelect {
+    background-color: #ffffff;
+  }
+  .title,
+  .table th,
+  .table td,
+  .filterSection label,
+  .filterSection select,
+  .filterSection input,
+  .paginationControls button,
+  .itemsPerPageSelect,
+  .deleteButton {
+    color: #000000;
+  }
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+  .table tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+  .paginationControls button:hover:not(:disabled) {
+    background-color: #1769e3;
+    color: #ffffff;
+  }
+  .deleteButton {
+    color: #ff0000;
+  }
+  /* ATENÇÃO: Seus estilos de modo escuro parecem estar forçando um tema claro.
+     Verifique se as cores como 'background-color: #ffffff' e 'color: #000000'
+     estão corretas ou se deveriam usar as variáveis do seu globals.css. */
 }
