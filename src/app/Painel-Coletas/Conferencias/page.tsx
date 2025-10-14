@@ -9,12 +9,9 @@ import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
-
-// --- [NOVO] Importando o modal e o ícone de conferência ---
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
 import { FiClipboard } from "react-icons/fi";
 
-// --- Seus componentes de ícone ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -66,10 +63,9 @@ const IconSync = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes ---
+// --- [ATUALIZADO] Interface local com os novos campos ---
 interface ColetaExibida {
   id: number;
-  codConferenciaErp: string;
   descricao: string;
   data: string;
   dataFim: string | null;
@@ -79,13 +75,16 @@ interface ColetaExibida {
   status: string;
   integradoErp: boolean;
   qtdItens: number;
+  qtdItensConferidos: number; // NOVO
   volumeTotal: number;
+  volumeConferido: number; // NOVO
 }
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
   sortable: boolean;
 }
+
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
@@ -95,6 +94,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   status: "situacao",
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
+  volumeConferido: "volumeConferido",
 };
 const TIPOS_DE_COLETA = ["3", "4"];
 const OPCOES_STATUS = {
@@ -104,17 +104,22 @@ const OPCOES_STATUS = {
   "Finalizada Completa": "3",
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
+
+// --- [ATUALIZADO] Nova ordem e novas colunas ---
 const columns: ColumnConfig[] = [
-  { key: "status", label: "Status", sortable: false },
-  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
-  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
+  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
+  { key: "qtdItensConferidos", label: "Qtd. Itens Conf.", sortable: false }, // NOVO
+  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true }, // NOVO
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
+
 const getOrigemText = (origem: string) =>
   origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
 const getTipoMovimentoText = (tipo: string) => {
@@ -169,14 +174,11 @@ const ConferenciasPage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
-
-  // --- [NOVO] Estado para o modal ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-  const codUsuario = 1; // Substituir pela sua lógica de usuário
+  const codUsuario = 1;
 
   const {
     coletas,
@@ -200,31 +202,32 @@ const ConferenciasPage: React.FC = () => {
     dateRange.endDate,
     !!codEmpresa
   );
-
   const isLoading = companyLoading || coletasLoading;
+
+  // --- [ATUALIZADO] Mapeamento dos novos campos ---
   const filteredData = useMemo(() => {
     if (!coletas) return [];
     return coletas.map((c) => ({
       id: c.codConferencia,
-      codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
       data: c.dataCadastro,
       dataFim: c.dataFim,
-      origem: String(c.origem),
+      origem: String(c.origemCadastro),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
       qtdItens: c.qtdItens,
+      qtdItensConferidos: c.qtdItensConferidos, // NOVO
       volumeTotal: c.volumeTotal,
+      volumeConferido: c.volumeConferido, // NOVO
     }));
   }, [coletas]);
+
   useEffect(() => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
-
-  // --- [NOVO] Callback otimizado ---
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
     refetch();
@@ -286,7 +289,6 @@ const ConferenciasPage: React.FC = () => {
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
-          {/* --- [NOVO] Botão para cadastrar conferência --- */}
           <button
             className={styles.actionButton}
             onClick={() => setIsModalOpen(true)}
@@ -295,7 +297,6 @@ const ConferenciasPage: React.FC = () => {
             <span>Cadastrar Conferência</span>
             <FiClipboard />
           </button>
-
           <button
             className={styles.actionButton}
             onClick={() => refetch()}
@@ -306,9 +307,7 @@ const ConferenciasPage: React.FC = () => {
           </button>
         </div>
       </div>
-
       {isFilterExpanded && <div className={styles.filterExpansion}>...</div>}
-
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -332,6 +331,7 @@ const ConferenciasPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- [ATUALIZADO] Nova ordem e novas células --- */}
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
@@ -341,9 +341,11 @@ const ConferenciasPage: React.FC = () => {
                       {getStatusText(row.status)}
                     </span>
                   </td>
-                  <td>{row.qtdItens}</td>
-                  <td>{row.volumeTotal}</td>
                   <td>{row.id}</td>
+                  <td>{row.qtdItens}</td>
+                  <td>{row.qtdItensConferidos}</td>
+                  <td>{row.volumeTotal}</td>
+                  <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
                   <td>{getOrigemText(row.origem)}</td>
@@ -388,8 +390,6 @@ const ConferenciasPage: React.FC = () => {
         onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
-
-      {/* --- [NOVO] Chamada para o modal, configurado para conferência --- */}
       {codEmpresa && (
         <ModalCadastrarColeta
           isOpen={isModalOpen}
@@ -397,12 +397,11 @@ const ConferenciasPage: React.FC = () => {
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={3} // Passamos 3 como tipo base para indicar que é uma conferência
+          tipoColeta={3}
           titulo="Cadastrar Nova Conferência"
         />
       )}
     </div>
   );
 };
-
 export default ConferenciasPage;

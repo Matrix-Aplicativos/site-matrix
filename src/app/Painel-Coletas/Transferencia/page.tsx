@@ -10,12 +10,9 @@ import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
-
-// --- [NOVO] Importando o modal reutilizável e o ícone de transferência ---
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
 import { FiRepeat } from "react-icons/fi";
 
-// --- Seus componentes de ícone ---
 const IconTrash = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -85,10 +82,9 @@ const IconSync = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes ---
+// --- [ATUALIZADO] Interface local com os novos campos ---
 interface ColetaExibida {
   id: number;
-  codConferenciaErp: string;
   descricao: string;
   data: string;
   dataFim: string | null;
@@ -98,13 +94,16 @@ interface ColetaExibida {
   status: string;
   integradoErp: boolean;
   qtdItens: number;
+  qtdItensConferidos: number; // NOVO
   volumeTotal: number;
+  volumeConferido: number; // NOVO
 }
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
   sortable: boolean;
 }
+
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
@@ -114,6 +113,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   status: "situacao",
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
+  volumeConferido: "volumeConferido",
 };
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
@@ -122,21 +122,26 @@ const OPCOES_STATUS = {
   "Finalizada Completa": "3",
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
+
+// --- [ATUALIZADO] Nova ordem e novas colunas ---
 const columns: ColumnConfig[] = [
-  { key: "status", label: "Status", sortable: false },
-  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
-  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
+  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
+  { key: "qtdItensConferidos", label: "Qtd. Itens Conf.", sortable: false }, // NOVO
+  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true }, // NOVO
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
+
 const getOrigemText = (origem: string) =>
   origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
 const getTipoMovimentoText = (tipo: string) =>
-  tipo === "2" ? "Transferência" : tipo; // Já estava correto para esta tela
+  tipo === "2" ? "Transferência" : tipo;
 const getStatusText = (status: string) => {
   switch (status) {
     case "1":
@@ -179,14 +184,11 @@ const TransferenciasPage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
-
-  // --- [NOVO] Estado para controlar o modal ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-  const codUsuario = 1; // Lembre-se de substituir pela sua lógica real de autenticação
+  const codUsuario = 1;
 
   const {
     coletas,
@@ -210,33 +212,33 @@ const TransferenciasPage: React.FC = () => {
     dateRange.endDate,
     !!codEmpresa
   );
-
   const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
   const isLoading = companyLoading || coletasLoading || deleting;
 
+  // --- [ATUALIZADO] Mapeamento dos novos campos ---
   const filteredData = useMemo(() => {
     if (!coletas) return [];
     return coletas.map((c) => ({
       id: c.codConferencia,
-      codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
       data: c.dataCadastro,
       dataFim: c.dataFim,
-      origem: String(c.origem),
+      origem: String(c.origemCadastro),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
       qtdItens: c.qtdItens,
+      qtdItensConferidos: c.qtdItensConferidos, // NOVO
       volumeTotal: c.volumeTotal,
+      volumeConferido: c.volumeConferido, // NOVO
     }));
   }, [coletas]);
+
   useEffect(() => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
-
-  // --- [NOVO] Callback otimizada para o sucesso do cadastro ---
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
     refetch();
@@ -309,7 +311,6 @@ const TransferenciasPage: React.FC = () => {
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
-          {/* --- [NOVO] Botão para cadastrar transferência --- */}
           <button
             className={styles.actionButton}
             onClick={() => setIsModalOpen(true)}
@@ -318,7 +319,6 @@ const TransferenciasPage: React.FC = () => {
             <span>Cadastrar Transferência</span>
             <FiRepeat />
           </button>
-
           <button
             className={styles.actionButton}
             onClick={() => refetch()}
@@ -329,9 +329,7 @@ const TransferenciasPage: React.FC = () => {
           </button>
         </div>
       </div>
-
       {isFilterExpanded && <div className={styles.filterExpansion}>...</div>}
-
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -355,6 +353,7 @@ const TransferenciasPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- [ATUALIZADO] Nova ordem e novas células --- */}
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
@@ -364,9 +363,11 @@ const TransferenciasPage: React.FC = () => {
                       {getStatusText(row.status)}
                     </span>
                   </td>
-                  <td>{row.qtdItens}</td>
-                  <td>{row.volumeTotal}</td>
                   <td>{row.id}</td>
+                  <td>{row.qtdItens}</td>
+                  <td>{row.qtdItensConferidos}</td>
+                  <td>{row.volumeTotal}</td>
+                  <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
                   <td>{getOrigemText(row.origem)}</td>
@@ -423,8 +424,6 @@ const TransferenciasPage: React.FC = () => {
         onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
-
-      {/* --- [NOVO] Chamada para o modal, configurado para transferência --- */}
       {codEmpresa && (
         <ModalCadastrarColeta
           isOpen={isModalOpen}
@@ -432,12 +431,11 @@ const TransferenciasPage: React.FC = () => {
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={2} // <-- AQUI ESTÁ A MÁGICA
-          titulo="Cadastrar Nova Transferência" // <-- Título dinâmico
+          tipoColeta={2}
+          titulo="Cadastrar Nova Transferência"
         />
       )}
     </div>
   );
 };
-
 export default TransferenciasPage;

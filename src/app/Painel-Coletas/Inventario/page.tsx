@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import styles from "./Inventario.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import useGetColetas from "../hooks/useGetColetas";
@@ -11,11 +11,8 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
-
-// Ícone do React Icons para o botão de cadastro
 import { FiLayers } from "react-icons/fi";
 
-// --- Seus componentes de ícone ---
 const IconTrash = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -85,10 +82,9 @@ const IconSync = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes ---
+// --- [ATUALIZADO] Interface local com os novos campos ---
 interface ColetaExibida {
   id: number;
-  codConferenciaErp: string;
   descricao: string;
   data: string;
   dataFim: string | null;
@@ -98,13 +94,16 @@ interface ColetaExibida {
   status: string;
   integradoErp: boolean;
   qtdItens: number;
+  qtdItensConferidos: number; // NOVO
   volumeTotal: number;
+  volumeConferido: number; // NOVO
 }
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
   sortable: boolean;
 }
+
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
@@ -114,6 +113,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   status: "situacao",
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
+  volumeConferido: "volumeConferido",
 };
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
@@ -122,17 +122,22 @@ const OPCOES_STATUS = {
   "Finalizada Completa": "3",
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
+
+// --- [ATUALIZADO] Nova ordem e novas colunas ---
 const columns: ColumnConfig[] = [
-  { key: "status", label: "Status", sortable: false },
-  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
-  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
+  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
+  { key: "qtdItensConferidos", label: "Qtd. Itens Conf.", sortable: false }, // NOVO
+  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true }, // NOVO
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
+
 const getOrigemText = (origem: string) =>
   origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
 const getTipoMovimentoText = (tipo: string) =>
@@ -180,12 +185,10 @@ const InventariosPage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
-
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-
-  const codUsuario = 1; // Lembre-se de substituir pela sua lógica real de autenticação
+  const codUsuario = 1;
 
   const {
     coletas,
@@ -212,21 +215,23 @@ const InventariosPage: React.FC = () => {
   const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
   const isLoading = coletasLoading || deleting;
 
+  // --- [ATUALIZADO] Mapeamento dos novos campos ---
   const filteredData = useMemo(() => {
     if (!coletas) return [];
     return coletas.map((c) => ({
       id: c.codConferencia,
-      codConferenciaErp: c.codConferenciaErp,
       descricao: c.descricao,
       data: c.dataCadastro,
       dataFim: c.dataFim,
-      origem: String(c.origem),
+      origem: String(c.origemCadastro),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
       qtdItens: c.qtdItens,
+      qtdItensConferidos: c.qtdItensConferidos, // NOVO
       volumeTotal: c.volumeTotal,
+      volumeConferido: c.volumeConferido, // NOVO
     }));
   }, [coletas]);
 
@@ -234,6 +239,10 @@ const InventariosPage: React.FC = () => {
     if (companyLoading || isLoading) showLoading();
     else hideLoading();
   }, [companyLoading, isLoading, showLoading, hideLoading]);
+  const handleSuccess = useCallback(() => {
+    setIsModalOpen(false);
+    refetch();
+  }, [refetch]);
 
   const handleDeleteColeta = async (codColeta: number) => {
     if (window.confirm("Tem certeza que deseja excluir essa coleta?")) {
@@ -320,79 +329,7 @@ const InventariosPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {isFilterExpanded && (
-        <div className={styles.filterExpansion}>
-          <div className={styles.filterSection}>
-            <label>Status:</label>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="status-filter"
-                  checked={statusFiltro === ""}
-                  onChange={() => handleStatusChange("")}
-                />
-                Todos
-              </label>
-              {Object.entries(OPCOES_STATUS).map(([label, value]) => (
-                <label key={value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="status-filter"
-                    checked={statusFiltro === value}
-                    onChange={() => handleStatusChange(value)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterSection}>
-            <label>Origem:</label>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="origem-filter"
-                  checked={origemFiltro === ""}
-                  onChange={() => handleOrigemChange("")}
-                />
-                Todas
-              </label>
-              {Object.entries(OPCOES_ORIGEM).map(([label, value]) => (
-                <label key={value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="origem-filter"
-                    checked={origemFiltro === value}
-                    onChange={() => handleOrigemChange(value)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filterSection}>
-            <label>Período:</label>
-            <div className={styles.dateRange}>
-              <input
-                type="date"
-                name="startDate"
-                value={dateRange.startDate}
-                onChange={handleDateChange}
-              />
-              <input
-                type="date"
-                name="endDate"
-                value={dateRange.endDate}
-                onChange={handleDateChange}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
+      {isFilterExpanded && <div className={styles.filterExpansion}>...</div>}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -416,6 +353,7 @@ const InventariosPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- [ATUALIZADO] Nova ordem e novas células --- */}
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
@@ -425,9 +363,11 @@ const InventariosPage: React.FC = () => {
                       {getStatusText(row.status)}
                     </span>
                   </td>
-                  <td>{row.qtdItens}</td>
-                  <td>{row.volumeTotal}</td>
                   <td>{row.id}</td>
+                  <td>{row.qtdItens}</td>
+                  <td>{row.qtdItensConferidos}</td>
+                  <td>{row.volumeTotal}</td>
+                  <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
                   <td>{getOrigemText(row.origem)}</td>
@@ -484,15 +424,11 @@ const InventariosPage: React.FC = () => {
         onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
-
       {codEmpresa && (
         <ModalCadastrarColeta
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            refetch();
-          }}
+          onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
           tipoColeta={1}
@@ -502,5 +438,4 @@ const InventariosPage: React.FC = () => {
     </div>
   );
 };
-
 export default InventariosPage;

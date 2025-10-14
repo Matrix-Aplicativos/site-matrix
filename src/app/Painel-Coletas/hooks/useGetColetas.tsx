@@ -37,6 +37,7 @@ export interface Coleta {
   alocOrigem: Alocacao;
   alocDestino: Alocacao;
   qtdItens: number;
+  qtdItensConferidos: number; // <-- CAMPO ADICIONADO
   volumeTotal: number;
   volumeConferido: number;
   origemCadastro: string;
@@ -60,7 +61,6 @@ interface UseGetColetasHook {
   totalElementos: number;
 }
 
-// --- Hook Atualizado para aceitar valores únicos de filtro ---
 const useGetColetas = (
   codEmpresa: number,
   pagina: number = 1,
@@ -88,15 +88,12 @@ const useGetColetas = (
     try {
       setLoading(true);
       setError(null);
-
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
       });
-
       if (orderBy) queryParams.append("orderBy", orderBy);
       if (direction) queryParams.append("direction", direction);
-
       if (tipo) {
         if (Array.isArray(tipo)) {
           tipo.forEach((t) => queryParams.append("tipo", t));
@@ -104,32 +101,15 @@ const useGetColetas = (
           queryParams.append("tipo", tipo);
         }
       }
-
-      // Lógica simplificada para valor único
-      if (status) {
-        queryParams.append("situacao", status);
-      }
-      if (origem) {
-        queryParams.append("origem", origem);
-      }
-
-      if (filtro && valor) {
-        queryParams.append(filtro, valor);
-      }
-
-      if (dataInicial) {
-        queryParams.append("dataInicial", dataInicial);
-      }
-      if (dataFinal) {
-        queryParams.append("dataFinal", dataFinal);
-      }
-
+      if (status) queryParams.append("situacao", status);
+      if (origem) queryParams.append("origem", origem);
+      if (filtro && valor) queryParams.append(filtro, valor);
+      if (dataInicial) queryParams.append("dataInicial", dataInicial);
+      if (dataFinal) queryParams.append("dataFinal", dataFinal);
       const response = await axiosInstance.get<ApiResponse>(
         `/coleta/empresa/${codEmpresa}?${queryParams}`
       );
-
       const { conteudo, qtdPaginas, qtdElementos } = response.data;
-
       setColetas(conteudo || []);
       setTotalPaginas(qtdPaginas || 0);
       setTotalElementos(qtdElementos || 0);
@@ -163,7 +143,7 @@ const useGetColetas = (
     if (enabled) {
       fetchColetas();
     }
-  }, [fetchColetas]);
+  }, [fetchColetas, enabled]); // 'enabled' adicionado como dependência
 
   return {
     coletas,
