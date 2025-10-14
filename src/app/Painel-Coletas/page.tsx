@@ -1,49 +1,55 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import RelatorioColetas from "./components/RelatorioColetas";
-import { useLoading } from "../shared/Context/LoadingContext";
-import LoadingOverlay from "../shared/components/LoadingOverlay";
+import { useState, useMemo, useEffect } from "react";
+import { isSameMonth, subMonths, isSameYear } from "date-fns";
 import styles from "./Home.module.css";
+import { useLoading } from "../shared/Context/LoadingContext";
+
+// Hooks de dados
 import useGetColetas from "./hooks/useGetColetas";
 import useCurrentCompany from "./hooks/useCurrentCompany";
-import { isSameMonth, subMonths, isSameYear } from "date-fns"; // Import para datas
+import useGetGraficoFuncionarios from "./hooks/useGetGraficoFuncionarios";
 
-// NOVO: Importe o novo componente do gráfico de funcionários
+// Componentes
+import RelatorioColetas from "./components/RelatorioColetas";
 import RelatorioFuncionarios from "./components/RelatorioFuncionarios";
+import EstatisticasFuncionarios from "./components/EstatisticasFuncionarios"; // <-- NOVO
+import LoadingOverlay from "../shared/components/LoadingOverlay";
+
+// Função utilitária para data
+const toISODateString = (date: Date) => date.toISOString().split("T")[0];
+const OPCOES_TIPO = {
+  Inventario: 1,
+  Transferencia: 2,
+  "Conf. Venda": 3,
+  "Conf. Compra": 4,
+};
+const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
+type TipoMetrica =
+  | "coletasRealizadas"
+  | "itensDistintosBipados"
+  | "volumeTotalBipado";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
-
   const { empresa, loading: companyLoading } = useCurrentCompany();
-
   const codEmpresa = empresa?.codEmpresa;
 
+  // --- DADOS E LÓGICA DO RELATÓRIO DE COLETAS ---
   const { coletas, loading: coletasLoading } = useGetColetas(
     codEmpresa || 0,
     1
   );
-
-  const isLoading = companyLoading || coletasLoading;
-
-  useEffect(() => {
-    if (isLoading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
-  }, [isLoading, showLoading, hideLoading]);
-
   const {
     totalColetas,
     inventarios,
     transferencias,
     conferencias,
-    coletasAnterior,
     variacaoColetas,
   } = useMemo(() => {
-    if (!coletas || coletas.length === 0) {
+    // ... (lógica do useMemo de coletas permanece a mesma)
+    if (!coletas || coletas.length === 0)
       return {
         totalColetas: 0,
         inventarios: 0,
@@ -52,7 +58,6 @@ export default function HomePage() {
         coletasAnterior: 0,
         variacaoColetas: null,
       };
-    }
     const hoje = new Date();
     const mesAnterior = subMonths(hoje, 1);
     let totalAtual = 0,
@@ -96,17 +101,76 @@ export default function HomePage() {
     };
   }, [coletas]);
 
-  if (isLoading) {
+  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS (MOVIDO PARA CÁ) ---
+  const hoje = new Date();
+  const inicioDoMesCorrente = toISODateString(
+    new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+  );
+  const fimDoMesCorrente = toISODateString(
+    new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
+  );
+
+  const [dataInicioInput, setDataInicioInput] = useState(inicioDoMesCorrente);
+  const [dataFimInput, setDataFimInput] = useState(fimDoMesCorrente);
+  const [tiposSelecionados, setTiposSelecionados] =
+    useState<number[]>(TODOS_OS_TIPOS);
+  const [dateRangeAtivo, setDateRangeAtivo] = useState({
+    inicio: inicioDoMesCorrente,
+    fim: fimDoMesCorrente,
+  });
+  const [metricaSelecionada, setMetricaSelecionada] =
+    useState<TipoMetrica>("coletasRealizadas");
+
+  const {
+    dados: dadosFuncionarios,
+    loading: funcionariosLoading,
+    error: funcionariosError,
+  } = useGetGraficoFuncionarios(
+    codEmpresa,
+    dateRangeAtivo.inicio,
+    dateRangeAtivo.fim,
+    tiposSelecionados
+  );
+
+  const handlePesquisarFuncionarios = () => {
+    setDateRangeAtivo({ inicio: dataInicioInput, fim: dataFimInput });
+  };
+
+  const { totalColetasFunc, totalItensFunc, totalVolumeFunc } = useMemo(() => {
+    if (!dadosFuncionarios || dadosFuncionarios.length === 0) {
+      return { totalColetasFunc: 0, totalItensFunc: 0, totalVolumeFunc: 0 };
+    }
+    return dadosFuncionarios.reduce(
+      (acc, curr) => {
+        acc.totalColetasFunc += curr.coletasRealizadas;
+        acc.totalItensFunc += curr.itensDistintosBipados;
+        acc.totalVolumeFunc += curr.volumeTotalBipado;
+        return acc;
+      },
+      { totalColetasFunc: 0, totalItensFunc: 0, totalVolumeFunc: 0 }
+    );
+  }, [dadosFuncionarios]);
+
+  // --- GERENCIAMENTO DE LOADING GERAL ---
+  const isLoading = companyLoading || coletasLoading; // Loading principal da página
+  useEffect(() => {
+    if (isLoading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [isLoading, showLoading, hideLoading]);
+
+  // Renderização condicional
+  if (isLoading)
     return <div className={styles.container}>Carregando painel...</div>;
-  }
-  if (!empresa) {
+  if (!empresa)
     return (
       <div className={styles.container}>
-        <h2>No Company Assigned</h2>
-        <p>Your account is not associated with any company.</p>
+        <h2>Nenhuma empresa associada</h2>
+        <p>Sua conta não está vinculada a nenhuma empresa.</p>
       </div>
     );
-  }
 
   return (
     <div className={styles.container}>
@@ -115,10 +179,10 @@ export default function HomePage() {
         SEU PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
       </h1>
 
+      {/* --- BLOCO DO RELATÓRIO DE COLETAS --- */}
       <div className={styles.border}>
         <RelatorioColetas view={view} onViewChange={setView} />
       </div>
-
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
           <div className={styles.statWithTable}>
@@ -132,6 +196,7 @@ export default function HomePage() {
                       variacaoColetas >= 0 ? styles.positive : styles.negative
                     }
                   >
+                    {" "}
                     {variacaoColetas >= 0 ? "▲" : "▼"}{" "}
                     {Math.abs(variacaoColetas).toFixed(1)}%
                   </span>{" "}
@@ -184,9 +249,30 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* NOVO: Componente do gráfico de funcionários adicionado aqui */}
+      {/* --- BLOCO DO RELATÓRIO DE FUNCIONÁRIOS (AGORA SEPARADO) --- */}
       <div className={styles.border}>
-        <RelatorioFuncionarios />
+        <RelatorioFuncionarios
+          dados={dadosFuncionarios}
+          loading={funcionariosLoading}
+          error={funcionariosError}
+          dataInicioInput={dataInicioInput}
+          setDataInicioInput={setDataInicioInput}
+          dataFimInput={dataFimInput}
+          setDataFimInput={setDataFimInput}
+          tiposSelecionados={tiposSelecionados}
+          setTiposSelecionados={setTiposSelecionados}
+          metricaSelecionada={metricaSelecionada}
+          setMetricaSelecionada={setMetricaSelecionada}
+          handlePesquisar={handlePesquisarFuncionarios}
+        />
+      </div>
+      <div className={styles.border}>
+        <EstatisticasFuncionarios
+          totalColetas={totalColetasFunc}
+          totalItens={totalItensFunc}
+          totalVolume={totalVolumeFunc}
+          isLoading={funcionariosLoading}
+        />
       </div>
     </div>
   );

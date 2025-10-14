@@ -1,27 +1,32 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
+
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import { Usuario, Empresa } from "../utils/types/Usuario";
-import Image from "next/image";
-import Logo from "@/app/img/Logo.png";
-import "./SelecionarEmpresa.css";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+
+import Logo from "@/app/img/Logo.png";
 import SearchBar from "../components/SearchBar";
-import { ArrowLeft } from "lucide-react"; 
+import "./SelecionarEmpresa.css";
 
 export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
+  // Declaração de Funções e Lógica
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
-          window.location.href = "/Painel-Coletas/Login";
+          router.push("/Painel-Coletas/Login");
           return;
         }
         const userId = getUserFromToken(token);
@@ -34,11 +39,12 @@ export default function SelecionarEmpresaPage() {
       }
     };
     fetchUserData();
-  }, []);
+  }, [router]);
 
   const filteredEmpresas = useMemo(() => {
     if (!usuario?.empresas) return [];
     if (!searchQuery) return usuario.empresas;
+
     const lowercasedQuery = searchQuery.toLowerCase();
     return usuario.empresas.filter(
       (empresa) =>
@@ -49,7 +55,7 @@ export default function SelecionarEmpresaPage() {
 
   const handleSelectEmpresa = (empresa: Empresa) => {
     localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
-    window.location.href = "/Painel-Coletas";
+    router.push("/Painel-Coletas");
   };
 
   const formatCpfCnpj = (cnpj: string) => {
@@ -67,9 +73,10 @@ export default function SelecionarEmpresaPage() {
     return <div className="error-container">{error}</div>;
   }
 
+  // Return
   return (
     <div className="selecao-container-grid">
-      <div className="back-arrow" onClick={() => window.history.back()}>
+      <div className="back-arrow" onClick={() => router.back()}>
         <ArrowLeft size={22} />
       </div>
 

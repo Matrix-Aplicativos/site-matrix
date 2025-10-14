@@ -1,18 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 import Logo from "@/app/img/Logo.png";
 import "./Login.css";
 import useLogin from "../hooks/useLogin";
-import Link from "next/link";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { Usuario } from "../utils/types/Usuario";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
+  // Declaração de todos os useStates e Hooks
+  const [definirPrimeiraSenha, setDefinirPrimeiraSenha] = useState(false);
+  const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
+  const [login, setLogin] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
+  const [textoIdentificacao, setTextoIdentificacao] = useState("");
+  const [tipoMensagem, setTipoMensagem] = useState<"sucesso" | "erro" | "">("");
+  const [forcaSenha, setForcaSenha] = useState(0);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+
+  const router = useRouter();
   const {
     loginUsuario,
     loading,
@@ -21,18 +35,7 @@ export default function LoginPage() {
     solicitarRedefinicaoSenha,
   } = useLogin();
 
-  const [definirPrimeiraSenha, setDefinirPrimeiraSenha] = useState(false);
-  const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
-  const [login, setLogin] = useState("");
-  const [textoIdentificacao, setTextoIdentificacao] = useState("");
-  const [tipoMensagem, setTipoMensagem] = useState<"sucesso" | "erro" | "">("");
-  const [senha, setSenha] = useState("");
-  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
-  const [forcaSenha, setForcaSenha] = useState(0);
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const router = useRouter();
-
+  // Declaração de Funções e Lógica
   useEffect(() => {
     if (!textoIdentificacao) return;
     const timer = setTimeout(() => {
@@ -49,6 +52,18 @@ export default function LoginPage() {
     }
   }, [modoEsqueciSenha, definirPrimeiraSenha]);
 
+  const verificarForcaSenha = (valor: string) => {
+    if (valor.length < 6) return 1;
+    let forca = 0;
+    if (/[A-Z]/.test(valor)) forca++;
+    if (/[a-z]/.test(valor)) forca++;
+    if (/[0-9]/.test(valor)) forca++;
+    if (/[^A-Za-z0-9]/.test(valor)) forca++;
+    if (forca <= 1) return 1;
+    if (forca === 2 || forca === 3) return 2;
+    return 3;
+  };
+
   const handleDefinirSenha = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = await definirPrimeiraSenhaUsuario({
@@ -56,6 +71,7 @@ export default function LoginPage() {
       confirmacaoSenha,
     });
     if (!data) return;
+
     if (
       data.status === 200 ||
       data.message?.toLowerCase().includes("sucesso")
@@ -131,7 +147,6 @@ export default function LoginPage() {
             return;
           }
 
-          // ===== INÍCIO DA LÓGICA DE EMPRESAS =====
           if (!usuario.empresas || usuario.empresas.length === 0) {
             setTextoIdentificacao("Usuário não vinculado a nenhuma empresa.");
             setTipoMensagem("erro");
@@ -153,18 +168,18 @@ export default function LoginPage() {
     }
   };
 
-  const verificarForcaSenha = (valor: string) => {
-    if (valor.length < 6) return 1;
-    let forca = 0;
-    if (/[A-Z]/.test(valor)) forca++;
-    if (/[a-z]/.test(valor)) forca++;
-    if (/[0-9]/.test(valor)) forca++;
-    if (/[^A-Za-z0-9]/.test(valor)) forca++;
-    if (forca <= 1) return 1;
-    if (forca === 2 || forca === 3) return 2;
-    return 3;
+  const handleVoltar = () => {
+    setModoEsqueciSenha(false);
+    setDefinirPrimeiraSenha(false);
+    setSenha("");
+    setConfirmacaoSenha("");
+    setLogin("");
   };
 
+  // Declaração de Funções de renderização
+  // (Nenhuma função de renderização separada neste componente)
+
+  // Return
   return (
     <div className="container">
       <div className="content">
@@ -333,13 +348,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="action-button voltar"
-                onClick={() => {
-                  setModoEsqueciSenha(false);
-                  setDefinirPrimeiraSenha(false);
-                  setSenha("");
-                  setConfirmacaoSenha("");
-                  setLogin("");
-                }}
+                onClick={handleVoltar}
               >
                 Voltar
               </button>

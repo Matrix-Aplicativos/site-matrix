@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar";
+import { useEffect, useState, useMemo } from "react";
 import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetUsuarios from "../hooks/useGetUsuarios";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
+import SearchBar from "../components/SearchBar";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 
-// --- Ícones e Interfaces ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -46,11 +45,6 @@ const IconSort = () => (
   </svg>
 );
 
-interface ColumnConfig {
-  key: keyof FuncionarioExibido;
-  label: string;
-  sortable: boolean;
-}
 interface FuncionarioExibido {
   codigo: number;
   nome: string;
@@ -58,6 +52,12 @@ interface FuncionarioExibido {
   email: string;
   status: boolean;
 }
+interface ColumnConfig {
+  key: keyof FuncionarioExibido;
+  label: string;
+  sortable: boolean;
+}
+
 const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
   codigo: "codFuncionarioErp",
   nome: "nome",
@@ -65,15 +65,27 @@ const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
   email: "email",
   status: "ativo",
 };
-
 const FILTER_TO_API_PARAM: Record<string, string> = {
   nome: "nomeUsuario",
   cpf: "cpfusuario",
   email: "emailUsuario",
   codigo: "codUsuarioErp",
 };
+const columns: ColumnConfig[] = [
+  { key: "codigo", label: "Código", sortable: true },
+  { key: "nome", label: "Nome", sortable: true },
+  { key: "cpf", label: "CPF", sortable: true },
+  { key: "email", label: "Email", sortable: true },
+  { key: "status", label: "Status", sortable: true },
+];
 
+const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
+const getStatusClass = (status: boolean) =>
+  status ? styles.statusCompleted : styles.statusNotStarted;
+
+// --- Componente Principal ---
 const FuncionariosPage: React.FC = () => {
+  // Declaração de States e Hooks
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -94,18 +106,15 @@ const FuncionariosPage: React.FC = () => {
 
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
-
     if (query) {
       const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
       if (apiParamKey) {
         filtros[apiParamKey] = query;
       }
     }
-
     if (statusFilter !== "todos") {
       filtros.ativo = statusFilter === "ativo";
     }
-
     return filtros;
   }, [query, selectedFilter, statusFilter]);
 
@@ -128,10 +137,7 @@ const FuncionariosPage: React.FC = () => {
 
   const isLoading = companyLoading || usuariosLoading;
 
-  const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
-  const getStatusClass = (status: boolean) =>
-    status ? styles.statusCompleted : styles.statusNotStarted;
-
+  // Declaração de Funções e Lógica
   const displayedData = useMemo(() => {
     if (!usuarios) return [];
     return usuarios.map((u) => ({
@@ -143,6 +149,11 @@ const FuncionariosPage: React.FC = () => {
     }));
   }, [usuarios]);
 
+  useEffect(() => {
+    if (isLoading) showLoading();
+    else hideLoading();
+  }, [isLoading, showLoading, hideLoading]);
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -153,10 +164,9 @@ const FuncionariosPage: React.FC = () => {
     setPaginaAtual(1);
   };
 
-  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
-    setPaginaAtual(1); // Essencial: Volta para a primeira página
+    setPaginaAtual(1);
   };
 
   const sortData = (key: keyof FuncionarioExibido) => {
@@ -169,11 +179,7 @@ const FuncionariosPage: React.FC = () => {
 
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
 
-  useEffect(() => {
-    if (isLoading) showLoading();
-    else hideLoading();
-  }, [isLoading, showLoading, hideLoading]);
-
+  // Early Return
   if (usuariosError) {
     return (
       <div className={styles.container}>
@@ -183,14 +189,7 @@ const FuncionariosPage: React.FC = () => {
     );
   }
 
-  const columns: ColumnConfig[] = [
-    { key: "codigo", label: "Código", sortable: true },
-    { key: "nome", label: "Nome", sortable: true },
-    { key: "cpf", label: "CPF", sortable: true },
-    { key: "email", label: "Email", sortable: true },
-    { key: "status", label: "Status", sortable: true },
-  ];
-
+  // Return
   return (
     <div className={styles.container}>
       <LoadingOverlay />
@@ -308,7 +307,6 @@ const FuncionariosPage: React.FC = () => {
 
       {totalElementos > 0 && (
         <div className="footerControls">
-          {/* ATUALIZADO: A chamada do componente de paginação */}
           <PaginationControls
             paginaAtual={paginaAtual}
             totalPaginas={totalPaginas}

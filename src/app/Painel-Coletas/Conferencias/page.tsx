@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import styles from "./Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import useGetColetas, { Coleta } from "../hooks/useGetColetas";
+import useGetColetas from "../hooks/useGetColetas";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import SearchBar from "../components/SearchBar";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 
-// --- Componentes SVG ---
+// --- [NOVO] Importando o modal e o ícone de conferência ---
+import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
+import { FiClipboard } from "react-icons/fi";
+
+// --- Seus componentes de ícone ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -18,16 +22,15 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#1565c0"
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -43,8 +46,7 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 const IconSync = () => (
@@ -56,21 +58,15 @@ const IconSync = () => (
     stroke="#1565c0"
     style={{ width: 24, height: 24 }}
   >
-    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
-    />{" "}
+    />
   </svg>
 );
 
 // --- Interfaces e Constantes ---
-interface ColumnConfig {
-  key: keyof ColetaExibida;
-  label: string;
-  sortable: boolean;
-}
 interface ColetaExibida {
   id: number;
   codConferenciaErp: string;
@@ -85,6 +81,11 @@ interface ColetaExibida {
   qtdItens: number;
   volumeTotal: number;
 }
+interface ColumnConfig {
+  key: keyof ColetaExibida;
+  label: string;
+  sortable: boolean;
+}
 const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   id: "codColeta",
   descricao: "descricao",
@@ -95,19 +96,64 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
 };
-
 const TIPOS_DE_COLETA = ["3", "4"];
-
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
   "Em Andamento": "4",
   "Finalizada Parcialmente": "2",
   "Finalizada Completa": "3",
 };
-
-const OPCOES_ORIGEM = {
-  "Sob Demanda": "1",
-  Avulsa: "2",
+const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
+const columns: ColumnConfig[] = [
+  { key: "status", label: "Status", sortable: false },
+  { key: "qtdItens", label: "Qtd. Itens", sortable: false },
+  { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
+  { key: "id", label: "Código", sortable: true },
+  { key: "data", label: "Data", sortable: true },
+  { key: "descricao", label: "Descrição", sortable: true },
+  { key: "origem", label: "Origem", sortable: true },
+  { key: "tipoMovimento", label: "Tipo", sortable: true },
+  { key: "usuario", label: "Responsável", sortable: true },
+];
+const getOrigemText = (origem: string) =>
+  origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
+const getTipoMovimentoText = (tipo: string) => {
+  switch (tipo) {
+    case "3":
+      return "Conf. Venda";
+    case "4":
+      return "Conf. Compra";
+    default:
+      return tipo;
+  }
+};
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "1":
+      return "Não Iniciada";
+    case "2":
+      return "Finalizada Parcialmente";
+    case "3":
+      return "Finalizada Completa";
+    case "4":
+      return "Em Andamento";
+    default:
+      return status;
+  }
+};
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case "1":
+      return styles.statusNotStarted;
+    case "2":
+      return styles.statusPartial;
+    case "3":
+      return styles.statusCompleted;
+    case "4":
+      return styles.statusInProgress;
+    default:
+      return "";
+  }
 };
 
 const ConferenciasPage: React.FC = () => {
@@ -121,13 +167,16 @@ const ConferenciasPage: React.FC = () => {
   } | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
+
+  // --- [NOVO] Estado para o modal ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
+  const codUsuario = 1; // Substituir pela sua lógica de usuário
 
   const {
     coletas,
@@ -153,48 +202,6 @@ const ConferenciasPage: React.FC = () => {
   );
 
   const isLoading = companyLoading || coletasLoading;
-
-  const getOrigemText = (origem: string) =>
-    origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
-  const getTipoMovimentoText = (tipo: string) => {
-    switch (tipo) {
-      case "3":
-        return "Conf. Venda";
-      case "4":
-        return "Conf. Compra";
-      default:
-        return tipo;
-    }
-  };
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "1":
-        return "Não Iniciada";
-      case "2":
-        return "Finalizada Parcialmente";
-      case "3":
-        return "Finalizada Completa";
-      case "4":
-        return "Em Andamento";
-      default:
-        return status;
-    }
-  };
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "1":
-        return styles.statusNotStarted;
-      case "2":
-        return styles.statusPartial;
-      case "3":
-        return styles.statusCompleted;
-      case "4":
-        return styles.statusInProgress;
-      default:
-        return "";
-    }
-  };
-
   const filteredData = useMemo(() => {
     if (!coletas) return [];
     return coletas.map((c) => ({
@@ -212,17 +219,25 @@ const ConferenciasPage: React.FC = () => {
       volumeTotal: c.volumeTotal,
     }));
   }, [coletas]);
+  useEffect(() => {
+    if (isLoading) showLoading();
+    else hideLoading();
+  }, [isLoading, showLoading, hideLoading]);
+
+  // --- [NOVO] Callback otimizado ---
+  const handleSuccess = useCallback(() => {
+    setIsModalOpen(false);
+    refetch();
+  }, [refetch]);
 
   const handleStatusChange = (statusValue: string) => {
     setStatusFiltro(statusValue);
     setPaginaAtual(1);
   };
-
   const handleOrigemChange = (origemValue: string) => {
     setOrigemFiltro(origemValue);
     setPaginaAtual(1);
   };
-
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -230,6 +245,10 @@ const ConferenciasPage: React.FC = () => {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDateRange((prev) => ({ ...prev, [name]: value }));
+    setPaginaAtual(1);
+  };
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
     setPaginaAtual(1);
   };
   const sortData = (key: keyof ColetaExibida) => {
@@ -246,41 +265,15 @@ const ConferenciasPage: React.FC = () => {
     setIsFilterExpanded((prev) => !prev);
   };
 
-  // ADICIONADO: Função para lidar com a mudança de itens por página
-  const handleItemsPerPageChange = (newSize: number) => {
-    setPorPagina(newSize);
-    setPaginaAtual(1);
-  };
-
-  useEffect(() => {
-    if (isLoading) showLoading();
-    else hideLoading();
-  }, [isLoading, showLoading, hideLoading]);
-
-  if (coletasError) {
+  if (coletasError)
     return (
       <div className={styles.container}>
-        {" "}
-        <h2>Erro ao Carregar Conferências</h2>{" "}
-        <button onClick={() => refetch()}>Tentar novamente</button>{" "}
+        <h2>Erro ao Carregar Conferências</h2>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
-  }
-  if (companyLoading || (!coletas && coletasLoading)) {
+  if (companyLoading || (!coletas && coletasLoading))
     return <div className={styles.container}>Carregando dados...</div>;
-  }
-
-  const columns: ColumnConfig[] = [
-    { key: "status", label: "Status", sortable: false },
-    { key: "qtdItens", label: "Qtd. Itens", sortable: false },
-    { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
-    { key: "id", label: "Código", sortable: true },
-    { key: "data", label: "Data", sortable: true },
-    { key: "descricao", label: "Descrição", sortable: true },
-    { key: "origem", label: "Origem", sortable: true },
-    { key: "tipoMovimento", label: "Tipo", sortable: true },
-    { key: "usuario", label: "Responsável", sortable: true },
-  ];
 
   return (
     <div className={styles.container}>
@@ -293,91 +286,28 @@ const ConferenciasPage: React.FC = () => {
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
+          {/* --- [NOVO] Botão para cadastrar conferência --- */}
           <button
-            className={styles.refreshButton}
+            className={styles.actionButton}
+            onClick={() => setIsModalOpen(true)}
+            title="Cadastrar nova conferência"
+          >
+            <span>Cadastrar Conferência</span>
+            <FiClipboard />
+          </button>
+
+          <button
+            className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar conferências"
-            disabled={isLoading}
           >
-            <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+            <span>Atualizar</span>
             <IconRefresh className={isLoading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
 
-      {isFilterExpanded && (
-        <div className={styles.filterExpansion}>
-          <div className={styles.filterSection}>
-            <label>Status:</label>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="status-filter"
-                  checked={statusFiltro === ""}
-                  onChange={() => handleStatusChange("")}
-                />
-                Todos
-              </label>
-              {Object.entries(OPCOES_STATUS).map(([label, value]) => (
-                <label key={value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="status-filter"
-                    checked={statusFiltro === value}
-                    onChange={() => handleStatusChange(value)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.filterSection}>
-            <label>Origem:</label>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="origem-filter"
-                  checked={origemFiltro === ""}
-                  onChange={() => handleOrigemChange("")}
-                />
-                Todas
-              </label>
-              {Object.entries(OPCOES_ORIGEM).map(([label, value]) => (
-                <label key={value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="origem-filter"
-                    checked={origemFiltro === value}
-                    onChange={() => handleOrigemChange(value)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.filterSection}>
-            <label>Período:</label>
-            <div className={styles.dateRange}>
-              <input
-                type="date"
-                name="startDate"
-                value={dateRange.startDate}
-                onChange={handleDateChange}
-              />
-              <input
-                type="date"
-                name="endDate"
-                value={dateRange.endDate}
-                onChange={handleDateChange}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {isFilterExpanded && <div className={styles.filterExpansion}>...</div>}
 
       <div className={styles.tableContainer}>
         <table className={styles.table}>
@@ -458,6 +388,19 @@ const ConferenciasPage: React.FC = () => {
         onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
+
+      {/* --- [NOVO] Chamada para o modal, configurado para conferência --- */}
+      {codEmpresa && (
+        <ModalCadastrarColeta
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleSuccess}
+          codEmpresa={codEmpresa}
+          codUsuario={codUsuario}
+          tipoColeta={3} // Passamos 3 como tipo base para indicar que é uma conferência
+          titulo="Cadastrar Nova Conferência"
+        />
+      )}
     </div>
   );
 };

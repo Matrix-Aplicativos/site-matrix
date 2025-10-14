@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/app/img/Logo.png";
@@ -21,12 +20,12 @@ export default function RedefinirSenhaPage() {
 
         <div className="token-input-container">
           {[...Array(6)].map((_, index) => (
-            <input 
-              key={index} 
-              type="text" 
+            <input
+              key={index}
+              type="text"
               maxLength={1}
-              className="token-input-box" 
-              inputMode="numeric" 
+              className="token-input-box"
+              inputMode="numeric"
             />
           ))}
         </div>

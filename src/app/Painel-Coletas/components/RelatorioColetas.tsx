@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -14,8 +14,8 @@ import {
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import useGetColetas from "../hooks/useGetColetas";
 import useGraficoColetas from "../hooks/useGraficoColetas";
-import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 
 ChartJS.register(
   CategoryScale,
@@ -32,32 +32,40 @@ interface RelatorioColetasProps {
   onViewChange: (view: "mensal" | "anual") => void;
 }
 
+const placeholderStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100%",
+  color: "#666",
+  textAlign: "center",
+  padding: "20px",
+};
+
 export default function RelatorioColetas({
   view,
   onViewChange,
 }: RelatorioColetasProps) {
   const { empresa, loading: companyLoading } = useCurrentCompany();
-
   const codEmpresa = empresa?.codEmpresa;
+
   const { coletas, loading: coletasLoading } = useGetColetas(
     codEmpresa || 0,
     1
   );
+
   const chartData = useGraficoColetas(coletas, view);
 
   const finalChartData = useMemo(() => {
-    if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+    if (!chartData?.datasets?.length) {
       return chartData;
     }
-
     const newData = { ...chartData };
     newData.datasets = chartData.datasets.map((dataset) => ({
       ...dataset,
-      // ALTERADO: Cor padronizada com o outro gráfico
       backgroundColor: "rgb(54, 162, 235)",
       borderColor: "rgb(54, 162, 235)",
     }));
-
     return newData;
   }, [chartData]);
 
@@ -70,37 +78,26 @@ export default function RelatorioColetas({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       title: {
         display: true,
         text:
           view === "mensal"
             ? `Coletas por dia - ${currentMonth}`
             : `Coletas por mês - ${currentYear}`,
-        font: {
-          size: 16,
-        },
+        font: { size: 16 },
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            return `${context.raw} Coletas`;
-          },
+          label: (context: any) => `${context.raw} Coletas`,
         },
       },
       datalabels: {
         anchor: "center" as const,
         align: "center" as const,
         color: "black",
-        font: {
-          weight: "bold" as const,
-          size: 14, // ALTERADO: Fonte aumentada
-        },
-        formatter: (value: number) => {
-          return value > 0 ? value : "";
-        },
+        font: { weight: "bold" as const, size: 14 },
+        formatter: (value: number) => (value > 0 ? value : ""),
       },
     },
     scales: {
@@ -108,43 +105,22 @@ export default function RelatorioColetas({
         title: {
           display: true,
           text: view === "mensal" ? "Dias do Mês" : "Meses",
-          font: {
-            weight: "bold" as const,
-          },
+          font: { weight: "bold" as const },
         },
-        grid: {
-          display: false,
-        },
+        grid: { display: false },
       },
       y: {
         title: {
           display: true,
           text: "Quantidade de Coletas",
-          font: {
-            weight: "bold" as const,
-          },
+          font: { weight: "bold" as const },
         },
         beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          precision: 0,
-        },
-        grid: {
-          color: "rgba(0, 0, 0, 0.05)",
-        },
+        ticks: { stepSize: 1, precision: 0 },
+        grid: { color: "rgba(0, 0, 0, 0.05)" },
       },
     },
   } as const;
-
-  const placeholderStyle: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
-    color: "#666",
-    textAlign: "center",
-    padding: "20px",
-  };
 
   const renderChartContent = () => {
     if (isLoading) {
@@ -155,7 +131,6 @@ export default function RelatorioColetas({
         </>
       );
     }
-
     if (!codEmpresa) {
       return (
         <div style={placeholderStyle}>
@@ -163,7 +138,6 @@ export default function RelatorioColetas({
         </div>
       );
     }
-
     if (!finalChartData?.labels?.length) {
       return (
         <div style={placeholderStyle}>
@@ -171,10 +145,10 @@ export default function RelatorioColetas({
         </div>
       );
     }
-
     return <Bar data={finalChartData} options={options} />;
   };
 
+  // Return
   return (
     <div style={{ padding: "20px 0", width: "100%" }}>
       <div
@@ -192,7 +166,7 @@ export default function RelatorioColetas({
           <button
             style={{
               padding: "8px 16px",
-              background: view === "mensal" ? "rgb(54, 162, 235)" : "#f0f0f0", // ALTERADO
+              background: view === "mensal" ? "rgb(54, 162, 235)" : "#f0f0f0",
               color: view === "mensal" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
@@ -207,7 +181,7 @@ export default function RelatorioColetas({
           <button
             style={{
               padding: "8px 16px",
-              background: view === "anual" ? "rgb(54, 162, 235)" : "#f0f0f0", // ALTERADO
+              background: view === "anual" ? "rgb(54, 162, 235)" : "#f0f0f0",
               color: view === "anual" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",

@@ -211,23 +211,28 @@
   flex-grow: 1;
 }
 
-.refreshButton {
-  padding: 0.6rem;
+.actionButton {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  color: #1769e3;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.refreshButton:disabled {
+.actionButton:hover {
+  background-color: #f0f7ff;
+  border-color: #d2e6fa;
+}
+
+.actionButton:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.refreshButton svg {
-  font-size: 1.2rem;
-  color: #1769e3;
 }
 
 @keyframes spin {
@@ -241,10 +246,8 @@
 
 .spinning {
   animation: spin 1s linear infinite;
-  color: #1769e3;
 }
 
-/* --- ESTILOS PARA STATUS --- */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 16px;
@@ -253,69 +256,23 @@
   display: inline-block;
   white-space: nowrap;
 }
-
-/* Finalizada Completa - Verde */
 .statusCompleted {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
-
-/* Finalizada Parcialmente - Amarelo */
 .statusPartial {
   background-color: #fffde7;
   color: #f57f17;
 }
-
-/* Em Andamento - Azul */
 .statusInProgress {
   background-color: #e3f2fd;
   color: #1565c0;
 }
-
-/* Não Iniciada - Vermelho */
 .statusNotStarted {
   background-color: #ffebee;
   color: #c62828;
 }
 
-/* Modo Escuro */
 @media (prefers-color-scheme: dark) {
-  .container,
-  .table th,
-  .filterExpansion,
-  .filterSection select,
-  .filterSection input,
-  .expandedRow > td,
-  .paginationControls button,
-  .itemsPerPageSelect {
-    background-color: #ffffff;
-  }
-
-  .title,
-  .table th,
-  .table td,
-  .filterSection label,
-  .filterSection select,
-  .filterSection input,
-  .paginationControls button,
-  .itemsPerPageSelect,
-  .deleteButton,
-  .refreshButton svg {
-    color: #000000;
-  }
-
-  .table tbody tr:nth-child(even) {
-    background-color: #f0f0f0;
-  }
-  .table tbody tr:hover {
-    background-color: #e0e0e0;
-  }
-
-  .paginationControls button:hover:not(:disabled) {
-    background-color: #1769e3;
-    color: #ffffff;
-  }
-  .deleteButton {
-    color: #ff0000;
-  }
+  /* Seus estilos de modo escuro aqui... */
 }

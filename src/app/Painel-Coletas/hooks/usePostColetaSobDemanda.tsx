@@ -1,3 +1,5 @@
+// src/app/inventarios/hooks/usePostColetaSobDemanda.ts
+
 import { useState, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
@@ -23,6 +25,7 @@ interface UsePostColetaResult {
   loading: boolean;
   error: string | null;
   success: boolean;
+  reset: () => void; // <-- NOVO: Adicionamos a função reset na interface
 }
 
 const usePostColetaSobDemanda = (): UsePostColetaResult => {
@@ -31,13 +34,11 @@ const usePostColetaSobDemanda = (): UsePostColetaResult => {
   const [success, setSuccess] = useState(false);
 
   const postColeta = useCallback(async (payload: PostColetaPayload) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
     try {
-      setLoading(true);
-      setError(null);
-      setSuccess(false);
-
       await axiosInstance.post("/coleta/cadastro/sob-demanda", payload);
-
       setSuccess(true);
     } catch (err) {
       const message =
@@ -50,11 +51,18 @@ const usePostColetaSobDemanda = (): UsePostColetaResult => {
     }
   }, []);
 
+  // <-- NOVO: Função para resetar os estados de success e error ---
+  const reset = useCallback(() => {
+    setError(null);
+    setSuccess(false);
+  }, []);
+
   return {
     postColeta,
     loading,
     error,
     success,
+    reset, // <-- NOVO: Expondo a função no retorno do hook
   };
 };
 

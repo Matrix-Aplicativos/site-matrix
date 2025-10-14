@@ -1,0 +1,215 @@
+/* src/app/inventarios/components/ModalCadastrarColeta.module.css */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modalContent {
+  background-color: var(--modal-bg-color); /* Dark Mode */
+  color: var(--item-count-text-color); /* Dark Mode */
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1000px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--wrapper-border-color); /* Dark Mode */
+}
+.modalHeader h2 {
+  margin: 0;
+}
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.modalBody {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.leftPanel,
+.rightPanel {
+  width: 50%;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.leftPanel {
+  border-right: 1px solid var(--wrapper-border-color); /* Dark Mode */
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.formSection label {
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.formSection input,
+.formSection select,
+.searchInput {
+  padding: 0.75rem;
+  border: 1px solid var(--input-border-color); /* Dark Mode */
+  background-color: var(--button-bg-color); /* Dark Mode */
+  color: var(--item-count-text-color); /* Dark Mode */
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+}
+.searchInput {
+  margin-bottom: 1rem;
+}
+
+.coletaItensSection,
+.rightPanel {
+  gap: 1rem;
+}
+.coletaItensSection h4,
+.rightPanel h4 {
+  margin: 0;
+}
+.coletaItensList,
+.produtoList {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--wrapper-border-color); /* Dark Mode */
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+.emptyList {
+  color: var(--text-placeholder-color); /* Dark Mode */
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.coletaItem,
+.produtoItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--wrapper-border-color); /* Dark Mode */
+}
+.coletaItemInfo,
+.produtoInfo {
+  flex-grow: 1;
+}
+.produtoInfo {
+  display: flex;
+  flex-direction: column;
+}
+.produtoInfo span {
+  font-size: 0.8rem;
+  color: var(--text-placeholder-color); /* Dark Mode */
+}
+.quantidadeInput {
+  width: 70px;
+  text-align: center;
+}
+
+.removerItemBtn,
+.adicionarItemBtn {
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.removerItemBtn {
+  background-color: #fbe9e7;
+  color: #d32f2f;
+}
+.adicionarItemBtn {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--wrapper-border-color); /* Dark Mode */
+}
+.submitButton,
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.submitButton {
+  background-color: var(--button-primary-bg);
+  color: var(--button-active-text-color);
+}
+.submitButton:disabled {
+  background-color: var(--button-primary-disabled-bg);
+  cursor: not-allowed;
+}
+.cancelButton {
+  background-color: var(--button-secondary-bg);
+  color: var(--item-count-text-color);
+}
+.cancelButton:hover {
+  background-color: var(--button-secondary-hover-bg);
+}
+
+.paginationControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--wrapper-border-color); /* Dark Mode */
+  margin-top: auto;
+}
+.paginationControls button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--button-border-color); /* Dark Mode */
+  background-color: var(--button-bg-color); /* Dark Mode */
+  color: var(--item-count-text-color); /* Dark Mode */
+  border-radius: 4px;
+  cursor: pointer;
+}
+.paginationControls button:hover {
+  background-color: var(--button-hover-bg-color);
+} /* Dark Mode */
+.paginationControls button:disabled {
+  background-color: var(--button-disabled-bg-color); /* Dark Mode */
+  color: var(--button-disabled-text-color); /* Dark Mode */
+  cursor: not-allowed;
+  opacity: 1;
+}
+.paginationControls span {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
