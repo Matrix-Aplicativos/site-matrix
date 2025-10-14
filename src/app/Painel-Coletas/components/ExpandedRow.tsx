@@ -1,9 +1,10 @@
-"use-client";
+"use client";
 
 import React, { useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import styles from "./ExpandedRow.module.css";
 import useGetColetaItens from "../hooks/useGetItensColeta";
+import PaginationControls from "./PaginationControls";
 
 interface ExpandedRowContentProps {
   coletaId: number;
@@ -11,43 +12,28 @@ interface ExpandedRowContentProps {
 
 type ExpandedDetailType = "lote" | "serie";
 
-const ITEMS_PER_PAGE = 5;
-
 const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
   coletaId,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [expandedDetails, setExpandedDetails] = useState<{
     codItem: number;
     type: ExpandedDetailType;
   } | null>(null);
 
-  const { itens, loading, error } = useGetColetaItens(
-    coletaId,
-    currentPage,
-    ITEMS_PER_PAGE
-  );
+  const { itens, loading, error, totalPaginas, totalElementos } =
+    useGetColetaItens(coletaId, currentPage, itemsPerPage);
 
-  const isLastPage = !itens || itens.length < ITEMS_PER_PAGE;
-  const showPagination =
-    currentPage > 1 || (itens && itens.length === ITEMS_PER_PAGE);
-
-  const handleNextItemPage = () => {
-    if (!isLastPage) {
-      setExpandedDetails(null);
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevItemPage = () => {
-    setExpandedDetails(null);
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleItemsPerPageChange = (newSize: number) => {
+    setItemsPerPage(newSize);
+    setCurrentPage(1);
   };
 
   const handleToggleDetails = (codItem: number, type: ExpandedDetailType) => {
     setExpandedDetails((prev) => {
       if (prev?.codItem === codItem && prev?.type === type) {
-        return null; 
+        return null;
       }
       return { codItem, type };
     });
@@ -109,7 +95,7 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
   };
 
   const renderTableBody = () => {
-    if (loading) {
+    if (loading && (!itens || itens.length === 0)) {
       return (
         <tr>
           <td colSpan={9} style={{ textAlign: "center" }}>
@@ -208,20 +194,16 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
         <tbody>{renderTableBody()}</tbody>
       </table>
 
-      {showPagination && (
-        <div className={styles.itemPagination}>
-          <button
-            onClick={handlePrevItemPage}
-            disabled={currentPage === 1 || loading}
-          >
-            &lt;
-          </button>
-          <span> {currentPage}</span>
-          <button onClick={handleNextItemPage} disabled={isLastPage || loading}>
-            &gt;
-          </button>
-        </div>
-      )}
+      <PaginationControls
+        paginaAtual={currentPage}
+        totalPaginas={totalPaginas}
+        totalElementos={totalElementos}
+        porPagina={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+        isLoading={loading}
+        itemsPerPageOptions={[5, 10, 20]}
+      />
     </div>
   );
 };

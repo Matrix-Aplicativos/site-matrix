@@ -72,8 +72,8 @@ const useGetColetas = (
   origem?: string,
   filtro?: string,
   valor?: string,
-  dataInicial?: string,
-  dataFinal?: string,
+  dataCadastroIni?: string,
+  dataCadastroFim?: string,
   enabled: boolean = true
 ): UseGetColetasHook => {
   const [coletas, setColetas] = useState<Coleta[] | null>(null);
@@ -104,8 +104,8 @@ const useGetColetas = (
       if (status) queryParams.append("situacao", status);
       if (origem) queryParams.append("origem", origem);
       if (filtro && valor) queryParams.append(filtro, valor);
-      if (dataInicial) queryParams.append("dataInicial", dataInicial);
-      if (dataFinal) queryParams.append("dataFinal", dataFinal);
+      if (dataCadastroIni) queryParams.append("dataCadastroIni", dataCadastroIni);
+      if (dataCadastroFim) queryParams.append("dataCadastroFim", dataCadastroFim);
       const response = await axiosInstance.get<ApiResponse>(
         `/coleta/empresa/${codEmpresa}?${queryParams}`
       );
@@ -134,8 +134,8 @@ const useGetColetas = (
     origem,
     filtro,
     valor,
-    dataInicial,
-    dataFinal,
+    dataCadastroIni,
+    dataCadastroFim,
     enabled,
   ]);
 

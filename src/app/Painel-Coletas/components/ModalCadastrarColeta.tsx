@@ -1,25 +1,35 @@
-// src/app/inventarios/components/ModalCadastrarColeta.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalCadastrarColeta.module.css";
 import usePostColetaSobDemanda from "../hooks/usePostColetaSobDemanda";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useGetEstoques from "../hooks/useGetEstoques";
 import { Produto } from "../utils/types/Produto";
+import { FaTrash } from "react-icons/fa";
+import SearchBar from "./SearchBar";
 
+// --- Constantes e Interfaces ---
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   codEmpresa: number;
   codUsuario: number;
-  tipoColeta: 1 | 2 | 3 | 4; // Agora aceita os tipos 3 e 4
+  tipoColeta: 1 | 2 | 3 | 4;
   titulo: string;
 }
 
 interface ItemNaColeta extends Produto {
   quantidade: number;
 }
+
+const FILTER_TO_API_PARAM: Record<string, string> = {
+  descricao: "descricao",
+  codigoErp: "codErp",
+  marca: "marca",
+  codBarra: "codBarras",
+  codReferencia: "codReferencia",
+  codFabricante: "codFabricante",
+};
 
 const ModalCadastrarColeta: React.FC<ModalProps> = ({
   isOpen,
@@ -30,19 +40,31 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
   tipoColeta,
   titulo,
 }) => {
+  // --- ESTADOS ---
   const [descricao, setDescricao] = useState("");
   const [codAlocEstoqueOrigem, setCodAlocEstoqueOrigem] = useState<string>("");
   const [codAlocEstoqueDestino, setCodAlocEstoqueDestino] =
     useState<string>("");
   const [itensNaColeta, setItensNaColeta] = useState<ItemNaColeta[]>([]);
-  const [filtroProduto, setFiltroProduto] = useState("");
   const [paginaProdutos, setPaginaProdutos] = useState(1);
-  const porPaginaProdutos = 15;
-
-  // --- [NOVO] Estado interno para o tipo de conferência (3 ou 4) ---
+  const [quantidadeParaAdicionar, setQuantidadeParaAdicionar] =
+    useState<number>(1);
   const [tipoConferenciaInterno, setTipoConferenciaInterno] = useState<3 | 4>(
     tipoColeta === 4 ? 4 : 3
   );
+
+  const [productQuery, setProductQuery] = useState("");
+  const [selectedProductFilter, setSelectedProductFilter] =
+    useState("descricao");
+
+  const porPaginaProdutos = 15;
+
+  // --- HOOKS ---
+  const filtrosApi = useMemo(() => {
+    if (!productQuery) return {};
+    const apiParamKey = FILTER_TO_API_PARAM[selectedProductFilter];
+    return apiParamKey ? { [apiParamKey]: productQuery } : {};
+  }, [productQuery, selectedProductFilter]);
 
   const {
     postColeta,
@@ -62,42 +84,56 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     porPaginaProdutos,
     undefined,
     undefined,
-    undefined,
+    filtrosApi,
     isOpen
   );
-
-  const produtosFiltrados = useMemo(() => {
-    if (!produtos) return [];
-    if (!filtroProduto) return produtos;
-    return produtos.filter((p) =>
-      p.descricaoItem.toLowerCase().includes(filtroProduto.toLowerCase())
-    );
-  }, [produtos, filtroProduto]);
 
   useEffect(() => {
     if (!isOpen) {
       setDescricao("");
       setItensNaColeta([]);
-      setFiltroProduto("");
+      setProductQuery("");
+      setSelectedProductFilter("descricao");
       setCodAlocEstoqueDestino("");
       setCodAlocEstoqueOrigem("");
       setPaginaProdutos(1);
-      setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3); // Reseta para o padrão
+      setQuantidadeParaAdicionar(1);
+      setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3);
     }
   }, [isOpen, tipoColeta]);
 
-  const handleAdicionarItem = (produto: Produto) => {
-    if (itensNaColeta.find((item) => item.codItemApi === produto.codItemApi)) {
-      alert("Este item já foi adicionado.");
-      return;
-    }
-    setItensNaColeta((prev) => [...prev, { ...produto, quantidade: 1 }]);
+  const handleProductSearch = (query: string) => {
+    setProductQuery(query);
+    setPaginaProdutos(1);
   };
+
+  const handleAdicionarItem = (produto: Produto) => {
+    const itemExistente = itensNaColeta.find(
+      (item) => item.codItemApi === produto.codItemApi
+    );
+    if (itemExistente) {
+      setItensNaColeta((prev) =>
+        prev.map((item) =>
+          item.codItemApi === produto.codItemApi
+            ? { ...item, quantidade: item.quantidade + quantidadeParaAdicionar }
+            : item
+        )
+      );
+    } else {
+      setItensNaColeta((prev) => [
+        ...prev,
+        { ...produto, quantidade: quantidadeParaAdicionar },
+      ]);
+    }
+    setQuantidadeParaAdicionar(1);
+  };
+
   const handleRemoverItem = (codItemToRemove: number) => {
     setItensNaColeta((prev) =>
       prev.filter((item) => item.codItemApi !== codItemToRemove)
     );
   };
+
   const handleQuantidadeChange = (
     codItemToUpdate: number,
     novaQuantidade: string
@@ -115,36 +151,33 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!descricao) {
+      alert("O campo de descrição é obrigatório.");
+      return;
+    }
     if (itensNaColeta.length === 0) {
       alert("Adicione pelo menos um item à coleta.");
       return;
     }
-
     let payloadTipo = tipoColeta;
     let payloadOrigem = parseInt(codAlocEstoqueOrigem, 10) || 0;
     let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
-
-    // --- [NOVO] Lógica de payload para cada tipo de coleta ---
     if (tipoColeta === 1) {
-      // Inventário
       if (!codAlocEstoqueDestino) {
         alert("Para inventário, o estoque de destino é obrigatório.");
         return;
       }
-      payloadOrigem = payloadDestino; // Workaround para a API que não aceita 0
+      payloadOrigem = payloadDestino;
     } else if (tipoColeta === 2) {
-      // Transferência
       if (!codAlocEstoqueOrigem || !codAlocEstoqueDestino) {
         alert("Para transferência, a origem e o destino são obrigatórios.");
         return;
       }
     } else if (tipoColeta === 3 || tipoColeta === 4) {
-      // Conferência
-      payloadTipo = tipoConferenciaInterno; // Usa o tipo selecionado no radio button
-      payloadOrigem = 0; // Envia 0 como "nulo"
-      payloadDestino = 0; // Envia 0 como "nulo"
+      payloadTipo = tipoConferenciaInterno;
+      payloadOrigem = 0;
+      payloadDestino = 0;
     }
-
     await postColeta({
       codColeta: 0,
       codEmpresa,
@@ -167,6 +200,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       reset();
     }
   }, [success, onSuccess, reset]);
+
   useEffect(() => {
     if (postError) {
       alert(`Falha no cadastro: ${postError}`);
@@ -180,7 +214,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>{titulo}</h2>
+          <h1>{titulo}</h1>
           <button onClick={onClose} className={styles.closeButton}>
             &times;
           </button>
@@ -194,62 +228,57 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 type="text"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Digite o nome da coleta"
                 required
               />
-
-              {/* --- [NOVO] Renderização condicional dos campos --- */}
               {tipoColeta === 3 || tipoColeta === 4 ? (
                 <div className={styles.radioGroup}>
                   <label>Tipo de Conferência:</label>
-                  <div>
+                  <div className={styles.radioOptionsContainer}>
                     <label className={styles.radioLabel}>
+                      Conf. Venda
                       <input
                         type="radio"
                         value="3"
                         checked={tipoConferenciaInterno === 3}
                         onChange={() => setTipoConferenciaInterno(3)}
-                      />{" "}
-                      Conf. Venda
+                      />
                     </label>
                     <label className={styles.radioLabel}>
+                      Conf. Compra
                       <input
                         type="radio"
                         value="4"
                         checked={tipoConferenciaInterno === 4}
                         onChange={() => setTipoConferenciaInterno(4)}
-                      />{" "}
-                      Conf. Compra
+                      />
                     </label>
                   </div>
                 </div>
-              ) : (
-                <>
-                  {tipoColeta === 2 && (
-                    <label>
-                      Origem
-                      <select
-                        value={codAlocEstoqueOrigem}
-                        onChange={(e) =>
-                          setCodAlocEstoqueOrigem(e.target.value)
-                        }
-                        required
-                      >
-                        <option value="">
-                          {estoquesLoading
-                            ? "Carregando..."
-                            : "Selecione a Origem"}
+              ) : tipoColeta === 2 ? (
+                <div className={styles.stockSelectRow}>
+                  <label>
+                    Origem
+                    <select
+                      value={codAlocEstoqueOrigem}
+                      onChange={(e) => setCodAlocEstoqueOrigem(e.target.value)}
+                      required
+                    >
+                      <option value="">
+                        {estoquesLoading
+                          ? "Carregando..."
+                          : "Selecione a Origem"}
+                      </option>
+                      {estoques.map((e) => (
+                        <option
+                          key={e.codAlocEstoqueApi}
+                          value={e.codAlocEstoqueApi}
+                        >
+                          {e.descricao}
                         </option>
-                        {estoques.map((e) => (
-                          <option
-                            key={e.codAlocEstoqueApi}
-                            value={e.codAlocEstoqueApi}
-                          >
-                            {e.descricao}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
+                      ))}
+                    </select>
+                  </label>
                   <label>
                     Destino
                     <select
@@ -272,10 +301,33 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                       ))}
                     </select>
                   </label>
-                </>
+                </div>
+              ) : (
+                // tipoColeta === 1 (Inventário)
+                <label>
+                  Destino
+                  <select
+                    value={codAlocEstoqueDestino}
+                    onChange={(e) => setCodAlocEstoqueDestino(e.target.value)}
+                    required
+                  >
+                    <option value="">
+                      {estoquesLoading
+                        ? "Carregando..."
+                        : "Selecione o Destino"}
+                    </option>
+                    {estoques.map((e) => (
+                      <option
+                        key={e.codAlocEstoqueApi}
+                        value={e.codAlocEstoqueApi}
+                      >
+                        {e.descricao}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
             </div>
-
             <div className={styles.coletaItensSection}>
               <h4>Itens na Coleta ({itensNaColeta.length})</h4>
               <div className={styles.coletaItensList}>
@@ -287,8 +339,8 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                   itensNaColeta.map((item) => (
                     <div key={item.codItemApi} className={styles.coletaItem}>
                       <div className={styles.coletaItemInfo}>
-                        <span>
-                          {item.codItemApi} - {item.descricaoItem}
+                        <span className={styles.produtoDescricaoSingleLine}>
+                          {item.codItemErp} - {item.descricaoItem}
                         </span>
                       </div>
                       <input
@@ -307,7 +359,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                         onClick={() => handleRemoverItem(item.codItemApi)}
                         className={styles.removerItemBtn}
                       >
-                        -
+                        <FaTrash color="#DA072D" />
                       </button>
                     </div>
                   ))
@@ -316,24 +368,56 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
             </div>
           </div>
           <div className={styles.rightPanel}>
-            <h4>Buscar Produtos</h4>
-            <input
-              type="text"
-              placeholder="Digite para buscar..."
-              value={filtroProduto}
-              onChange={(e) => setFiltroProduto(e.target.value)}
-              className={styles.searchInput}
+            <SearchBar
+              placeholder="Qual produto deseja buscar?"
+              onSearch={handleProductSearch}
+              showFilterIcon={false}
             />
+            <div className={styles.controlsRow}>
+              <div className={styles.filterWrapper}>
+                <label htmlFor="productFilter">Buscar por</label>
+                <select
+                  id="productFilter"
+                  value={selectedProductFilter}
+                  onChange={(e) => setSelectedProductFilter(e.target.value)}
+                >
+                  <option value="descricao">Descrição</option>
+                  <option value="codigoErp">Código ERP</option>
+                  <option value="marca">Marca</option>
+                </select>
+              </div>
+              <div className={styles.qtyInputWrapper}>
+                <label htmlFor="quantidadeParaAdicionar">Quantidade</label>
+                <input
+                  id="quantidadeParaAdicionar"
+                  type="number"
+                  value={quantidadeParaAdicionar}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setQuantidadeParaAdicionar(val >= 1 ? val : 1);
+                  }}
+                  min="1"
+                />
+              </div>
+            </div>
             <div className={styles.produtoList}>
-              {produtosLoading && <p>Buscando produtos...</p>}
-              {!produtosLoading &&
-                produtosFiltrados?.map((produto) => (
+              {produtosLoading && (
+                <p className={styles.emptyList}>Buscando produtos...</p>
+              )}
+              {!produtosLoading && (!produtos || produtos.length === 0) && (
+                <p className={styles.emptyList}>Nenhum produto encontrado.</p>
+              )}
+              {produtos &&
+                produtos.map((produto) => (
                   <div key={produto.codItemApi} className={styles.produtoItem}>
                     <div className={styles.produtoInfo}>
-                      <strong>
-                        {produto.codItemApi} - {produto.descricaoItem}
+                      <strong className={styles.produtoDescricaoSingleLine}>
+                        {produto.descricaoItem}
                       </strong>
-                      <span>Marca: {produto.descricaoMarca}</span>
+                      <span>
+                        Cód. ERP: {produto.codItemErp} | Marca:{" "}
+                        {produto.descricaoMarca}
+                      </span>
                     </div>
                     <button
                       onClick={() => handleAdicionarItem(produto)}
@@ -347,16 +431,16 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
             <div className={styles.paginationControls}>
               <button
                 onClick={() => setPaginaProdutos((p) => p - 1)}
-                disabled={paginaProdutos <= 1}
+                disabled={paginaProdutos <= 1 || produtosLoading}
               >
                 Anterior
               </button>
               <span>
-                Página {paginaProdutos} de {totalPaginas}
+                Página {paginaProdutos} de {totalPaginas || 1}
               </span>
               <button
                 onClick={() => setPaginaProdutos((p) => p + 1)}
-                disabled={paginaProdutos >= totalPaginas}
+                disabled={paginaProdutos >= totalPaginas || produtosLoading}
               >
                 Próxima
               </button>

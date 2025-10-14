@@ -10,6 +10,7 @@ interface PaginationControlsProps {
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (size: number) => void;
   isLoading?: boolean;
+  itemsPerPageOptions?: number[];
 }
 
 const PaginationControls: React.FC<PaginationControlsProps> = ({
@@ -20,6 +21,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
   onPageChange,
   onItemsPerPageChange,
   isLoading = false,
+  itemsPerPageOptions = [20, 50, 100],
 }) => {
   const startItem = totalElementos > 0 ? (paginaAtual - 1) * porPagina + 1 : 0;
   const endItem = Math.min(paginaAtual * porPagina, totalElementos);
@@ -98,9 +100,11 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           disabled={isLoading}
         >
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
+          {itemsPerPageOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
       </div>
     </div>

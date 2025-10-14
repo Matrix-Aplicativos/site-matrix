@@ -63,7 +63,6 @@ const IconSync = () => (
   </svg>
 );
 
-// --- [ATUALIZADO] Interface local com os novos campos ---
 interface ColetaExibida {
   id: number;
   descricao: string;
@@ -75,9 +74,9 @@ interface ColetaExibida {
   status: string;
   integradoErp: boolean;
   qtdItens: number;
-  qtdItensConferidos: number; // NOVO
+  qtdItensConferidos: number;
   volumeTotal: number;
-  volumeConferido: number; // NOVO
+  volumeConferido: number;
 }
 interface ColumnConfig {
   key: keyof ColetaExibida;
@@ -105,14 +104,13 @@ const OPCOES_STATUS = {
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
-// --- [ATUALIZADO] Nova ordem e novas colunas ---
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
   { key: "qtdItens", label: "Qtd. Itens", sortable: false },
-  { key: "qtdItensConferidos", label: "Qtd. Itens Conf.", sortable: false }, // NOVO
+  { key: "qtdItensConferidos", label: "Qtd. Itens Conf.", sortable: false },
   { key: "volumeTotal", label: "Qtd. Volume", sortable: true },
-  { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true }, // NOVO
+  { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true },
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
@@ -204,7 +202,6 @@ const ConferenciasPage: React.FC = () => {
   );
   const isLoading = companyLoading || coletasLoading;
 
-  // --- [ATUALIZADO] Mapeamento dos novos campos ---
   const filteredData = useMemo(() => {
     if (!coletas) return [];
     return coletas.map((c) => ({
@@ -212,15 +209,15 @@ const ConferenciasPage: React.FC = () => {
       descricao: c.descricao,
       data: c.dataCadastro,
       dataFim: c.dataFim,
-      origem: String(c.origemCadastro),
+      origem: String(c.origem),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
       qtdItens: c.qtdItens,
-      qtdItensConferidos: c.qtdItensConferidos, // NOVO
+      qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
-      volumeConferido: c.volumeConferido, // NOVO
+      volumeConferido: c.volumeConferido,
     }));
   }, [coletas]);
 
@@ -307,7 +304,79 @@ const ConferenciasPage: React.FC = () => {
           </button>
         </div>
       </div>
-      {isFilterExpanded && <div className={styles.filterExpansion}>...</div>}
+
+      {isFilterExpanded && (
+        <div className={styles.filterExpansion}>
+          <div className={styles.filterSection}>
+            <label>Status:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="status-filter"
+                  checked={statusFiltro === ""}
+                  onChange={() => handleStatusChange("")}
+                />
+                Todos
+              </label>
+              {Object.entries(OPCOES_STATUS).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="status-filter"
+                    checked={statusFiltro === value}
+                    onChange={() => handleStatusChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filterSection}>
+            <label>Origem:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="origem-filter"
+                  checked={origemFiltro === ""}
+                  onChange={() => handleOrigemChange("")}
+                />
+                Todas
+              </label>
+              {Object.entries(OPCOES_ORIGEM).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="origem-filter"
+                    checked={origemFiltro === value}
+                    onChange={() => handleOrigemChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filterSection}>
+            <label>Período:</label>
+            <div className={styles.dateRange}>
+              <input
+                type="date"
+                name="startDate"
+                value={dateRange.startDate}
+                onChange={handleDateChange}
+              />
+              <input
+                type="date"
+                name="endDate"
+                value={dateRange.endDate}
+                onChange={handleDateChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -331,7 +400,6 @@ const ConferenciasPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
-                  {/* --- [ATUALIZADO] Nova ordem e novas células --- */}
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
