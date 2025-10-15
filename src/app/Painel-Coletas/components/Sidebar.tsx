@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCookie, getCookie } from "cookies-next";
-import "./Sidebar.css";
 import Link from "next/link";
+import "./Sidebar.css";
 
 // Hooks
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
@@ -13,7 +13,7 @@ import useExportColetasCSV from "../hooks/useExportColetasCSV";
 
 // Componentes e Utils
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import ExportCSVModal, { ExportOptions } from "./ExportCsvModal"; // Ajustei o nome do arquivo para o padrão (primeira letra maiúscula)
+import ExportCSVModal, { ExportOptions } from "./ExportCsvModal";
 
 // Ícones
 import {
@@ -39,16 +39,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
+  const [isCadastrosOpen, setIsCadastrosOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const router = useRouter();
   const token = getCookie("token");
   const { usuario } = useGetLoggedUser(getUserFromToken(String(token)) || 0);
-
   const { empresa } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
   const { exportar, exportando } = useExportColetasCSV();
-
-  const [isCadastrosOpen, setIsCadastrosOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -70,7 +69,6 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     }
   };
 
-  // 👇 FUNÇÃO CORRIGIDA 👇
   const handleExportConfirm = (options: ExportOptions) => {
     if (!codEmpresa) {
       alert("Por favor, selecione uma empresa antes de exportar.");
@@ -80,7 +78,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       codEmpresa: codEmpresa,
       dataInicial: options.startDate,
       dataFinal: options.endDate,
-      formatoRelatorio: options.formato, // ✨ CORREÇÃO: Adicionada esta linha
+      formatoRelatorio: options.formato,
       incluirItens: options.incluirItens,
       incluirLotes: options.incluirLotes,
       incluirNumerosSerie: options.incluirNumerosSerie,
@@ -102,36 +100,28 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
         <ul className="menu">
           <li>
-            {" "}
             <Link href="/Painel-Coletas" className="menu-item">
-              {" "}
-              <FiHome size={24} />{" "}
-              {isOpen && <span className="menu-text">Home</span>}{" "}
-            </Link>{" "}
+              <FiHome size={24} />
+              {isOpen && <span className="menu-text">Home</span>}
+            </Link>
           </li>
           <li>
-            {" "}
             <Link href="/Painel-Coletas/Inventario" className="menu-item">
-              {" "}
-              <FiLayers size={24} />{" "}
-              {isOpen && <span className="menu-text">Inventários</span>}{" "}
-            </Link>{" "}
+              <FiLayers size={24} />
+              {isOpen && <span className="menu-text">Inventários</span>}
+            </Link>
           </li>
           <li>
-            {" "}
             <Link href="/Painel-Coletas/Transferencia" className="menu-item">
-              {" "}
-              <FiRepeat size={24} />{" "}
-              {isOpen && <span className="menu-text">Transferências</span>}{" "}
-            </Link>{" "}
+              <FiRepeat size={24} />
+              {isOpen && <span className="menu-text">Transferências</span>}
+            </Link>
           </li>
           <li>
-            {" "}
             <Link href="/Painel-Coletas/Conferencias" className="menu-item">
-              {" "}
-              <FiClipboard size={24} />{" "}
-              {isOpen && <span className="menu-text">Conferências</span>}{" "}
-            </Link>{" "}
+              <FiClipboard size={24} />
+              {isOpen && <span className="menu-text">Conferências</span>}
+            </Link>
           </li>
 
           <li className="menu-item-wrapper">
@@ -143,12 +133,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
               {isOpen && <span className="menu-text">Cadastros</span>}
               {isOpen && (
                 <span className="dropdown-icon">
-                  {" "}
-                  {isCadastrosOpen ? (
-                    <FiChevronDown />
-                  ) : (
-                    <FiChevronRight />
-                  )}{" "}
+                  {isCadastrosOpen ? <FiChevronDown /> : <FiChevronRight />}
                 </span>
               )}
             </div>
@@ -156,51 +141,43 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
               className={`submenu ${isCadastrosOpen && isOpen ? "open" : ""}`}
             >
               <li>
-                {" "}
                 <Link
                   href="/Painel-Coletas/Dispositivos"
                   className="menu-item submenu-item"
                 >
-                  {" "}
-                  <FiSmartphone size={24} />{" "}
-                  {isOpen && <span className="menu-text">Dispositivos</span>}{" "}
-                </Link>{" "}
+                  <FiSmartphone size={24} />
+                  {isOpen && <span className="menu-text">Dispositivos</span>}
+                </Link>
               </li>
               <li>
-                {" "}
                 <Link
                   href="/Painel-Coletas/Produtos"
                   className="menu-item submenu-item"
                 >
-                  {" "}
-                  <FiPackage size={24} />{" "}
-                  {isOpen && <span className="menu-text">Produtos</span>}{" "}
-                </Link>{" "}
+                  <FiPackage size={24} />
+                  {isOpen && <span className="menu-text">Produtos</span>}
+                </Link>
               </li>
               <li>
-                {" "}
                 <Link
                   href="/Painel-Coletas/Funcionarios"
                   className="menu-item submenu-item"
                 >
-                  {" "}
-                  <FiUsers size={24} />{" "}
-                  {isOpen && <span className="menu-text">Funcionários</span>}{" "}
-                </Link>{" "}
+                  <FiUsers size={24} />
+                  {isOpen && <span className="menu-text">Funcionários</span>}
+                </Link>
               </li>
             </ul>
           </li>
 
           <li>
-            {" "}
             <Link
               href="/Painel-Coletas/SelecionarEmpresa"
               className="menu-item"
             >
-              {" "}
-              <HiOfficeBuilding size={24} />{" "}
-              {isOpen && <span className="menu-text">Mudar Empresa</span>}{" "}
-            </Link>{" "}
+              <HiOfficeBuilding size={24} />
+              {isOpen && <span className="menu-text">Mudar Empresa</span>}
+            </Link>
           </li>
 
           <li>

@@ -1,5 +1,6 @@
-// utils/types/Produto.ts
+// src/app/inventarios/utils/types/Produto.ts
 
+// Tipos auxiliares baseados no seu JSON
 export interface Multiplicador {
   qtdMultiplicador: number;
   codBarras: string;
@@ -12,6 +13,7 @@ export interface Lote {
   qtdItens: number;
 }
 
+// Interface principal do Produto, agora correspondendo 100% à sua API
 export interface Produto {
   codItemApi: number;
   codIntegracao: number;
@@ -27,12 +29,11 @@ export interface Produto {
   familia: string;
   departamento: string;
   unidade: string;
-  saldoDisponivel: number;
-  ativo: boolean;
   multiplicadores: Multiplicador[];
   utilizaLote: boolean;
   utilizaNumSerie: boolean;
   qtdConferida: number;
   lotes: Lote[];
   numerosSerie: string[];
+  // O campo qtdEstoque não existe no novo JSON, então foi removido.
 }

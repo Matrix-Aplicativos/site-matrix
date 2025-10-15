@@ -1,0 +1,330 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modalContent {
+  background-color: var(--modal-bg-color);
+  color: var(--item-count-text-color);
+  border-radius: 8px;
+  width: 95%;
+  max-width: 1500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  max-height: 95vh;
+}
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--wrapper-border-color);
+  flex-shrink: 0;
+}
+.modalHeader h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: inherit;
+}
+.modalBody {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.leftPanel,
+.rightPanel {
+  width: 50%;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.leftPanel {
+  border-right: 1px solid var(--wrapper-border-color);
+}
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* ESPAÇAMENTO VERTICAL REDUZIDO */
+  flex-shrink: 0;
+}
+.formSection label {
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.formSection input,
+.formSection select {
+  padding: 0.75rem;
+  border: 1px solid var(--input-border-color);
+  background-color: var(--button-bg-color);
+  color: var(--item-count-text-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.stockSelectRow {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+.stockSelectRow > label {
+  width: 50%;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioOptionsContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2.5rem; /* espaçamento entre Conf. Venda e Conf. Compra */
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-weight: normal;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-direction: row;
+  white-space: nowrap;
+}
+
+.radioLabel input {
+  cursor: pointer;
+  margin: 0;
+}
+.coletaItensSection {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.coletaItensList {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid var(--wrapper-border-color);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+.controlsRow {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.filterWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-grow: 1;
+}
+.qtyInputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 150px;
+  flex-shrink: 0;
+}
+.filterWrapper label,
+.qtyInputWrapper label {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.filterWrapper select,
+.qtyInputWrapper input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--input-border-color);
+  background-color: var(--button-bg-color);
+  color: var(--item-count-text-color);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.coletaItensSection h4,
+.rightPanel h4 {
+  margin: 0;
+  flex-shrink: 0;
+}
+.produtoList {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--wrapper-border-color);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+.emptyList {
+  color: var(--text-placeholder-color);
+  text-align: center;
+  margin-top: 2rem;
+}
+.coletaItem,
+.produtoItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--wrapper-border-color);
+}
+.coletaItemInfo,
+.produtoInfo {
+  flex-grow: 1;
+  overflow: hidden;
+}
+.produtoInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.produtoDescricaoSingleLine {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* NOVO ESTILO PARA DESCRIÇÃO COM QUEBRA DE LINHA */
+.produtoDescricao {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limita a duas linhas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.4em; /* Evita que o layout "pule" quando o texto é menor */
+}
+
+.produtoInfo .produtoDescricao {
+  font-weight: bold;
+}
+.coletaItemInfo .produtoDescricaoSingleLine {
+  font-weight: normal;
+}
+.produtoInfo span {
+  font-size: 0.8rem;
+  color: var(--text-placeholder-color);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quantidadeInput {
+  width: 70px;
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid var(--input-border-color);
+  background-color: var(--button-bg-color);
+  color: var(--item-count-text-color);
+  border-radius: 4px;
+}
+.adicionarItemBtn {
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1769e3;
+  color: white;
+  flex-shrink: 0;
+  line-height: 1; /* Garante que a altura da linha não interfira */
+  padding: 0; /* Remove qualquer padding padrão */
+}
+.removerItemBtn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--wrapper-border-color);
+  flex-shrink: 0;
+}
+.submitButton,
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.submitButton {
+  background-color: var(--button-primary-bg);
+  color: var(--button-active-text-color);
+}
+.submitButton:disabled {
+  background-color: var(--button-primary-disabled-bg);
+  cursor: not-allowed;
+}
+.cancelButton {
+  background-color: var(--button-secondary-bg);
+  color: var(--item-count-text-color);
+}
+.paginationControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--wrapper-border-color);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.paginationControls button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--button-border-color);
+  background-color: var(--button-bg-color);
+  color: var(--item-count-text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.paginationControls button:hover {
+  background-color: var(--button-hover-bg-color);
+}
+.paginationControls button:disabled {
+  background-color: var(--button-disabled-bg-color);
+  color: var(--button-disabled-text-color);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.paginationControls span {
+  font-size: 0.85rem;
+  font-weight: bold;
+}

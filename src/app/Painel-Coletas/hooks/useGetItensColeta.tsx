@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
-// Suas interfaces permanecem as mesmas
+// --- Interfaces de Tipagem ---
+
 interface UsuarioBipagem {
   codUsuario: number;
   nome: string;
@@ -18,6 +19,7 @@ interface Lote {
 
 export interface ItemConferenciaDetalhado {
   codItem: number;
+  codItemCadastro: number; // Adicionado com base no JSON
   codConferencia: number;
   codIntegracao: number;
   codEmpresa: number;
@@ -37,11 +39,22 @@ export interface ItemConferenciaDetalhado {
   numerosSerie: string[];
 }
 
+// Interface para a resposta completa da API
+interface ApiResponse {
+  conteudo: ItemConferenciaDetalhado[];
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+}
+
+// Hook atualizado para retornar também os dados de paginação
 interface UseGetColetaItensHook {
   itens: ItemConferenciaDetalhado[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  totalPaginas: number;
+  totalElementos: number;
 }
 
 /**
@@ -61,6 +74,10 @@ const useGetColetaItens = (
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Estados para armazenar os dados de paginação
+  const [totalPaginas, setTotalPaginas] = useState<number>(0);
+  const [totalElementos, setTotalElementos] = useState<number>(0);
+
   const fetchItens = useCallback(async () => {
     if (!codColeta || !enabled) {
       setItens(null);
@@ -76,19 +93,20 @@ const useGetColetaItens = (
         porPagina: porPagina.toString(),
       });
 
-      const response = await axiosInstance.get(
-        `/coleta/${codColeta}/itens?${queryParams}`
+      // --- CAMINHO ALTERADO ---
+      const response = await axiosInstance.get<ApiResponse>(
+        `/coleta/${codColeta}/itens-painel?${queryParams}`
       );
 
-      const responseData = response.data;
-      // Lógica para extrair os dados, seja de um campo "dados" ou do corpo da resposta
-      const dados = Array.isArray(responseData.dados)
-        ? responseData.dados
-        : Array.isArray(responseData)
-        ? responseData
-        : [];
+      const { conteudo, qtdPaginas, qtdElementos } = response.data;
 
-      setItens(dados);
+      // --- LÓGICA DE EXTRAÇÃO CORRIGIDA ---
+      // Agora lê diretamente da propriedade "conteudo" e define um array vazio como fallback
+      setItens(conteudo || []);
+
+      // Armazena os dados de paginação no estado
+      setTotalPaginas(qtdPaginas || 0);
+      setTotalElementos(qtdElementos || 0);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError
@@ -105,7 +123,15 @@ const useGetColetaItens = (
     fetchItens();
   }, [fetchItens]);
 
-  return { itens, loading, error, refetch: fetchItens };
+  // Retorna os novos estados de paginação
+  return {
+    itens,
+    loading,
+    error,
+    refetch: fetchItens,
+    totalPaginas,
+    totalElementos,
+  };
 };
 
 export default useGetColetaItens;

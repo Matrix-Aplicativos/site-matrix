@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import styles from "./ExportCsvModal.module.css";
 
-// Interface para as opções de exportação
 export interface ExportOptions {
   startDate: string;
   endDate: string;
@@ -33,10 +32,6 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
   const [incluirLotes, setIncluirLotes] = useState(false);
   const [incluirNumerosSerie, setIncluirNumerosSerie] = useState(false);
 
-  if (!isOpen) {
-    return null;
-  }
-
   const handleConfirm = () => {
     if (!startDate || !endDate) {
       alert("Por favor, selecione a data de início e a data de fim.");
@@ -64,6 +59,10 @@ const ExportCSVModal: React.FC<ExportCSVModalProps> = ({
       incluirNumerosSerie,
     });
   };
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className={styles.modalOverlay}>

@@ -96,13 +96,19 @@
   background-color: #e9ecef;
 }
 
-/* --- Estilos para a Lista de Números de Série --- */
+.detailsTitle {
+  font-weight: bold;
+  margin: 0 0 12px 4px; /* Remove margem superior/lateral e adiciona inferior */
+  font-size: 1.1em;
+  color: #333;
+}
+
 .seriesContainer {
   max-height: 200px;
   overflow-y: auto;
   border: 1px solid #dee2e6;
   border-radius: 4px;
-  padding: 8px;
+  padding: 16px; /* Aumentado o padding para acomodar o título */
   background-color: #fff;
 }
 
@@ -115,13 +121,11 @@
 .seriesListItem {
   padding: 8px 12px;
   border-bottom: 1px solid #e9ecef;
-  font-family: monospace;
 }
 
 .seriesListItem:last-child {
   border-bottom: none;
 }
-
 /* --- Paginação --- */
 .itemPagination {
   display: flex;

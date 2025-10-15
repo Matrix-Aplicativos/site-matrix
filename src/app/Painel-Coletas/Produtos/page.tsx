@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import SearchBar from "../components/SearchBar";
+import { useEffect, useState, useMemo } from "react";
 import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { Produto } from "../utils/types/Produto";
+
+import SearchBar from "../components/SearchBar";
+import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 
-// --- Ícones e Interfaces (sem alterações) ---
+// --- Ícones, Interfaces e Constantes ---
+
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -29,6 +31,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -46,11 +49,6 @@ const IconSort = () => (
   </svg>
 );
 
-interface ColumnConfig {
-  key: keyof ProdutoExibido;
-  label: string;
-  sortable: boolean;
-}
 interface ProdutoExibido {
   id: number;
   codigoErp: string;
@@ -61,6 +59,13 @@ interface ProdutoExibido {
   codReferencia: string;
   codFabricante: string;
 }
+
+interface ColumnConfig {
+  key: keyof ProdutoExibido;
+  label: string;
+  sortable: boolean;
+}
+
 const SORT_COLUMN_MAP: { [key in keyof ProdutoExibido]?: string } = {
   codigoErp: "cadastroItem.codItemErp",
   descricao: "cadastroItem.descricaoItem",
@@ -80,8 +85,20 @@ const FILTER_TO_API_PARAM: Record<string, string> = {
   codFabricante: "codFabricante",
 };
 
+const columns: ColumnConfig[] = [
+  { key: "codigoErp", label: "Código ERP", sortable: true },
+  { key: "descricao", label: "Descrição", sortable: true },
+  { key: "unidade", label: "Unidade", sortable: true },
+  { key: "marca", label: "Marca", sortable: true },
+  { key: "codBarra", label: "Cód. Barras", sortable: true },
+  { key: "codReferencia", label: "Cód. Referência", sortable: true },
+  { key: "codFabricante", label: "Cód. Fabricante", sortable: true },
+];
+
 // --- Componente Principal ---
+
 const ProdutosPage: React.FC = () => {
+  // Declaração de States e Hooks
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -98,14 +115,9 @@ const ProdutosPage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
 
   const filtrosParaApi = useMemo(() => {
-    if (!query) {
-      return {};
-    }
+    if (!query) return {};
     const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
-    if (apiParamKey) {
-      return { [apiParamKey]: query };
-    }
-    return {};
+    return apiParamKey ? { [apiParamKey]: query } : {};
   }, [query, selectedFilter]);
 
   const {
@@ -127,6 +139,7 @@ const ProdutosPage: React.FC = () => {
 
   const isLoading = companyLoading || produtosLoading;
 
+  // Declaração de Funções e Lógica
   const displayedData = useMemo(() => {
     if (!produtos) return [];
     return produtos.map((p) => ({
@@ -141,15 +154,19 @@ const ProdutosPage: React.FC = () => {
     }));
   }, [produtos]);
 
+  useEffect(() => {
+    if (isLoading) showLoading();
+    else hideLoading();
+  }, [isLoading, showLoading, hideLoading]);
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
 
-  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
-    setPaginaAtual(1); // Essencial: Volta para a primeira página
+    setPaginaAtual(1);
   };
 
   const sortData = (key: keyof ProdutoExibido) => {
@@ -162,10 +179,8 @@ const ProdutosPage: React.FC = () => {
 
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
 
-  useEffect(() => {
-    if (isLoading) showLoading();
-    else hideLoading();
-  }, [isLoading, showLoading, hideLoading]);
+  // Declaração de Funções de renderização
+  // (Nenhuma função de renderização separada neste componente)
 
   if (produtosError) {
     return (
@@ -177,16 +192,7 @@ const ProdutosPage: React.FC = () => {
     );
   }
 
-  const columns: ColumnConfig[] = [
-    { key: "codigoErp", label: "Código ERP", sortable: true },
-    { key: "descricao", label: "Descrição", sortable: true },
-    { key: "unidade", label: "Unidade", sortable: true },
-    { key: "marca", label: "Marca", sortable: true },
-    { key: "codBarra", label: "Cód. Barras", sortable: true },
-    { key: "codReferencia", label: "Cód. Referência", sortable: true },
-    { key: "codFabricante", label: "Cód. Fabricante", sortable: true },
-  ];
-
+  // Return
   return (
     <div className={styles.container}>
       <LoadingOverlay />
@@ -199,7 +205,7 @@ const ProdutosPage: React.FC = () => {
         />
         <div className={styles.searchActions}>
           <button
-            className={styles.refreshButton}
+            className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar produtos"
             disabled={isLoading}
@@ -265,7 +271,6 @@ const ProdutosPage: React.FC = () => {
 
       {totalElementos > 0 && (
         <div className="footerControls">
-          {/* ATUALIZADO: A chamada do componente de paginação */}
           <PaginationControls
             paginaAtual={paginaAtual}
             totalPaginas={totalPaginas}

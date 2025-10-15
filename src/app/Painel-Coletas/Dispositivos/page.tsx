@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
+import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
-import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
 
-// Componente IconSort
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +28,6 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes ---
 interface DispositivoExibido {
   nome: string;
   codigo: string;
@@ -42,7 +40,12 @@ const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   status: "ativo",
 };
 
-// --- Componente da Página ---
+const columns: { key: keyof DispositivoExibido; label: string }[] = [
+  { key: "nome", label: "Nome" },
+  { key: "codigo", label: "Código" },
+  { key: "status", label: "Status" },
+];
+
 const DispositivosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -80,11 +83,13 @@ const DispositivosPage: React.FC = () => {
   const isLoading = companyLoading || dispositivosLoading || loadingConfig;
   const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
 
-  const columns: { key: keyof DispositivoExibido; label: string }[] = [
-    { key: "nome", label: "Nome" },
-    { key: "codigo", label: "Código" },
-    { key: "status", label: "Status" },
-  ];
+  useEffect(() => {
+    if (isLoading) {
+      showLoading();
+    } else {
+      hideLoading();
+    }
+  }, [isLoading, showLoading, hideLoading]);
 
   const handleSort = (key: keyof DispositivoExibido) => {
     const direction =
@@ -115,19 +120,10 @@ const DispositivosPage: React.FC = () => {
     await refetch();
   };
 
-  // ADICIONADO: Função para lidar com a mudança do seletor de itens por página
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
-    setPaginaAtual(1); // Essencial: Volta para a primeira página
+    setPaginaAtual(1);
   };
-
-  useEffect(() => {
-    if (isLoading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
-  }, [isLoading, showLoading, hideLoading]);
 
   return (
     <div className={styles.container}>
@@ -239,7 +235,6 @@ const DispositivosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ATUALIZADO: A chamada do componente de paginação */}
       {totalElementos > 0 && (
         <div className={styles.footerControls}>
           <PaginationControls
@@ -248,7 +243,6 @@ const DispositivosPage: React.FC = () => {
             totalElementos={totalElementos}
             porPagina={porPagina}
             onPageChange={setPaginaAtual}
-            // ADICIONADO: Passando a nova função para a prop
             onItemsPerPageChange={handleItemsPerPageChange}
           />
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
+// A importação agora traz a interface com 'codFuncionario'
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 
 interface ApiResponseUsuarios {
@@ -27,7 +28,6 @@ const useGetUsuarios = (
   porPagina: number,
   orderBy?: string,
   direction?: "asc" | "desc",
-  // ALTERADO: Em vez de 'filtro' e 'valor', agora aceitamos um objeto genérico
   filtros?: Record<string, string | boolean>,
   enabled: boolean = true
 ): UseGetUsuariosHook => {
@@ -55,10 +55,8 @@ const useGetUsuarios = (
       if (orderBy) queryParams.append("orderBy", orderBy);
       if (direction) queryParams.append("direction", direction);
 
-      // ADICIONADO: Lógica para adicionar dinamicamente os filtros à URL
       if (filtros) {
         Object.entries(filtros).forEach(([key, value]) => {
-          // Checa se o valor não é nulo ou indefinido antes de adicionar
           if (value !== null && value !== undefined) {
             queryParams.append(key, String(value));
           }
@@ -86,15 +84,7 @@ const useGetUsuarios = (
     } finally {
       setLoading(false);
     }
-  }, [
-    codEmpresa,
-    pagina,
-    porPagina,
-    orderBy,
-    direction,
-    filtros, // ALTERADO: A dependência agora é o objeto de filtros
-    enabled,
-  ]);
+  }, [codEmpresa, pagina, porPagina, orderBy, direction, filtros, enabled]);
 
   useEffect(() => {
     fetchUsuarios();

@@ -1,6 +1,6 @@
-// src/components/SearchBar.tsx (ATUALIZADO)
+"use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { FaFilter } from "react-icons/fa";
 import styles from "./SearchBar.module.css";
 
@@ -30,7 +30,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <form className={styles.searchBarContainer} onSubmit={handleSubmit}>
-      {/* NOVO: Wrapper para agrupar o input e o ícone */}
       <div className={styles.inputWrapper}>
         <input
           type="text"
@@ -39,7 +38,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
           onChange={handleInputChange}
           className={styles.input}
         />
-        {/* O ícone agora está DENTRO do wrapper, junto com o input */}
         {showFilterIcon && (
           <FaFilter className={styles.icon} onClick={onFilterClick} />
         )}
