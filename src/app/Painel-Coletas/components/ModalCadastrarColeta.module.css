@@ -111,8 +111,8 @@
   cursor: pointer;
   border: none;
   padding: 0;
-  flex-direction: row; 
-  white-space: nowrap; 
+  flex-direction: row;
+  white-space: nowrap;
 }
 
 .radioLabel input {
@@ -200,12 +200,24 @@
   display: flex;
   flex-direction: column;
 }
+
 .produtoDescricaoSingleLine {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.produtoInfo .produtoDescricaoSingleLine {
+
+/* NOVO ESTILO PARA DESCRIÇÃO COM QUEBRA DE LINHA */
+.produtoDescricao {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limita a duas linhas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.4em; /* Evita que o layout "pule" quando o texto é menor */
+}
+
+.produtoInfo .produtoDescricao {
   font-weight: bold;
 }
 .coletaItemInfo .produtoDescricaoSingleLine {
@@ -242,6 +254,8 @@
   background-color: #1769e3;
   color: white;
   flex-shrink: 0;
+  line-height: 1; /* Garante que a altura da linha não interfira */
+  padding: 0; /* Remove qualquer padding padrão */
 }
 .removerItemBtn {
   background-color: transparent;

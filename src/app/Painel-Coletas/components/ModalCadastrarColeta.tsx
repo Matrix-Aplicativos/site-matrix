@@ -384,6 +384,9 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                   <option value="descricao">Descrição</option>
                   <option value="codigoErp">Código ERP</option>
                   <option value="marca">Marca</option>
+                  <option value="codBarra">Cód. Barras</option>
+                  <option value="codReferencia">Cód. Referência</option>
+                  <option value="codFabricante">Cód. Fabricante</option>
                 </select>
               </div>
               <div className={styles.qtyInputWrapper}>
@@ -411,12 +414,12 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 produtos.map((produto) => (
                   <div key={produto.codItemApi} className={styles.produtoItem}>
                     <div className={styles.produtoInfo}>
-                      <strong className={styles.produtoDescricaoSingleLine}>
-                        {produto.descricaoItem}
+                      <strong className={styles.produtoDescricao}>
+                        {produto.descricaoItem} - {produto.descricaoMarca}
                       </strong>
                       <span>
-                        Cód. ERP: {produto.codItemErp} | Marca:{" "}
-                        {produto.descricaoMarca}
+                        Cód. ERP: {produto.codItemErp} | Cód. Barra:{" "}
+                        {produto.codBarra}
                       </span>
                     </div>
                     <button

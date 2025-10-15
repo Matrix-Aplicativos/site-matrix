@@ -211,6 +211,7 @@
   flex-grow: 1;
 }
 
+/* --- [NOVO] Estilo unificado para os botões de ação --- */
 .actionButton {
   display: flex;
   align-items: center;
@@ -257,26 +258,18 @@
   display: inline-block;
   white-space: nowrap;
 }
-
-/* Finalizada Completa - Verde */
 .statusCompleted {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
-
-/* Finalizada Parcialmente - Amarelo */
 .statusPartial {
   background-color: #fffde7;
   color: #f57f17;
 }
-
-/* Em Andamento - Azul */
 .statusInProgress {
   background-color: #e3f2fd;
   color: #1565c0;
 }
-
-/* Não Iniciada - Vermelho */
 .statusNotStarted {
   background-color: #ffebee;
   color: #c62828;
@@ -294,7 +287,6 @@
   .itemsPerPageSelect {
     background-color: #ffffff;
   }
-
   .title,
   .table th,
   .table td,
@@ -303,19 +295,15 @@
   .filterSection input,
   .paginationControls button,
   .itemsPerPageSelect,
-  .deleteButton,
-  .refreshButton svg,
-  .actionButton {
+  .deleteButton {
     color: #000000;
   }
-
   .table tbody tr:nth-child(even) {
     background-color: #f0f0f0;
   }
   .table tbody tr:hover {
     background-color: #e0e0e0;
   }
-
   .paginationControls button:hover:not(:disabled) {
     background-color: #1769e3;
     color: #ffffff;
@@ -323,4 +311,7 @@
   .deleteButton {
     color: #ff0000;
   }
+  /* ATENÇÃO: Seus estilos de modo escuro parecem estar forçando um tema claro.
+     Verifique se as cores como 'background-color: #ffffff' e 'color: #000000'
+     estão corretas ou se deveriam usar as variáveis do seu globals.css. */
 }

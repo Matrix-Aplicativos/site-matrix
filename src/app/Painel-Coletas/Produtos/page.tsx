@@ -205,7 +205,7 @@ const ProdutosPage: React.FC = () => {
         />
         <div className={styles.searchActions}>
           <button
-            className={styles.refreshButton}
+            className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar produtos"
             disabled={isLoading}

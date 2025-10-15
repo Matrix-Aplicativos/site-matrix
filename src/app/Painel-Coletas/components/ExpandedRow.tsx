@@ -79,6 +79,7 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
             )}
             {expandedDetails?.type === "serie" && (
               <div className={styles.seriesContainer}>
+                <h3 className={styles.detailsTitle}>Números de Série</h3>
                 <ul className={styles.seriesList}>
                   {item.numerosSerie.map((num: string, index: number) => (
                     <li key={index} className={styles.seriesListItem}>

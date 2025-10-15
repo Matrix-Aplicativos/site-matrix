@@ -9,6 +9,7 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
+import ModalPermissoes from "../components/ModalPermissoes";
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -17,7 +18,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#1565c0"
+    stroke="currentColor" // Alterado para herdar a cor do botão
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -51,14 +52,17 @@ interface FuncionarioExibido {
   cpf: string;
   email: string;
   status: boolean;
+  originalUser: UsuarioGet; // Para passar o objeto completo para o modal
 }
 interface ColumnConfig {
-  key: keyof FuncionarioExibido;
+  key: keyof FuncionarioExibido | "acoes";
   label: string;
   sortable: boolean;
 }
 
-const SORT_COLUMN_MAP: { [key in keyof FuncionarioExibido]?: string } = {
+const SORT_COLUMN_MAP: {
+  [key in keyof Omit<FuncionarioExibido, "originalUser">]?: string;
+} = {
   codigo: "codFuncionarioErp",
   nome: "nome",
   cpf: "cpf",
@@ -77,6 +81,7 @@ const columns: ColumnConfig[] = [
   { key: "cpf", label: "CPF", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "status", label: "Status", sortable: true },
+  { key: "acoes", label: "Ações", sortable: false },
 ];
 
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
@@ -99,6 +104,8 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -138,7 +145,7 @@ const FuncionariosPage: React.FC = () => {
   const isLoading = companyLoading || usuariosLoading;
 
   // Declaração de Funções e Lógica
-  const displayedData = useMemo(() => {
+  const displayedData: FuncionarioExibido[] = useMemo(() => {
     if (!usuarios) return [];
     return usuarios.map((u) => ({
       codigo: u.codUsuarioErp,
@@ -146,6 +153,7 @@ const FuncionariosPage: React.FC = () => {
       cpf: u.cpf,
       email: u.email,
       status: u.ativo,
+      originalUser: u,
     }));
   }, [usuarios]);
 
@@ -153,6 +161,31 @@ const FuncionariosPage: React.FC = () => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
+
+  const handleOpenModal = (usuario: UsuarioGet) => {
+    setSelectedUser(usuario);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleSavePermissions = async (
+    userId: number,
+    newPermissions: string[]
+  ) => {
+    console.log(
+      `Salvando permissões para o usuário ${userId}:`,
+      newPermissions
+    );
+    // TODO: Adicionar chamada à API para salvar as permissões
+    // Ex: await updateUserPermissions({ userId, permissions: newPermissions });
+    alert("Permissões salvas com sucesso! (Simulação)");
+    handleCloseModal();
+    refetch(); // Atualiza a lista
+  };
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -193,6 +226,14 @@ const FuncionariosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
+      {selectedUser && (
+        <ModalPermissoes
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          usuario={selectedUser}
+          onSave={handleSavePermissions}
+        />
+      )}
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
       <div className={styles.searchContainer}>
         <SearchBar
@@ -202,12 +243,12 @@ const FuncionariosPage: React.FC = () => {
         />
         <div className={styles.searchActions}>
           <button
-            className={styles.refreshButton}
+            className={styles.actionButton} // Classe unificada
             onClick={() => refetch()}
             title="Atualizar funcionários"
             disabled={isLoading}
           >
-            <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+            <span>Atualizar</span>
             <IconRefresh className={isLoading ? styles.spinning : ""} />
           </button>
         </div>
@@ -272,7 +313,10 @@ const FuncionariosPage: React.FC = () => {
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  onClick={() => col.sortable && sortData(col.key)}
+                  onClick={() =>
+                    col.sortable &&
+                    sortData(col.key as keyof FuncionarioExibido)
+                  }
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
@@ -298,6 +342,14 @@ const FuncionariosPage: React.FC = () => {
                   >
                     {getStatusText(row.status)}
                   </span>
+                </td>
+                <td>
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => handleOpenModal(row.originalUser)}
+                  >
+                    Permissões
+                  </button>
                 </td>
               </tr>
             ))}
