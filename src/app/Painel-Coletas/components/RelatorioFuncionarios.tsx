@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, ReactNode } from "react";
+import { useMemo, ReactNode, Dispatch, SetStateAction } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -13,8 +13,8 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import styles from "./RelatorioFuncionarios.module.css";
-import useCurrentCompany from "../hooks/useCurrentCompany";
-import useGetGraficoFuncionarios from "../hooks/useGetGraficoFuncionarios";
+// Assumindo que o tipo dos dados do gráfico seja exportado do hook
+import { DadosFuncionario } from "../hooks/useGetGraficoFuncionarios";
 
 ChartJS.register(
   CategoryScale,
@@ -26,8 +26,7 @@ ChartJS.register(
   ChartDataLabels
 );
 
-const toISODateString = (date: Date) => date.toISOString().split("T")[0];
-
+// --- Tipos e Constantes ---
 type TipoMetrica =
   | "coletasRealizadas"
   | "itensDistintosBipados"
@@ -53,48 +52,41 @@ const OPCOES_TIPO = {
 };
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
 
-export default function RelatorioFuncionarios() {
-  const { empresa } = useCurrentCompany();
-  const codEmpresa = empresa?.codEmpresa;
+// --- Interface de Props para o Componente ---
+interface RelatorioFuncionariosProps {
+  dados: DadosFuncionario[] | null;
+  loading: boolean;
+  error: string | null;
+  dataInicioInput: string;
+  setDataInicioInput: Dispatch<SetStateAction<string>>;
+  dataFimInput: string;
+  setDataFimInput: Dispatch<SetStateAction<string>>;
+  tiposSelecionados: number[];
+  setTiposSelecionados: Dispatch<SetStateAction<number[]>>;
+  metricaSelecionada: TipoMetrica;
+  setMetricaSelecionada: Dispatch<SetStateAction<TipoMetrica>>;
+  handlePesquisar: () => void;
+}
 
-  const hoje = new Date();
-  const inicioDoMesCorrente = toISODateString(
-    new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-  );
-  const fimDoMesCorrente = toISODateString(
-    new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
-  );
-
-  const [dataInicioInput, setDataInicioInput] = useState(inicioDoMesCorrente);
-  const [dataFimInput, setDataFimInput] = useState(fimDoMesCorrente);
-  const [tiposSelecionados, setTiposSelecionados] =
-    useState<number[]>(TODOS_OS_TIPOS);
-  const [dateRangeAtivo, setDateRangeAtivo] = useState({
-    inicio: inicioDoMesCorrente,
-    fim: fimDoMesCorrente,
-  });
-  const [metricaSelecionada, setMetricaSelecionada] =
-    useState<TipoMetrica>("coletasRealizadas");
-
-  const { dados, loading, error } = useGetGraficoFuncionarios(
-    codEmpresa,
-    dateRangeAtivo.inicio,
-    dateRangeAtivo.fim,
-    tiposSelecionados
-  );
-
-  const handlePesquisar = () => {
-    setDateRangeAtivo({
-      inicio: dataInicioInput,
-      fim: dataFimInput,
-    });
-  };
-
+export default function RelatorioFuncionarios({
+  dados,
+  loading,
+  error,
+  dataInicioInput,
+  setDataInicioInput,
+  dataFimInput,
+  setDataFimInput,
+  tiposSelecionados,
+  setTiposSelecionados,
+  metricaSelecionada,
+  setMetricaSelecionada,
+  handlePesquisar,
+}: RelatorioFuncionariosProps) {
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
       if (estaTentandoDesmarcar && prev.length === 1) {
-        return prev; 
+        return prev;
       }
       return estaTentandoDesmarcar
         ? prev.filter((t) => t !== tipoValor)
@@ -104,7 +96,8 @@ export default function RelatorioFuncionarios() {
 
   const handleToggleTodosTipos = () => {
     if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
-      return; 
+      // Se todos já estão selecionados, não faz nada para evitar desmarcar o último
+      return;
     } else {
       setTiposSelecionados(TODOS_OS_TIPOS);
     }
@@ -122,21 +115,18 @@ export default function RelatorioFuncionarios() {
         label: "Coletas Realizadas",
         data: dadosOrdenados.map((d) => d.coletasRealizadas),
         backgroundColor: coresMetricas.coletasRealizadas,
-        yAxisID: "y",
       },
       {
         id: "itensDistintosBipados",
         label: "Itens Bipados",
         data: dadosOrdenados.map((d) => d.itensDistintosBipados),
         backgroundColor: coresMetricas.itensDistintosBipados,
-        yAxisID: "y",
       },
       {
         id: "volumeTotalBipado",
         label: "Volume Total",
         data: dadosOrdenados.map((d) => d.volumeTotalBipado),
         backgroundColor: coresMetricas.volumeTotalBipado,
-        yAxisID: "y",
       },
     ];
 
@@ -173,9 +163,6 @@ export default function RelatorioFuncionarios() {
           },
         },
         y: {
-          type: "linear" as const,
-          display: true,
-          position: "left" as const,
           beginAtZero: true,
           title: {
             display: true,

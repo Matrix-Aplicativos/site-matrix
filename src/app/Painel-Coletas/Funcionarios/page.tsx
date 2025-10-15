@@ -11,6 +11,7 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 import ModalPermissoes from "../components/ModalPermissoes";
 
+// --- Ícones (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -18,15 +19,16 @@ const IconRefresh = ({ className }: { className?: string }) => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor" // Alterado para herdar a cor do botão
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    <polyline points="23 4 23 10 17 10"></polyline>
-    <polyline points="1 20 1 14 7 14"></polyline>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+    {" "}
+    <polyline points="23 4 23 10 17 10"></polyline>{" "}
+    <polyline points="1 20 1 14 7 14"></polyline>{" "}
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
   </svg>
 );
 const IconSort = () => (
@@ -42,27 +44,29 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+    {" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
   </svg>
 );
 
+// --- Interfaces Internas (sem alterações) ---
 interface FuncionarioExibido {
-  codigo: number;
+  codigo: string;
   nome: string;
   cpf: string;
   email: string;
   status: boolean;
-  originalUser: UsuarioGet; // Para passar o objeto completo para o modal
+  originalUser: UsuarioGet;
 }
+type SortableColumn = keyof Omit<FuncionarioExibido, "originalUser">;
 interface ColumnConfig {
   key: keyof FuncionarioExibido | "acoes";
   label: string;
   sortable: boolean;
 }
 
-const SORT_COLUMN_MAP: {
-  [key in keyof Omit<FuncionarioExibido, "originalUser">]?: string;
-} = {
+// --- Constantes (sem alterações) ---
+const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
   codigo: "codFuncionarioErp",
   nome: "nome",
   cpf: "cpf",
@@ -83,14 +87,12 @@ const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "acoes", label: "Ações", sortable: false },
 ];
-
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
   status ? styles.statusCompleted : styles.statusNotStarted;
 
 // --- Componente Principal ---
 const FuncionariosPage: React.FC = () => {
-  // Declaração de States e Hooks
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -100,7 +102,7 @@ const FuncionariosPage: React.FC = () => {
   const [selectedFilter, setSelectedFilter] =
     useState<keyof FuncionarioExibido>("nome");
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof FuncionarioExibido;
+    key: SortableColumn;
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
@@ -144,7 +146,6 @@ const FuncionariosPage: React.FC = () => {
 
   const isLoading = companyLoading || usuariosLoading;
 
-  // Declaração de Funções e Lógica
   const displayedData: FuncionarioExibido[] = useMemo(() => {
     if (!usuarios) return [];
     return usuarios.map((u) => ({
@@ -166,53 +167,43 @@ const FuncionariosPage: React.FC = () => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
-
   const handleSavePermissions = async (
-    userId: number,
+    funcionarioId: number,
     newPermissions: string[]
   ) => {
     console.log(
-      `Salvando permissões para o usuário ${userId}:`,
+      `Salvando permissões para o funcionário ${funcionarioId}:`,
       newPermissions
     );
-    // TODO: Adicionar chamada à API para salvar as permissões
-    // Ex: await updateUserPermissions({ userId, permissions: newPermissions });
     alert("Permissões salvas com sucesso! (Simulação)");
     handleCloseModal();
-    refetch(); // Atualiza a lista
+    refetch();
   };
-
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
-
   const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
     setStatusFilter(newStatus);
     setPaginaAtual(1);
   };
-
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
-
-  const sortData = (key: keyof FuncionarioExibido) => {
+  const sortData = (key: SortableColumn) => {
     const direction: "asc" | "desc" =
       sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
         : "asc";
     setSortConfig({ key, direction });
   };
-
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
 
-  // Early Return
   if (usuariosError) {
     return (
       <div className={styles.container}>
@@ -222,7 +213,6 @@ const FuncionariosPage: React.FC = () => {
     );
   }
 
-  // Return
   return (
     <div className={styles.container}>
       <LoadingOverlay />
@@ -230,7 +220,7 @@ const FuncionariosPage: React.FC = () => {
         <ModalPermissoes
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          usuario={selectedUser}
+          usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
         />
       )}
@@ -243,7 +233,7 @@ const FuncionariosPage: React.FC = () => {
         />
         <div className={styles.searchActions}>
           <button
-            className={styles.actionButton} // Classe unificada
+            className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar funcionários"
             disabled={isLoading}
@@ -270,36 +260,38 @@ const FuncionariosPage: React.FC = () => {
               <option value="codigo">Código</option>
             </select>
           </div>
-
           <div className={styles.filterSection}>
             <label>Filtrar por Status:</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
+                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "todos"}
                   onChange={() => handleStatusChange("todos")}
-                />
-                Todos
+                />{" "}
+                Todos{" "}
               </label>
               <label className={styles.radioLabel}>
+                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "ativo"}
                   onChange={() => handleStatusChange("ativo")}
-                />
-                Ativo
+                />{" "}
+                Ativo{" "}
               </label>
               <label className={styles.radioLabel}>
+                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "inativo"}
                   onChange={() => handleStatusChange("inativo")}
-                />
-                Inativo
+                />{" "}
+                Inativo{" "}
               </label>
             </div>
           </div>
@@ -314,8 +306,7 @@ const FuncionariosPage: React.FC = () => {
                 <th
                   key={col.key}
                   onClick={() =>
-                    col.sortable &&
-                    sortData(col.key as keyof FuncionarioExibido)
+                    col.sortable && sortData(col.key as SortableColumn)
                   }
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
@@ -329,7 +320,9 @@ const FuncionariosPage: React.FC = () => {
           </thead>
           <tbody>
             {displayedData.map((row) => (
-              <tr key={row.codigo}>
+              <tr key={row.originalUser.codFuncionario}>
+                {" "}
+                {/* CHAVE PRINCIPAL AGORA É codFuncionario */}
                 <td>{row.codigo}</td>
                 <td>{row.nome}</td>
                 <td>{row.cpf}</td>
@@ -344,12 +337,18 @@ const FuncionariosPage: React.FC = () => {
                   </span>
                 </td>
                 <td>
-                  <button
-                    className={styles.actionButton}
-                    onClick={() => handleOpenModal(row.originalUser)}
-                  >
-                    Permissões
-                  </button>
+                  {/* LÓGICA FINAL E CORRETA */}
+                  {row.originalUser.codUsuario &&
+                  row.originalUser.codUsuario > 0 ? (
+                    <button
+                      className={styles.actionButton}
+                      onClick={() => handleOpenModal(row.originalUser)}
+                    >
+                      Permissões
+                    </button>
+                  ) : (
+                    "—" // Exibe um traço se não houver codUsuario
+                  )}
                 </td>
               </tr>
             ))}
