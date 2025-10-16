@@ -1,83 +1,67 @@
-import { useMemo } from "react";
-import { ChartData } from "chart.js";
+// Em: hooks/useGetGraficoColetas.ts
 
-interface Coleta {
-  dataCadastro: string;
+import { useState, useEffect } from "react";
+import { AxiosError } from "axios";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+
+// Interface para a resposta da nova API
+export interface DadosGraficoColeta {
+  periodo: string;
+  totalColetas: number;
+  contagemPorTipo: {
+    tipo: string;
+    quantidade: number;
+  }[];
 }
 
-export default function useGraficoColetas(
-  coletas: Coleta[] | null,
-  view: "mensal" | "anual"
-): ChartData<"bar"> {
-  return useMemo(() => {
-    if (!coletas || coletas.length === 0) {
-      return {
-        labels: [],
-        datasets: [],
-      };
+export default function useGetGraficoColetas(
+  codEmpresa: number | undefined,
+  dataInicio: string | null,
+  dataFim: string | null,
+  agrupamento: "DIA" | "MES"
+) {
+  const [dados, setDados] = useState<DadosGraficoColeta[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Não faz a chamada se os parâmetros essenciais não estiverem presentes
+    if (!codEmpresa || !dataInicio || !dataFim) {
+      setDados(null);
+      setLoading(false);
+      return;
     }
 
-    const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtual = hoje.getMonth();
-    const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
 
-    const labels =
-      view === "mensal"
-        ? Array.from({ length: diasNoMes }, (_, i) => (i + 1).toString())
-        : [
-            "Jan",
-            "Fev",
-            "Mar",
-            "Abr",
-            "Mai",
-            "Jun",
-            "Jul",
-            "Ago",
-            "Set",
-            "Out",
-            "Nov",
-            "Dez",
-          ];
-
-    const totais = Array(labels.length).fill(0);
-
-    coletas.forEach((coleta) => {
       try {
-        if (!coleta.dataCadastro) return;
+        const params = new URLSearchParams();
+        params.append("dataInicio", dataInicio);
+        params.append("dataFim", dataFim);
+        params.append("agrupamento", agrupamento);
 
-        const data = new Date(coleta.dataCadastro);
-        if (isNaN(data.getTime())) return;
+        const response = await axiosInstance.get<DadosGraficoColeta[]>(
+          `/coleta/grafico/${codEmpresa}`,
+          { params }
+        );
 
-        // Filtra apenas coletas do ano atual para o gráfico
-        if (data.getFullYear() !== anoAtual) return;
-
-        const index =
-          view === "mensal"
-            ? data.getMonth() === mesAtual
-              ? data.getDate() - 1
-              : -1
-            : data.getMonth();
-
-        if (index >= 0 && index < labels.length) {
-          totais[index]++;
-        }
-      } catch (error) {
-        console.error("Erro ao processar coleta:", error);
+        setDados(response.data);
+      } catch (err) {
+        const errorMessage =
+          err instanceof AxiosError
+            ? err.response?.data?.message || err.message
+            : "Ocorreu um erro ao buscar os dados do gráfico.";
+        setError(errorMessage);
+        setDados(null);
+      } finally {
+        setLoading(false);
       }
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: "Coletas",
-          data: totais,
-          backgroundColor: "rgba(54, 162, 235, 0.7)",
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1,
-        },
-      ],
     };
-  }, [coletas, view]);
+
+    fetchData();
+  }, [codEmpresa, dataInicio, dataFim, agrupamento]);
+
+  return { dados, loading, error };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,11 +12,25 @@ import {
   Legend,
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import useGetColetas from "../hooks/useGetColetas";
-import useGraficoColetas from "../hooks/useGraficoColetas";
+
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  addMonths,
+  subMonths,
+  addYears,
+  subYears,
+  getDaysInMonth,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import useGetGraficoColetas from "../hooks/useGraficoColetas";
 
+// Registra os componentes e plugins do Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -40,6 +54,18 @@ const placeholderStyle: React.CSSProperties = {
   color: "#666",
   textAlign: "center",
   padding: "20px",
+  fontSize: "1.1rem",
+};
+
+const buttonStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  background: "#e0e0e0",
+  color: "#333",
+  border: "1px solid #ccc",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontWeight: "bold",
+  transition: "all 0.2s ease",
 };
 
 export default function RelatorioColetas({
@@ -49,30 +75,130 @@ export default function RelatorioColetas({
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  const { coletas, loading: coletasLoading } = useGetColetas(
-    codEmpresa || 0,
-    1
+  const [dataExibicao, setDataExibicao] = useState(new Date());
+
+  const { dataInicio, dataFim } = useMemo(() => {
+    const baseDate = dataExibicao || new Date();
+    if (view === "mensal") {
+      const inicio = startOfMonth(baseDate);
+      const fim = endOfMonth(baseDate);
+      return {
+        dataInicio: format(inicio, "yyyy-MM-dd"),
+        dataFim: format(fim, "yyyy-MM-dd"),
+      };
+    } else {
+      const inicio = startOfYear(baseDate);
+      const fim = endOfYear(baseDate);
+      return {
+        dataInicio: format(inicio, "yyyy-MM-dd"),
+        dataFim: format(fim, "yyyy-MM-dd"),
+      };
+    }
+  }, [view, dataExibicao]);
+
+  const {
+    dados: dadosGrafico,
+    loading: coletasLoading,
+    error,
+  } = useGetGraficoColetas(
+    codEmpresa,
+    dataInicio,
+    dataFim,
+    view === "mensal" ? "DIA" : "MES"
   );
 
-  const chartData = useGraficoColetas(coletas, view);
-
-  const finalChartData = useMemo(() => {
-    if (!chartData?.datasets?.length) {
-      return chartData;
+  const chartData = useMemo(() => {
+    let labels: string[];
+    if (view === "mensal") {
+      const diasNoMes = getDaysInMonth(dataExibicao);
+      labels = Array.from({ length: diasNoMes }, (_, i) => (i + 1).toString());
+    } else {
+      labels = [
+        "Jan",
+        "Fev",
+        "Mar",
+        "Abr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Set",
+        "Out",
+        "Nov",
+        "Dez",
+      ];
     }
-    const newData = { ...chartData };
-    newData.datasets = chartData.datasets.map((dataset) => ({
-      ...dataset,
-      backgroundColor: "rgb(54, 162, 235)",
-      borderColor: "rgb(54, 162, 235)",
-    }));
-    return newData;
-  }, [chartData]);
+
+    const totais = Array(labels.length).fill(0);
+
+    if (dadosGrafico) {
+      dadosGrafico.forEach((dado) => {
+        let index = -1;
+        if (view === "mensal") {
+          const dia = new Date(`${dado.periodo}T12:00:00`).getDate();
+          index = dia - 1;
+        } else {
+          // anual
+          // ########## CORREÇÃO APLICADA AQUI ##########
+          // Extrai o mês da string "YYYY-MM"
+          const mes = parseInt(dado.periodo.split("-")[1], 10);
+          index = mes - 1;
+          // ###########################################
+        }
+
+        if (index >= 0 && index < totais.length) {
+          totais[index] = dado.totalColetas;
+        }
+      });
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Coletas",
+          data: totais,
+          backgroundColor: "rgb(54, 162, 235)",
+          borderColor: "rgb(54, 162, 235)",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [dadosGrafico, view, dataExibicao]);
 
   const isLoading = companyLoading || coletasLoading;
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.toLocaleString("pt-BR", { month: "long" });
+
+  const tituloGrafico = useMemo(() => {
+    const baseDate = dataExibicao || new Date();
+    if (view === "mensal") {
+      const mesAno = format(baseDate, "MMMM 'de' yyyy", { locale: ptBR });
+      return `Coletas por dia - ${
+        mesAno.charAt(0).toUpperCase() + mesAno.slice(1)
+      }`;
+    }
+    return `Coletas por mês - ${format(baseDate, "yyyy")}`;
+  }, [dataExibicao, view]);
+
+  const handleNavegacao = (direction: "anterior" | "proximo") => {
+    const fn =
+      direction === "anterior"
+        ? view === "mensal"
+          ? subMonths
+          : subYears
+        : view === "mensal"
+        ? addMonths
+        : addYears;
+    setDataExibicao((current) => fn(current, 1));
+  };
+
+  const isProximoDesabilitado = useMemo(() => {
+    const hoje = new Date();
+    const baseDate = dataExibicao || new Date();
+    if (view === "mensal") {
+      return startOfMonth(baseDate) >= startOfMonth(hoje);
+    }
+    return startOfYear(baseDate) >= startOfYear(hoje);
+  }, [dataExibicao, view]);
 
   const options = {
     responsive: true,
@@ -81,10 +207,7 @@ export default function RelatorioColetas({
       legend: { display: false },
       title: {
         display: true,
-        text:
-          view === "mensal"
-            ? `Coletas por dia - ${currentMonth}`
-            : `Coletas por mês - ${currentYear}`,
+        text: tituloGrafico,
         font: { size: 16 },
       },
       tooltip: {
@@ -131,6 +254,9 @@ export default function RelatorioColetas({
         </>
       );
     }
+    if (error) {
+      return <div style={placeholderStyle}>{error}</div>;
+    }
     if (!codEmpresa) {
       return (
         <div style={placeholderStyle}>
@@ -138,17 +264,18 @@ export default function RelatorioColetas({
         </div>
       );
     }
-    if (!finalChartData?.labels?.length) {
+    const semMovimentacao = chartData.datasets[0]?.data.every((d) => d === 0);
+    if (semMovimentacao) {
       return (
         <div style={placeholderStyle}>
           Nenhuma movimentação registrada no período selecionado.
         </div>
       );
     }
-    return <Bar data={finalChartData} options={options} />;
+
+    return <Bar data={chartData} options={options} />;
   };
 
-  // Return
   return (
     <div style={{ padding: "20px 0", width: "100%" }}>
       <div
@@ -159,9 +286,34 @@ export default function RelatorioColetas({
           marginBottom: "20px",
         }}
       >
-        <h2 style={{ marginLeft: 20, color: "#000", fontSize: "1.5rem" }}>
-          Relatório de Coletas
-        </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <h2
+            style={{
+              marginLeft: 20,
+              color: "#000",
+              fontSize: "1.5rem",
+              margin: 0,
+            }}
+          >
+            Relatório de Coletas
+          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <button
+              style={buttonStyle}
+              onClick={() => handleNavegacao("anterior")}
+            >
+              &lt;
+            </button>
+            <button
+              style={buttonStyle}
+              onClick={() => handleNavegacao("proximo")}
+              disabled={isProximoDesabilitado}
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
+
         <div style={{ display: "flex", gap: "10px" }}>
           <button
             style={{
