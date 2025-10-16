@@ -44,6 +44,7 @@ export default function HomePage() {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  // --- DADOS E LÓGICA DO RELATÓRIO DE COLETAS (CORRIGIDO) ---
   const hoje = new Date();
   const mesAnteriorDate = subMonths(hoje, 1);
 
@@ -58,6 +59,7 @@ export default function HomePage() {
   );
   const dataFimMesAnterior = format(endOfMonth(mesAnteriorDate), "yyyy-MM-dd");
 
+  // Busca os dados agregados para o mês atual
   const { dados: dadosMesAtual, loading: loadingMesAtual } =
     useGetGraficoColetas(
       codEmpresa,
@@ -82,8 +84,9 @@ export default function HomePage() {
     conferencias,
     variacaoColetas,
   } = useMemo(() => {
-    // Função auxiliar para processar os dados agregados do hook
-    const processarDadosAgregados = (dados: any[] | undefined) => {
+    // ########## CORREÇÃO APLICADA AQUI ##########
+    // Adicionado 'null' à tipagem do parâmetro 'dados'
+    const processarDadosAgregados = (dados: any[] | null | undefined) => {
       if (!dados || dados.length === 0) {
         return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 };
       }
@@ -185,6 +188,7 @@ export default function HomePage() {
     );
   }, [dadosFuncionarios]);
 
+  // --- GERENCIAMENTO DE LOADING GERAL ---
   const isLoading = companyLoading || loadingMesAtual || loadingMesAnterior;
   useEffect(() => {
     if (isLoading) {
@@ -282,6 +286,7 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* --- BLOCO DO RELATÓRIO DE FUNCIONÁRIOS (AGORA SEPARADO) --- */}
       <div className={styles.border}>
         <RelatorioFuncionarios
           dados={dadosFuncionarios}
