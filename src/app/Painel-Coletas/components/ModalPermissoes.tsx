@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalPermissoes.module.css";
-import { UsuarioGet } from "../utils/types/UsuarioGet"; // ALTERADO: Importa o tipo correto
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 import useGetUsuarioById from "../hooks/useGetUsuarioById";
+import useGetCargos from "../hooks/useGetCargos";
+import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargos";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  usuarioInfo: UsuarioGet; // ALTERADO: Aceita o tipo da lista (summary)
-  onSave: (userId: number, permissions: string[]) => void;
+  usuarioInfo: UsuarioGet;
+  onSave: () => void;
 }
 
-const PERMISSIONS_CATEGORIES = [
+const PERMISSION_DISPLAY_MAP = [
   {
     title: "Acessos Gerais",
     permissions: [
@@ -25,7 +27,7 @@ const PERMISSIONS_CATEGORIES = [
     ],
   },
   {
-    title: "Módulos MOVIX",
+    title: "Acessos MOVIX",
     permissions: [
       { key: "ROLE_MOVIX_INVENTARIO", description: "Visualizar Inventários" },
       {
@@ -58,19 +60,28 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   usuarioInfo,
   onSave,
 }) => {
-  // Busca os detalhes completos do usuário (incluindo cargos) quando o modal abre
   const {
     usuario: fullUser,
     loading: userLoading,
     error: userError,
-  } = useGetUsuarioById(
-    // ALTERADO: Lida com codUsuario opcional de forma segura
-    isOpen ? usuarioInfo.codUsuario ?? null : null
-  );
+  } = useGetUsuarioById(isOpen ? usuarioInfo.codUsuario ?? null : null);
+
+  const {
+    cargos: availableCargos,
+    loading: cargosLoading,
+    error: cargosError,
+  } = useGetCargos();
+
+  const {
+    updateCargos,
+    loading: updateLoading,
+    error: updateError,
+  } = useUpdateUsuarioCargos();
 
   const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
+  const isFetchingData = userLoading || cargosLoading;
+  const fetchError = userError || cargosError;
 
-  // Atualiza as permissões selecionadas quando os dados do usuário completo são carregados
   useEffect(() => {
     if (fullUser && fullUser.cargos) {
       const userRoles = fullUser.cargos.map((cargo) => cargo.nome);
@@ -80,6 +91,25 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     }
   }, [fullUser]);
 
+  const categorizedPermissions = useMemo(() => {
+    if (!availableCargos || availableCargos.length === 0) return [];
+    const availableRoleNames = new Set(availableCargos.map((c) => c.nomeCargo));
+    return PERMISSION_DISPLAY_MAP.map((category) => ({
+      ...category,
+      permissions: category.permissions.filter((p) =>
+        availableRoleNames.has(p.key)
+      ),
+    })).filter((category) => category.permissions.length > 0);
+  }, [availableCargos]);
+
+  const cargoNameToIdMap = useMemo(() => {
+    const map = new Map<string, number>();
+    availableCargos.forEach((cargo) => {
+      map.set(cargo.nomeCargo, cargo.codCargo);
+    });
+    return map;
+  }, [availableCargos]);
+
   const handleCheckboxChange = (permissionKey: string) => {
     setCurrentPermissions((prev) =>
       prev.includes(permissionKey)
@@ -88,29 +118,39 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     );
   };
 
-  const handleSaveClick = () => {
-    // ALTERADO: Adiciona uma verificação para garantir que codUsuario existe antes de salvar
-    if (usuarioInfo.codUsuario) {
-      onSave(usuarioInfo.codUsuario, currentPermissions);
-    } else {
-      console.error("Tentativa de salvar permissões sem um codUsuario válido.");
+  const handleSaveClick = async () => {
+    if (!usuarioInfo.codUsuario) {
+      console.error("ID do usuário é inválido.");
+      return;
+    }
+
+    const codCargosParaEnviar = currentPermissions
+      .map((permissionName) => cargoNameToIdMap.get(permissionName))
+      .filter((id): id is number => id !== undefined);
+
+    const success = await updateCargos(
+      usuarioInfo.codUsuario,
+      codCargosParaEnviar
+    );
+
+    if (success) {
+      onSave();
     }
   };
 
   if (!isOpen) return null;
 
-  // Função para renderizar o conteúdo do corpo do modal (sem alterações)
   const renderModalBody = () => {
-    if (userLoading) {
+    if (isFetchingData) {
       return (
         <div className={styles.loadingState}>Carregando permissões...</div>
       );
     }
-    if (userError) {
-      return <div className={styles.errorState}>{userError}</div>;
+    if (fetchError) {
+      return <div className={styles.errorState}>{fetchError}</div>;
     }
-    if (fullUser) {
-      return PERMISSIONS_CATEGORIES.map((category) => (
+    if (categorizedPermissions.length > 0) {
+      return categorizedPermissions.map((category) => (
         <div key={category.title} className={styles.categoryContainer}>
           <h4 className={styles.categoryTitle}>{category.title}</h4>
           <div className={styles.permissionsGrid}>
@@ -129,7 +169,11 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         </div>
       ));
     }
-    return null;
+    return (
+      <div className={styles.loadingState}>
+        Nenhum cargo disponível para seleção.
+      </div>
+    );
   };
 
   return (
@@ -144,15 +188,18 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         </div>
         <div className={styles.modalBody}>{renderModalBody()}</div>
         <div className={styles.modalFooter}>
+          <div className={styles.footerError}>
+            {updateError && <p className={styles.errorText}>{updateError}</p>}
+          </div>
           <button onClick={onClose} className={styles.cancelButton}>
             Cancelar
           </button>
           <button
             onClick={handleSaveClick}
             className={styles.saveButton}
-            disabled={userLoading || !!userError}
+            disabled={isFetchingData || updateLoading || !!fetchError}
           >
-            Salvar Alterações
+            {updateLoading ? "Salvando..." : "Salvar Alterações"}
           </button>
         </div>
       </div>

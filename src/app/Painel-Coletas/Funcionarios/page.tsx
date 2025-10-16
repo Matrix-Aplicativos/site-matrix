@@ -9,9 +9,9 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
-// import ModalPermissoes from "../components/ModalPermissoes"; // <-- Comentado
+import ModalPermissoes from "../components/ModalPermissoes";
 
-// --- Ícones (sem alterações) ---
+// --- Ícones ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -25,10 +25,9 @@ const IconRefresh = ({ className }: { className?: string }) => (
     strokeLinejoin="round"
     className={className}
   >
-    {" "}
-    <polyline points="23 4 23 10 17 10"></polyline>{" "}
-    <polyline points="1 20 1 14 7 14"></polyline>{" "}
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>{" "}
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
 const IconSort = () => (
@@ -44,12 +43,11 @@ const IconSort = () => (
     strokeLinejoin="round"
     style={{ marginLeft: "0.5em" }}
   >
-    {" "}
-    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>{" "}
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
 
-// --- Interfaces Internas (sem alterações) ---
+// --- Interfaces Internas ---
 interface FuncionarioExibido {
   codigo: string;
   nome: string;
@@ -85,7 +83,7 @@ const columns: ColumnConfig[] = [
   { key: "cpf", label: "CPF", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "status", label: "Status", sortable: true },
-  // { key: "acoes", label: "Ações", sortable: false }, // <-- Comentado
+  { key: "acoes", label: "Ações", sortable: false },
 ];
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
@@ -106,8 +104,8 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  // const [isModalOpen, setIsModalOpen] = useState(false); // <-- Comentado
-  // const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // <-- Comentado
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -163,7 +161,6 @@ const FuncionariosPage: React.FC = () => {
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
-  /* --- Lógica de Permissões Comentada ---
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
@@ -172,19 +169,12 @@ const FuncionariosPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
-  const handleSavePermissions = async (
-    funcionarioId: number,
-    newPermissions: string[]
-  ) => {
-    console.log(
-      `Salvando permissões para o funcionário ${funcionarioId}:`,
-      newPermissions
-    );
+
+  const handleSavePermissions = () => {
     alert("Permissões salvas com sucesso!");
     handleCloseModal();
     refetch();
   };
-  */
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -219,7 +209,6 @@ const FuncionariosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      {/* --- Modal de Permissões Comentado ---
       {selectedUser && (
         <ModalPermissoes
           isOpen={isModalOpen}
@@ -228,7 +217,6 @@ const FuncionariosPage: React.FC = () => {
           onSave={handleSavePermissions}
         />
       )}
-      */}
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
       <div className={styles.searchContainer}>
         <SearchBar
@@ -269,34 +257,31 @@ const FuncionariosPage: React.FC = () => {
             <label>Filtrar por Status:</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
-                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "todos"}
                   onChange={() => handleStatusChange("todos")}
-                />{" "}
-                Todos{" "}
+                />
+                Todos
               </label>
               <label className={styles.radioLabel}>
-                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "ativo"}
                   onChange={() => handleStatusChange("ativo")}
-                />{" "}
-                Ativo{" "}
+                />
+                Ativo
               </label>
               <label className={styles.radioLabel}>
-                {" "}
                 <input
                   type="radio"
                   name="status-funcionario"
                   checked={statusFilter === "inativo"}
                   onChange={() => handleStatusChange("inativo")}
-                />{" "}
-                Inativo{" "}
+                />
+                Inativo
               </label>
             </div>
           </div>
@@ -326,7 +311,6 @@ const FuncionariosPage: React.FC = () => {
           <tbody>
             {displayedData.map((row) => (
               <tr key={row.originalUser.codFuncionario}>
-                {" "}
                 <td>{row.codigo}</td>
                 <td>{row.nome}</td>
                 <td>{row.cpf}</td>
@@ -340,7 +324,6 @@ const FuncionariosPage: React.FC = () => {
                     {getStatusText(row.status)}
                   </span>
                 </td>
-                {/* --- Coluna de Ações Comentada ---
                 <td>
                   {row.originalUser.codUsuario &&
                   row.originalUser.codUsuario > 0 ? (
@@ -351,10 +334,9 @@ const FuncionariosPage: React.FC = () => {
                       Permissões
                     </button>
                   ) : (
-                    "—" 
+                    "—"
                   )}
                 </td>
-                */}
               </tr>
             ))}
           </tbody>
