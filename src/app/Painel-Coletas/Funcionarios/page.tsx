@@ -9,7 +9,7 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
-import ModalPermissoes from "../components/ModalPermissoes";
+// import ModalPermissoes from "../components/ModalPermissoes"; // <-- Comentado
 
 // --- Ícones (sem alterações) ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -65,7 +65,7 @@ interface ColumnConfig {
   sortable: boolean;
 }
 
-// --- Constantes (sem alterações) ---
+// --- Constantes ---
 const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
   codigo: "codFuncionarioErp",
   nome: "nome",
@@ -85,7 +85,7 @@ const columns: ColumnConfig[] = [
   { key: "cpf", label: "CPF", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "status", label: "Status", sortable: true },
-  { key: "acoes", label: "Ações", sortable: false },
+  // { key: "acoes", label: "Ações", sortable: false }, // <-- Comentado
 ];
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
@@ -106,8 +106,8 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
+  // const [isModalOpen, setIsModalOpen] = useState(false); // <-- Comentado
+  // const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // <-- Comentado
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -163,6 +163,7 @@ const FuncionariosPage: React.FC = () => {
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
+  /* --- Lógica de Permissões Comentada ---
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
@@ -179,10 +180,12 @@ const FuncionariosPage: React.FC = () => {
       `Salvando permissões para o funcionário ${funcionarioId}:`,
       newPermissions
     );
-    alert("Permissões salvas com sucesso! (Simulação)");
+    alert("Permissões salvas com sucesso!");
     handleCloseModal();
     refetch();
   };
+  */
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
@@ -216,6 +219,7 @@ const FuncionariosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
+      {/* --- Modal de Permissões Comentado ---
       {selectedUser && (
         <ModalPermissoes
           isOpen={isModalOpen}
@@ -224,6 +228,7 @@ const FuncionariosPage: React.FC = () => {
           onSave={handleSavePermissions}
         />
       )}
+      */}
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
       <div className={styles.searchContainer}>
         <SearchBar
@@ -322,7 +327,6 @@ const FuncionariosPage: React.FC = () => {
             {displayedData.map((row) => (
               <tr key={row.originalUser.codFuncionario}>
                 {" "}
-                {/* CHAVE PRINCIPAL AGORA É codFuncionario */}
                 <td>{row.codigo}</td>
                 <td>{row.nome}</td>
                 <td>{row.cpf}</td>
@@ -336,8 +340,8 @@ const FuncionariosPage: React.FC = () => {
                     {getStatusText(row.status)}
                   </span>
                 </td>
+                {/* --- Coluna de Ações Comentada ---
                 <td>
-                  {/* LÓGICA FINAL E CORRETA */}
                   {row.originalUser.codUsuario &&
                   row.originalUser.codUsuario > 0 ? (
                     <button
@@ -347,9 +351,10 @@ const FuncionariosPage: React.FC = () => {
                       Permissões
                     </button>
                   ) : (
-                    "—" // Exibe um traço se não houver codUsuario
+                    "—" 
                   )}
                 </td>
+                */}
               </tr>
             ))}
           </tbody>

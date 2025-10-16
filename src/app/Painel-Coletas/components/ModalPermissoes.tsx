@@ -1,5 +1,3 @@
-// ./src/app/Painel-Coletas/Funcionarios/components/ModalPermissoes.tsx (CORRIGIDO)
-
 import React, { useState, useEffect } from "react";
 import styles from "./ModalPermissoes.module.css";
 import { UsuarioGet } from "../utils/types/UsuarioGet"; // ALTERADO: Importa o tipo correto
@@ -12,14 +10,13 @@ interface ModalProps {
   onSave: (userId: number, permissions: string[]) => void;
 }
 
-// Estrutura de dados com as permissões organizadas por categoria (sem alterações)
 const PERMISSIONS_CATEGORIES = [
   {
     title: "Acessos Gerais",
     permissions: [
       {
         key: "ROLE_MOVIX_GESTOR",
-        description: "Acesso de Gestor (App e Painel Web)",
+        description: "Acesso de Gestor (Painel Web)",
       },
       {
         key: "ROLE_MOVIX_FUNCIONARIO",
