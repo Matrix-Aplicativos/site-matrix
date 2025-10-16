@@ -1,20 +1,28 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { isSameMonth, subMonths, isSameYear } from "date-fns";
+import {
+  isSameMonth,
+  subMonths,
+  isSameYear,
+  format,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 import styles from "./Home.module.css";
 import { useLoading } from "../shared/Context/LoadingContext";
 
 // Hooks de dados
-import useGetColetas from "./hooks/useGetColetas";
 import useCurrentCompany from "./hooks/useCurrentCompany";
+
 import useGetGraficoFuncionarios from "./hooks/useGetGraficoFuncionarios";
 
 // Componentes
 import RelatorioColetas from "./components/RelatorioColetas";
 import RelatorioFuncionarios from "./components/RelatorioFuncionarios";
-import EstatisticasFuncionarios from "./components/EstatisticasFuncionarios"; // <-- NOVO
+import EstatisticasFuncionarios from "./components/EstatisticasFuncionarios";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
+import useGetGraficoColetas from "./hooks/useGraficoColetas";
 
 // Função utilitária para data
 const toISODateString = (date: Date) => date.toISOString().split("T")[0];
@@ -36,11 +44,37 @@ export default function HomePage() {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // --- DADOS E LÓGICA DO RELATÓRIO DE COLETAS ---
-  const { coletas, loading: coletasLoading } = useGetColetas(
-    codEmpresa || 0,
-    1
+  const hoje = new Date();
+  const mesAnteriorDate = subMonths(hoje, 1);
+
+  // Período do mês atual
+  const dataInicioMesAtual = format(startOfMonth(hoje), "yyyy-MM-dd");
+  const dataFimMesAtual = format(endOfMonth(hoje), "yyyy-MM-dd");
+
+  // Período do mês anterior
+  const dataInicioMesAnterior = format(
+    startOfMonth(mesAnteriorDate),
+    "yyyy-MM-dd"
   );
+  const dataFimMesAnterior = format(endOfMonth(mesAnteriorDate), "yyyy-MM-dd");
+
+  const { dados: dadosMesAtual, loading: loadingMesAtual } =
+    useGetGraficoColetas(
+      codEmpresa,
+      dataInicioMesAtual,
+      dataFimMesAtual,
+      "DIA"
+    );
+
+  // Busca os dados agregados para o mês anterior (para comparação)
+  const { dados: dadosMesAnterior, loading: loadingMesAnterior } =
+    useGetGraficoColetas(
+      codEmpresa,
+      dataInicioMesAnterior,
+      dataFimMesAnterior,
+      "DIA"
+    );
+
   const {
     totalColetas,
     inventarios,
@@ -48,61 +82,61 @@ export default function HomePage() {
     conferencias,
     variacaoColetas,
   } = useMemo(() => {
-    // ... (lógica do useMemo de coletas permanece a mesma)
-    if (!coletas || coletas.length === 0)
-      return {
-        totalColetas: 0,
-        inventarios: 0,
-        transferencias: 0,
-        conferencias: 0,
-        coletasAnterior: 0,
-        variacaoColetas: null,
-      };
-    const hoje = new Date();
-    const mesAnterior = subMonths(hoje, 1);
-    let totalAtual = 0,
-      totalAnterior = 0,
-      tipo1 = 0,
-      tipo2 = 0,
-      tipo3e4 = 0;
-    coletas.forEach((c) => {
-      try {
-        if (!c.dataCadastro) return;
-        const data = new Date(c.dataCadastro);
-        if (isNaN(data.getTime())) return;
-        if (isSameMonth(data, hoje) && isSameYear(data, hoje)) {
-          totalAtual++;
-          if (c.tipo === 1) tipo1++;
-          else if (c.tipo === 2) tipo2++;
-          else if (c.tipo === 3 || c.tipo === 4) tipo3e4++;
-        } else if (
-          isSameMonth(data, mesAnterior) &&
-          isSameYear(data, mesAnterior)
-        ) {
-          totalAnterior++;
-        }
-      } catch (error) {
-        console.error("Date processing error:", error);
+    // Função auxiliar para processar os dados agregados do hook
+    const processarDadosAgregados = (dados: any[] | undefined) => {
+      if (!dados || dados.length === 0) {
+        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 };
       }
-    });
+
+      return dados.reduce(
+        (acc, itemDiario) => {
+          acc.total += itemDiario.totalColetas;
+          if (itemDiario.contagemPorTipo) {
+            itemDiario.contagemPorTipo.forEach((tipoInfo: any) => {
+              switch (tipoInfo.tipo.toUpperCase()) {
+                case "INVENTARIO":
+                  acc.tipo1 += tipoInfo.quantidade;
+                  break;
+                case "TRANSFERENCIA":
+                  acc.tipo2 += tipoInfo.quantidade;
+                  break;
+                case "CONFERENCIA_VENDA":
+                case "CONFERENCIA_COMPRA":
+                case "CONFERENCIA": // Fallback
+                  acc.tipo3e4 += tipoInfo.quantidade;
+                  break;
+              }
+            });
+          }
+          return acc;
+        },
+        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 }
+      );
+    };
+
+    const statsMesAtual = processarDadosAgregados(dadosMesAtual);
+    const statsMesAnterior = processarDadosAgregados(dadosMesAnterior);
+
+    const totalAtual = statsMesAtual.total;
+    const totalAnterior = statsMesAnterior.total;
+
     const variacao =
       totalAnterior > 0
         ? ((totalAtual - totalAnterior) / totalAnterior) * 100
         : totalAtual > 0
         ? 100
         : null;
+
     return {
       totalColetas: totalAtual,
-      inventarios: tipo1,
-      transferencias: tipo2,
-      conferencias: tipo3e4,
-      coletasAnterior: totalAnterior,
+      inventarios: statsMesAtual.tipo1,
+      transferencias: statsMesAtual.tipo2,
+      conferencias: statsMesAtual.tipo3e4,
       variacaoColetas: variacao,
     };
-  }, [coletas]);
+  }, [dadosMesAtual, dadosMesAnterior]);
 
-  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS (MOVIDO PARA CÁ) ---
-  const hoje = new Date();
+  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS ---
   const inicioDoMesCorrente = toISODateString(
     new Date(hoje.getFullYear(), hoje.getMonth(), 1)
   );
@@ -151,8 +185,7 @@ export default function HomePage() {
     );
   }, [dadosFuncionarios]);
 
-  // --- GERENCIAMENTO DE LOADING GERAL ---
-  const isLoading = companyLoading || coletasLoading; // Loading principal da página
+  const isLoading = companyLoading || loadingMesAtual || loadingMesAnterior;
   useEffect(() => {
     if (isLoading) {
       showLoading();
@@ -249,7 +282,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* --- BLOCO DO RELATÓRIO DE FUNCIONÁRIOS (AGORA SEPARADO) --- */}
       <div className={styles.border}>
         <RelatorioFuncionarios
           dados={dadosFuncionarios}

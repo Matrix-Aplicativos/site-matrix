@@ -138,12 +138,8 @@ export default function RelatorioColetas({
           const dia = new Date(`${dado.periodo}T12:00:00`).getDate();
           index = dia - 1;
         } else {
-          // anual
-          // ########## CORREÇÃO APLICADA AQUI ##########
-          // Extrai o mês da string "YYYY-MM"
           const mes = parseInt(dado.periodo.split("-")[1], 10);
           index = mes - 1;
-          // ###########################################
         }
 
         if (index >= 0 && index < totais.length) {
@@ -168,15 +164,22 @@ export default function RelatorioColetas({
 
   const isLoading = companyLoading || coletasLoading;
 
+  // ########## MUDANÇA 1: Título do gráfico simplificado ##########
   const tituloGrafico = useMemo(() => {
+    if (view === "mensal") {
+      return "Coletas por dia";
+    }
+    return "Coletas por mês";
+  }, [view]);
+
+  // ########## MUDANÇA 2: Criado texto de exibição para o cabeçalho ##########
+  const textoExibicao = useMemo(() => {
     const baseDate = dataExibicao || new Date();
     if (view === "mensal") {
       const mesAno = format(baseDate, "MMMM 'de' yyyy", { locale: ptBR });
-      return `Coletas por dia - ${
-        mesAno.charAt(0).toUpperCase() + mesAno.slice(1)
-      }`;
+      return mesAno.charAt(0).toUpperCase() + mesAno.slice(1);
     }
-    return `Coletas por mês - ${format(baseDate, "yyyy")}`;
+    return format(baseDate, "yyyy");
   }, [dataExibicao, view]);
 
   const handleNavegacao = (direction: "anterior" | "proximo") => {
@@ -207,7 +210,7 @@ export default function RelatorioColetas({
       legend: { display: false },
       title: {
         display: true,
-        text: tituloGrafico,
+        text: tituloGrafico, // Título simplificado usado aqui
         font: { size: 16 },
       },
       tooltip: {
@@ -297,13 +300,26 @@ export default function RelatorioColetas({
           >
             Relatório de Coletas
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+
+          {/* ########## MUDANÇA 3: Estrutura do cabeçalho alterada ########## */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button
               style={buttonStyle}
               onClick={() => handleNavegacao("anterior")}
             >
               &lt;
             </button>
+            <span
+              style={{
+                fontWeight: "bold",
+                fontSize: "1rem",
+                color: "#333",
+                minWidth: "180px",
+                textAlign: "center",
+              }}
+            >
+              {textoExibicao}
+            </span>
             <button
               style={buttonStyle}
               onClick={() => handleNavegacao("proximo")}
