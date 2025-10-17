@@ -1,31 +1,22 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import {
-  isSameMonth,
-  subMonths,
-  isSameYear,
-  format,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import styles from "./Home.module.css";
 import { useLoading } from "../shared/Context/LoadingContext";
 
 // Hooks de dados
 import useCurrentCompany from "./hooks/useCurrentCompany";
-
 import useGetGraficoFuncionarios from "./hooks/useGetGraficoFuncionarios";
+import useGetGraficoColetas from "./hooks/useGraficoColetas";
 
 // Componentes
 import RelatorioColetas from "./components/RelatorioColetas";
 import RelatorioFuncionarios from "./components/RelatorioFuncionarios";
 import EstatisticasFuncionarios from "./components/EstatisticasFuncionarios";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
-import useGetGraficoColetas from "./hooks/useGraficoColetas";
 
-// Função utilitária para data
-const toISODateString = (date: Date) => date.toISOString().split("T")[0];
+// Tipos e Constantes
 const OPCOES_TIPO = {
   Inventario: 1,
   Transferencia: 2,
@@ -43,23 +34,18 @@ export default function HomePage() {
   const [view, setView] = useState<"mensal" | "anual">("mensal");
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
-
-  // --- DADOS E LÓGICA DO RELATÓRIO DE COLETAS (CORRIGIDO) ---
   const hoje = new Date();
-  const mesAnteriorDate = subMonths(hoje, 1);
 
-  // Período do mês atual
+  // --- LÓGICA DO RELATÓRIO DE COLETAS (sem alterações) ---
+  const mesAnteriorDate = subMonths(hoje, 1);
   const dataInicioMesAtual = format(startOfMonth(hoje), "yyyy-MM-dd");
   const dataFimMesAtual = format(endOfMonth(hoje), "yyyy-MM-dd");
-
-  // Período do mês anterior
   const dataInicioMesAnterior = format(
     startOfMonth(mesAnteriorDate),
     "yyyy-MM-dd"
   );
   const dataFimMesAnterior = format(endOfMonth(mesAnteriorDate), "yyyy-MM-dd");
 
-  // Busca os dados agregados para o mês atual
   const { dados: dadosMesAtual, loading: loadingMesAtual } =
     useGetGraficoColetas(
       codEmpresa,
@@ -67,8 +53,6 @@ export default function HomePage() {
       dataFimMesAtual,
       "DIA"
     );
-
-  // Busca os dados agregados para o mês anterior (para comparação)
   const { dados: dadosMesAnterior, loading: loadingMesAnterior } =
     useGetGraficoColetas(
       codEmpresa,
@@ -84,13 +68,10 @@ export default function HomePage() {
     conferencias,
     variacaoColetas,
   } = useMemo(() => {
-    // ########## CORREÇÃO APLICADA AQUI ##########
-    // Adicionado 'null' à tipagem do parâmetro 'dados'
+    // (código de processamento de dados de coletas omitido para brevidade)
     const processarDadosAgregados = (dados: any[] | null | undefined) => {
-      if (!dados || dados.length === 0) {
+      if (!dados || dados.length === 0)
         return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 };
-      }
-
       return dados.reduce(
         (acc, itemDiario) => {
           acc.total += itemDiario.totalColetas;
@@ -105,7 +86,7 @@ export default function HomePage() {
                   break;
                 case "CONFERENCIA_VENDA":
                 case "CONFERENCIA_COMPRA":
-                case "CONFERENCIA": // Fallback
+                case "CONFERENCIA":
                   acc.tipo3e4 += tipoInfo.quantidade;
                   break;
               }
@@ -116,20 +97,16 @@ export default function HomePage() {
         { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 }
       );
     };
-
     const statsMesAtual = processarDadosAgregados(dadosMesAtual);
     const statsMesAnterior = processarDadosAgregados(dadosMesAnterior);
-
     const totalAtual = statsMesAtual.total;
     const totalAnterior = statsMesAnterior.total;
-
     const variacao =
       totalAnterior > 0
         ? ((totalAtual - totalAnterior) / totalAnterior) * 100
         : totalAtual > 0
         ? 100
         : null;
-
     return {
       totalColetas: totalAtual,
       inventarios: statsMesAtual.tipo1,
@@ -139,25 +116,28 @@ export default function HomePage() {
     };
   }, [dadosMesAtual, dadosMesAnterior]);
 
-  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS ---
-  const inicioDoMesCorrente = toISODateString(
-    new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-  );
-  const fimDoMesCorrente = toISODateString(
-    new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
-  );
+  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS (ATUALIZADO) ---
+  const inicioDoMesCorrente = format(startOfMonth(hoje), "yyyy-MM-dd");
+  const fimDoMesCorrente = format(endOfMonth(hoje), "yyyy-MM-dd");
 
   const [dataInicioInput, setDataInicioInput] = useState(inicioDoMesCorrente);
   const [dataFimInput, setDataFimInput] = useState(fimDoMesCorrente);
   const [tiposSelecionados, setTiposSelecionados] =
     useState<number[]>(TODOS_OS_TIPOS);
+  const [metricaSelecionada, setMetricaSelecionada] =
+    useState<TipoMetrica>("coletasRealizadas");
+
+  // NOVO: Estado que servirá como "gatilho" para o refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Este estado ainda é útil para garantir que o hook não dispare a cada digitação,
+  // mas agora o refresh será forçado pelo `refreshTrigger`.
   const [dateRangeAtivo, setDateRangeAtivo] = useState({
     inicio: inicioDoMesCorrente,
     fim: fimDoMesCorrente,
   });
-  const [metricaSelecionada, setMetricaSelecionada] =
-    useState<TipoMetrica>("coletasRealizadas");
 
+  // ALTERADO: O hook agora recebe o `refreshTrigger` como uma de suas dependências
   const {
     dados: dadosFuncionarios,
     loading: funcionariosLoading,
@@ -166,17 +146,20 @@ export default function HomePage() {
     codEmpresa,
     dateRangeAtivo.inicio,
     dateRangeAtivo.fim,
-    tiposSelecionados
+    tiposSelecionados,
+    refreshTrigger // Passa o gatilho para o hook
   );
 
+  // ALTERADO: A função agora atualiza as datas E dispara o gatilho
   const handlePesquisarFuncionarios = () => {
     setDateRangeAtivo({ inicio: dataInicioInput, fim: dataFimInput });
+    setRefreshTrigger((prev) => prev + 1); // Força a re-execução do hook de dados
   };
 
   const { totalColetasFunc, totalItensFunc, totalVolumeFunc } = useMemo(() => {
-    if (!dadosFuncionarios || dadosFuncionarios.length === 0) {
+    // (código de processamento dos totais de funcionários omitido para brevidade)
+    if (!dadosFuncionarios || dadosFuncionarios.length === 0)
       return { totalColetasFunc: 0, totalItensFunc: 0, totalVolumeFunc: 0 };
-    }
     return dadosFuncionarios.reduce(
       (acc, curr) => {
         acc.totalColetasFunc += curr.coletasRealizadas;
@@ -188,17 +171,12 @@ export default function HomePage() {
     );
   }, [dadosFuncionarios]);
 
-  // --- GERENCIAMENTO DE LOADING GERAL ---
   const isLoading = companyLoading || loadingMesAtual || loadingMesAnterior;
   useEffect(() => {
-    if (isLoading) {
-      showLoading();
-    } else {
-      hideLoading();
-    }
+    if (isLoading) showLoading();
+    else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
-  // Renderização condicional
   if (isLoading)
     return <div className={styles.container}>Carregando painel...</div>;
   if (!empresa)
@@ -216,12 +194,13 @@ export default function HomePage() {
         SEU PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
       </h1>
 
-      {/* --- BLOCO DO RELATÓRIO DE COLETAS --- */}
+      {/* Bloco do Relatório de Coletas */}
       <div className={styles.border}>
         <RelatorioColetas view={view} onViewChange={setView} />
       </div>
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
+          {/* Cards de estatísticas de coletas... */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{totalColetas}</span>
@@ -286,7 +265,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* --- BLOCO DO RELATÓRIO DE FUNCIONÁRIOS (AGORA SEPARADO) --- */}
+      {/* Bloco do Relatório de Funcionários */}
       <div className={styles.border}>
         <RelatorioFuncionarios
           dados={dadosFuncionarios}

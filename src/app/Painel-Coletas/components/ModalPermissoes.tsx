@@ -1,54 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalPermissoes.module.css";
-import { UsuarioGet } from "../utils/types/UsuarioGet"; // ALTERADO: Importa o tipo correto
+import { UsuarioGet } from "../utils/types/UsuarioGet";
 import useGetUsuarioById from "../hooks/useGetUsuarioById";
+import useGetCargos from "../hooks/useGetCargos";
+import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargos";
+
+// Constantes para facilitar a leitura e manutenção
+const GESTOR_ROLE = "ROLE_MOVIX_GESTOR";
+const FUNCIONARIO_ROLE = "ROLE_MOVIX_FUNCIONARIO";
+const MOVIX_ROLES = [
+  "ROLE_MOVIX_INVENTARIO",
+  "ROLE_MOVIX_TRANSFERENCIA",
+  "ROLE_MOVIX_CONF_COMPRA",
+  "ROLE_MOVIX_CONF_VENDA",
+  "ROLE_MOVIX_CADASTRAR_AVULSA",
+  "ROLE_MOVIX_CADASTRAR_DEMANDA",
+];
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  usuarioInfo: UsuarioGet; // ALTERADO: Aceita o tipo da lista (summary)
-  onSave: (userId: number, permissions: string[]) => void;
+  usuarioInfo: UsuarioGet;
+  onSave: () => void;
+  codUsuarioLogado: number; // ID do usuário logado
 }
 
-const PERMISSIONS_CATEGORIES = [
+const PERMISSION_DISPLAY_MAP = [
   {
     title: "Acessos Gerais",
     permissions: [
+      { key: GESTOR_ROLE, description: "Acesso de Gestor (Painel Web)" },
       {
-        key: "ROLE_MOVIX_GESTOR",
-        description: "Acesso de Gestor (Painel Web)",
-      },
-      {
-        key: "ROLE_MOVIX_FUNCIONARIO",
+        key: FUNCIONARIO_ROLE,
         description: "Acesso de Funcionário (Apenas App)",
       },
     ],
   },
   {
-    title: "Módulos MOVIX",
-    permissions: [
-      { key: "ROLE_MOVIX_INVENTARIO", description: "Visualizar Inventários" },
-      {
-        key: "ROLE_MOVIX_TRANSFERENCIA",
-        description: "Visualizar Transferências",
-      },
-      {
-        key: "ROLE_MOVIX_CONF_COMPRA",
-        description: "Visualizar Conferências de Compra",
-      },
-      {
-        key: "ROLE_MOVIX_CONF_VENDA",
-        description: "Visualizar Conferências de Venda",
-      },
-      {
-        key: "ROLE_MOVIX_CADASTRAR_AVULSA",
-        description: "Cadastrar Coleta Avulsa",
-      },
-      {
-        key: "ROLE_MOVIX_CADASTRAR_DEMANDA",
-        description: "Cadastrar Coleta Sob Demanda",
-      },
-    ],
+    title: "Acessos MOVIX",
+    permissions: MOVIX_ROLES.map((role) => {
+      const descriptions: { [key: string]: string } = {
+        ROLE_MOVIX_INVENTARIO: "Visualizar Inventários",
+        ROLE_MOVIX_TRANSFERENCIA: "Visualizar Transferências",
+        ROLE_MOVIX_CONF_COMPRA: "Visualizar Conferências de Compra",
+        ROLE_MOVIX_CONF_VENDA: "Visualizar Conferências de Venda",
+        ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
+        ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
+      };
+      return { key: role, description: descriptions[role] };
+    }),
   },
 ];
 
@@ -57,20 +57,30 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   onClose,
   usuarioInfo,
   onSave,
+  codUsuarioLogado,
 }) => {
-  // Busca os detalhes completos do usuário (incluindo cargos) quando o modal abre
   const {
     usuario: fullUser,
     loading: userLoading,
     error: userError,
-  } = useGetUsuarioById(
-    // ALTERADO: Lida com codUsuario opcional de forma segura
-    isOpen ? usuarioInfo.codUsuario ?? null : null
-  );
+  } = useGetUsuarioById(isOpen ? usuarioInfo.codUsuario ?? null : null);
+
+  const {
+    cargos: availableCargos,
+    loading: cargosLoading,
+    error: cargosError,
+  } = useGetCargos();
+
+  const {
+    updateCargos,
+    loading: updateLoading,
+    error: updateError,
+  } = useUpdateUsuarioCargos();
 
   const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
+  const isFetchingData = userLoading || cargosLoading;
+  const fetchError = userError || cargosError;
 
-  // Atualiza as permissões selecionadas quando os dados do usuário completo são carregados
   useEffect(() => {
     if (fullUser && fullUser.cargos) {
       const userRoles = fullUser.cargos.map((cargo) => cargo.nome);
@@ -80,56 +90,121 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     }
   }, [fullUser]);
 
+  const categorizedPermissions = useMemo(() => {
+    if (!availableCargos || availableCargos.length === 0) return [];
+    const availableRoleNames = new Set(availableCargos.map((c) => c.nomeCargo));
+    return PERMISSION_DISPLAY_MAP.map((category) => ({
+      ...category,
+      permissions: category.permissions.filter((p) =>
+        availableRoleNames.has(p.key)
+      ),
+    })).filter((category) => category.permissions.length > 0);
+  }, [availableCargos]);
+
+  const cargoNameToIdMap = useMemo(() => {
+    const map = new Map<string, number>();
+    availableCargos.forEach((cargo) => {
+      map.set(cargo.nomeCargo, cargo.codCargo);
+    });
+    return map;
+  }, [availableCargos]);
+
   const handleCheckboxChange = (permissionKey: string) => {
-    setCurrentPermissions((prev) =>
-      prev.includes(permissionKey)
-        ? prev.filter((p) => p !== permissionKey)
-        : [...prev, permissionKey]
-    );
+    setCurrentPermissions((prev) => {
+      const isCurrentlyChecked = prev.includes(permissionKey);
+      let newPermissions = [...prev];
+
+      if (isCurrentlyChecked) {
+        newPermissions = newPermissions.filter((p) => p !== permissionKey);
+        if (permissionKey === FUNCIONARIO_ROLE) {
+          newPermissions = newPermissions.filter(
+            (p) => !MOVIX_ROLES.includes(p)
+          );
+        }
+      } else {
+        newPermissions.push(permissionKey);
+      }
+      return newPermissions;
+    });
   };
 
-  const handleSaveClick = () => {
-    // ALTERADO: Adiciona uma verificação para garantir que codUsuario existe antes de salvar
-    if (usuarioInfo.codUsuario) {
-      onSave(usuarioInfo.codUsuario, currentPermissions);
-    } else {
-      console.error("Tentativa de salvar permissões sem um codUsuario válido.");
+  const handleSaveClick = async () => {
+    if (!usuarioInfo.codUsuario) {
+      console.error("ID do usuário é inválido.");
+      return;
+    }
+    const codCargosParaEnviar = currentPermissions
+      .map((permissionName) => cargoNameToIdMap.get(permissionName))
+      .filter((id): id is number => id !== undefined);
+
+    const success = await updateCargos(
+      usuarioInfo.codUsuario,
+      codCargosParaEnviar
+    );
+
+    if (success) {
+      onSave();
     }
   };
 
   if (!isOpen) return null;
 
-  // Função para renderizar o conteúdo do corpo do modal (sem alterações)
   const renderModalBody = () => {
-    if (userLoading) {
+    if (isFetchingData) {
       return (
         <div className={styles.loadingState}>Carregando permissões...</div>
       );
     }
-    if (userError) {
-      return <div className={styles.errorState}>{userError}</div>;
+    if (fetchError) {
+      return <div className={styles.errorState}>{fetchError}</div>;
     }
-    if (fullUser) {
-      return PERMISSIONS_CATEGORIES.map((category) => (
+    if (categorizedPermissions.length > 0) {
+      const hasAppAccess = currentPermissions.includes(FUNCIONARIO_ROLE);
+
+      return categorizedPermissions.map((category) => (
         <div key={category.title} className={styles.categoryContainer}>
           <h4 className={styles.categoryTitle}>{category.title}</h4>
           <div className={styles.permissionsGrid}>
-            {category.permissions.map((permission) => (
-              <label key={permission.key} className={styles.permissionLabel}>
-                <input
-                  type="checkbox"
-                  checked={currentPermissions.includes(permission.key)}
-                  onChange={() => handleCheckboxChange(permission.key)}
-                  className={styles.checkbox}
-                />
-                {permission.description}
-              </label>
-            ))}
+            {category.permissions.map((permission) => {
+              const cannotRemoveSelfGestor =
+                permission.key === GESTOR_ROLE &&
+                usuarioInfo.codUsuario === codUsuarioLogado &&
+                currentPermissions.includes(GESTOR_ROLE);
+
+              const isMovixPermission = MOVIX_ROLES.includes(permission.key);
+              const movixPermissionDisabled =
+                isMovixPermission && !hasAppAccess;
+
+              const isDisabled =
+                cannotRemoveSelfGestor || movixPermissionDisabled;
+
+              return (
+                <label
+                  key={permission.key}
+                  className={`${styles.permissionLabel} ${
+                    isDisabled ? styles.disabledLabel : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={currentPermissions.includes(permission.key)}
+                    onChange={() => handleCheckboxChange(permission.key)}
+                    className={styles.checkbox}
+                    disabled={isDisabled}
+                  />
+                  {permission.description}
+                </label>
+              );
+            })}
           </div>
         </div>
       ));
     }
-    return null;
+    return (
+      <div className={styles.loadingState}>
+        Nenhum cargo disponível para seleção.
+      </div>
+    );
   };
 
   return (
@@ -144,15 +219,18 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         </div>
         <div className={styles.modalBody}>{renderModalBody()}</div>
         <div className={styles.modalFooter}>
+          <div className={styles.footerError}>
+            {updateError && <p className={styles.errorText}>{updateError}</p>}
+          </div>
           <button onClick={onClose} className={styles.cancelButton}>
             Cancelar
           </button>
           <button
             onClick={handleSaveClick}
             className={styles.saveButton}
-            disabled={userLoading || !!userError}
+            disabled={isFetchingData || updateLoading || !!fetchError}
           >
-            Salvar Alterações
+            {updateLoading ? "Salvando..." : "Salvar Alterações"}
           </button>
         </div>
       </div>
