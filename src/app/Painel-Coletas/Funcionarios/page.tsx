@@ -10,8 +10,11 @@ import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 import ModalPermissoes from "../components/ModalPermissoes";
+import { getCookie } from "cookies-next"; // --- ADIÇÃO 1: IMPORTS ---
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
 
-// --- Ícones ---
+// --- Ícones (código omitido para brevidade) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +50,7 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces Internas ---
+// --- Interfaces e Constantes (código omitido para brevidade) ---
 interface FuncionarioExibido {
   codigo: string;
   nome: string;
@@ -62,8 +65,6 @@ interface ColumnConfig {
   label: string;
   sortable: boolean;
 }
-
-// --- Constantes ---
 const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
   codigo: "codFuncionarioErp",
   nome: "nome",
@@ -111,6 +112,12 @@ const FuncionariosPage: React.FC = () => {
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
+  // --- ADIÇÃO 2: BUSCA DO USUÁRIO LOGADO (LÓGICA "IMPROVISADA") ---
+  const token = getCookie("token");
+  const { usuario: usuarioLogado, loading: loggedUserLoading } =
+    useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  // -------------------------------------------------------------------
+
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
     if (query) {
@@ -142,7 +149,7 @@ const FuncionariosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  const isLoading = companyLoading || usuariosLoading;
+  const isLoading = companyLoading || usuariosLoading || loggedUserLoading;
 
   const displayedData: FuncionarioExibido[] = useMemo(() => {
     if (!usuarios) return [];
@@ -169,9 +176,7 @@ const FuncionariosPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
-
   const handleSavePermissions = () => {
-    alert("Permissões salvas com sucesso!");
     handleCloseModal();
     refetch();
   };
@@ -209,16 +214,22 @@ const FuncionariosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      {selectedUser && (
+
+      {/* --- ADIÇÃO 3: PASSANDO A PROP PARA O MODAL --- */}
+      {selectedUser && usuarioLogado && (
         <ModalPermissoes
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
+          codUsuarioLogado={usuarioLogado.codUsuario} // Prop adicionada
         />
       )}
+      {/* ----------------------------------------------- */}
+
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
       <div className={styles.searchContainer}>
+        {/* SearchBar e botões... */}
         <SearchBar
           placeholder="Qual funcionário deseja buscar?"
           onSearch={handleSearch}
@@ -239,6 +250,7 @@ const FuncionariosPage: React.FC = () => {
 
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
+          {/* Filtros... */}
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
             <select

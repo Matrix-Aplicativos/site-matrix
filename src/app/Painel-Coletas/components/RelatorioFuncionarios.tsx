@@ -52,7 +52,6 @@ const OPCOES_TIPO = {
 };
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
 
-// --- Interface de Props para o Componente ---
 interface RelatorioFuncionariosProps {
   dados: DadosFuncionario[] | null;
   loading: boolean;
@@ -85,9 +84,7 @@ export default function RelatorioFuncionarios({
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
-      if (estaTentandoDesmarcar && prev.length === 1) {
-        return prev;
-      }
+      if (estaTentandoDesmarcar && prev.length === 1) return prev;
       return estaTentandoDesmarcar
         ? prev.filter((t) => t !== tipoValor)
         : [...prev, tipoValor];
@@ -95,20 +92,16 @@ export default function RelatorioFuncionarios({
   };
 
   const handleToggleTodosTipos = () => {
-    if (tiposSelecionados.length === TODOS_OS_TIPOS.length) {
-      // Se todos já estão selecionados, não faz nada para evitar desmarcar o último
-      return;
-    } else {
-      setTiposSelecionados(TODOS_OS_TIPOS);
-    }
+    if (tiposSelecionados.length === TODOS_OS_TIPOS.length) return;
+    else setTiposSelecionados(TODOS_OS_TIPOS);
   };
 
   const chartData = useMemo(() => {
+    // (Lógica do gráfico omitida para brevidade, sem alterações)
     if (!dados || dados.length === 0) return { labels: [], datasets: [] };
     const dadosOrdenados = [...dados].sort((a, b) =>
       a.nomeFuncionario.localeCompare(b.nomeFuncionario)
     );
-
     const todosOsDatasets = [
       {
         id: "coletasRealizadas",
@@ -129,7 +122,6 @@ export default function RelatorioFuncionarios({
         backgroundColor: coresMetricas.volumeTotalBipado,
       },
     ];
-
     return {
       labels: dadosOrdenados.map((d) => d.nomeFuncionario),
       datasets: todosOsDatasets.filter(
@@ -139,6 +131,7 @@ export default function RelatorioFuncionarios({
   }, [dados, metricaSelecionada]);
 
   const options = useMemo(() => {
+    // (Opções do gráfico omitidas para brevidade, sem alterações)
     const yAxisTitle = titulosMetricas[metricaSelecionada];
     return {
       responsive: true,
@@ -183,13 +176,12 @@ export default function RelatorioFuncionarios({
           Erro ao buscar dados: {error.toString()}
         </div>
       );
-    if (!chartData?.datasets.length || !chartData?.labels?.length) {
+    if (!chartData?.datasets.length || !chartData?.labels?.length)
       return (
         <div className={styles.placeholder}>
           Nenhum dado encontrado para os filtros selecionados.
         </div>
       );
-    }
     return <Bar data={chartData} options={options} />;
   };
 
@@ -198,8 +190,8 @@ export default function RelatorioFuncionarios({
       <div className={styles.header}>
         <h2 className={styles.title}>Relatório por Funcionários</h2>
       </div>
-
       <div className={styles.filterSection}>
+        {/* Filtros de Métrica e Tipo */}
         <div className={styles.metricAndTypeFilters}>
           <div className={styles.filterGroup}>
             <span className={styles.filterGroupLabel}>Exibir Métrica:</span>
@@ -214,6 +206,7 @@ export default function RelatorioFuncionarios({
                       checked={metricaSelecionada === metrica}
                       onChange={() => setMetricaSelecionada(metrica)}
                       className={styles.radioInput}
+                      disabled={loading}
                     />
                     {titulosMetricas[metrica]}
                   </label>
@@ -230,7 +223,8 @@ export default function RelatorioFuncionarios({
                   onChange={handleToggleTodosTipos}
                   checked={tiposSelecionados.length === TODOS_OS_TIPOS.length}
                   className={styles.checkboxInput}
-                />
+                  disabled={loading}
+                />{" "}
                 Todos
               </label>
               {Object.entries(OPCOES_TIPO).map(([nome, valor]) => (
@@ -240,6 +234,7 @@ export default function RelatorioFuncionarios({
                     checked={tiposSelecionados.includes(valor)}
                     onChange={() => handleTipoChange(valor)}
                     className={styles.checkboxInput}
+                    disabled={loading}
                   />
                   {nome}
                 </label>
@@ -247,7 +242,7 @@ export default function RelatorioFuncionarios({
             </div>
           </div>
         </div>
-
+        {/* Filtros de Data */}
         <div className={styles.dateFilters}>
           <div className={styles.dateInputGroup}>
             <label htmlFor="dataInicioFunc" className={styles.dateLabel}>
@@ -259,6 +254,7 @@ export default function RelatorioFuncionarios({
               value={dataInicioInput}
               onChange={(e) => setDataInicioInput(e.target.value)}
               className={styles.dateInput}
+              disabled={loading}
             />
           </div>
           <div className={styles.dateInputGroup}>
@@ -271,6 +267,7 @@ export default function RelatorioFuncionarios({
               value={dataFimInput}
               onChange={(e) => setDataFimInput(e.target.value)}
               className={styles.dateInput}
+              disabled={loading}
             />
           </div>
           <button
@@ -282,7 +279,6 @@ export default function RelatorioFuncionarios({
           </button>
         </div>
       </div>
-
       <div className={styles.legendContainer}>
         <div className={styles.legendItem}>
           <span
@@ -292,7 +288,6 @@ export default function RelatorioFuncionarios({
           <span>{titulosMetricas[metricaSelecionada]}</span>
         </div>
       </div>
-
       <div className={styles.chartWrapper}>{renderContent()}</div>
     </div>
   );

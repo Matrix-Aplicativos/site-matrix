@@ -15,7 +15,8 @@ export default function useGetGraficoFuncionarios(
   codEmpresa: number | undefined,
   dataInicio: string | null,
   dataFim: string | null,
-  tipos: number[] | undefined // O hook ainda recebe um array para simplicidade
+  tipos: number[] | undefined,
+  refreshTrigger: number // 1. Adiciona o refreshTrigger como parâmetro
 ) {
   const [dados, setDados] = useState<DadosFuncionario[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +39,9 @@ export default function useGetGraficoFuncionarios(
 
       const inicio = new Date(dataInicio);
       const fim = new Date(dataFim);
+      // Adiciona 1 dia ao final para incluir a data final na contagem
       const diffDias =
-        (fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24);
+        (fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24) + 1;
 
       if (diffDias > 90) {
         setError("O período selecionado não pode ultrapassar 90 dias.");
@@ -49,7 +51,6 @@ export default function useGetGraficoFuncionarios(
       }
 
       try {
-        // ✅ Constrói os parâmetros da URL usando URLSearchParams
         const params = new URLSearchParams();
         params.append("dataInicio", dataInicio);
         params.append("dataFim", dataFim);
@@ -57,14 +58,13 @@ export default function useGetGraficoFuncionarios(
         const tiposParsed = tiposString ? JSON.parse(tiposString) : [];
         if (tiposParsed && tiposParsed.length > 0) {
           tiposParsed.forEach((tipo: number) => {
-            // Isso irá gerar &tipo=1&tipo=2 etc.
             params.append("tipo", tipo.toString());
           });
         }
 
         const response = await axiosInstance.get<DadosFuncionario[]>(
           `/usuario/grafico/${codEmpresa}`,
-          { params } // Passa o objeto URLSearchParams para o Axios
+          { params }
         );
 
         const dadosAjustados = response.data.map((func) => ({
@@ -89,7 +89,7 @@ export default function useGetGraficoFuncionarios(
     };
 
     fetchData();
-  }, [codEmpresa, dataInicio, dataFim, tiposString]); // A dependência continua sendo a string
+  }, [codEmpresa, dataInicio, dataFim, tiposString, refreshTrigger]); // 2. Adiciona o refreshTrigger à lista de dependências
 
   return { dados, loading, error };
 }
