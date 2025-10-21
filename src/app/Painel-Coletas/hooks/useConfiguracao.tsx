@@ -39,6 +39,9 @@ const useConfiguracao = (codEmpresa: number) => {
   const maximoDispositivos = parseInt(
     getConfiguracao("maximo-de-dispositivos")?.valor || "0"
   );
+   const maximoDispositivosMulti = parseInt(
+    getConfiguracao("maximo-de-dispositivos-multi")?.valor || "0"
+  );
   const configuracaoTeste1 =
     getConfiguracao("configuracao-teste1")?.ativo || false;
   const configuracaoTeste2 =
@@ -47,6 +50,7 @@ const useConfiguracao = (codEmpresa: number) => {
   return {
     configuracoes,
     maximoDispositivos,
+    maximoDispositivosMulti,
     configuracaoTeste1,
     configuracaoTeste2,
     getConfiguracao,

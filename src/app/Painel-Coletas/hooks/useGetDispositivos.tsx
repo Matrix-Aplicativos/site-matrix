@@ -2,14 +2,16 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
 
-// --- Interfaces (sem alterações) ---
+// Interface que define a estrutura de um Dispositivo
 interface Dispositivo {
   codDispositivo: string;
   nomeDispositivo: string;
   codEmpresaApi: number;
+  tipoLicenca: string; // MODIFICADO: Corrigido de volta para 'string'
   ativo: boolean;
 }
 
+// Interface que define a estrutura da resposta da API
 interface ApiResponseDispositivos {
   conteudo: Dispositivo[];
   paginaAtual: number;
@@ -17,17 +19,19 @@ interface ApiResponseDispositivos {
   qtdElementos: number;
 }
 
-// --- Interface do Hook (ATUALIZADA) ---
+// Interface que define o que o hook retorna
 interface UseGetDispositivosHook {
   dispositivos: Dispositivo[] | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
   totalPaginas: number;
-  totalElementos: number; // <-- ADICIONADO
+  totalElementos: number;
 }
 
-// --- Hook (ATUALIZADO) ---
+/**
+ * Hook customizado para buscar uma lista paginada de dispositivos de uma empresa.
+ */
 const useGetDispositivos = (
   codEmpresa: number,
   pagina: number = 1,
@@ -40,7 +44,7 @@ const useGetDispositivos = (
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [totalPaginas, setTotalPaginas] = useState<number>(0);
-  const [totalElementos, setTotalElementos] = useState<number>(0); // <-- ADICIONADO
+  const [totalElementos, setTotalElementos] = useState<number>(0);
 
   const fetchDispositivos = useCallback(async () => {
     if (!enabled || !codEmpresa) return;
@@ -48,7 +52,6 @@ const useGetDispositivos = (
     try {
       setLoading(true);
       setError(null);
-
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
@@ -59,7 +62,6 @@ const useGetDispositivos = (
       const response = await axiosInstance.get<ApiResponseDispositivos>(
         `/dispositivo/${codEmpresa}?${queryParams}`
       );
-
       const { conteudo, qtdPaginas, qtdElementos } = response.data;
 
       if (!Array.isArray(conteudo)) {
@@ -67,9 +69,10 @@ const useGetDispositivos = (
           "Formato de dados inválido da API: 'conteudo' não é um array."
         );
       }
+
       setDispositivos(conteudo || []);
       setTotalPaginas(qtdPaginas || 0);
-      setTotalElementos(qtdElementos || 0); // <-- ADICIONADO
+      setTotalElementos(qtdElementos || 0);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError
@@ -88,16 +91,15 @@ const useGetDispositivos = (
     if (enabled) {
       fetchDispositivos();
     }
-  }, [fetchDispositivos]);
+  }, [fetchDispositivos, enabled]);
 
-  // --- Retorno do Hook (ATUALIZADO) ---
   return {
     dispositivos,
     loading,
     error,
     refetch: fetchDispositivos,
     totalPaginas,
-    totalElementos, // <-- ADICIONADO
+    totalElementos,
   };
 };
 

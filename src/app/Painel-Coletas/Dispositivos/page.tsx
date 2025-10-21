@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
@@ -11,6 +11,7 @@ import useConfiguracao from "../hooks/useConfiguracao";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
 
+// Componente do ícone de ordenação
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -28,25 +29,32 @@ const IconSort = () => (
   </svg>
 );
 
+// Interface para controle de ordenação e colunas
 interface DispositivoExibido {
   nome: string;
   codigo: string;
+  tipoLicenca: string;
   status: boolean;
 }
 
+// Mapeamento de chaves para os nomes dos campos da API para ordenação
 const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   nome: "nome",
   codigo: "id.codDispositivo",
+  tipoLicenca: "tipoLicenca",
   status: "ativo",
 };
 
+// Definição das colunas da tabela
 const columns: { key: keyof DispositivoExibido; label: string }[] = [
   { key: "nome", label: "Nome" },
   { key: "codigo", label: "Código" },
+  { key: "tipoLicenca", label: "Tipo de Licença" },
   { key: "status", label: "Status" },
 ];
 
 const DispositivosPage: React.FC = () => {
+  // Estados para paginação e ordenação
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
@@ -54,10 +62,12 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
+  // Hooks para obter dados da empresa, configurações e controle de loading
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
+  // Hook principal para buscar os dispositivos
   const {
     dispositivos,
     loading: dispositivosLoading,
@@ -74,14 +84,25 @@ const DispositivosPage: React.FC = () => {
     !!codEmpresa
   );
 
+  // Hooks para ações de deletar e ativar/desativar
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
-  const { maximoDispositivos, loading: loadingConfig } = useConfiguracao(
-    codEmpresa || 0
-  );
+  const {
+    maximoDispositivos,
+    maximoDispositivosMulti,
+    loading: loadingConfig,
+  } = useConfiguracao(codEmpresa || 0);
 
   const isLoading = companyLoading || dispositivosLoading || loadingConfig;
-  const dispositivosAtivos = dispositivos?.filter((d) => d.ativo).length ?? 0;
+
+  // Cálculos para a seção "Situação"
+  const { dispositivosAtivos, dispositivosMultiAtivos } = useMemo(() => {
+    const ativos = dispositivos?.filter((d) => d.ativo).length ?? 0;
+    // MODIFICADO: Compara com a string "2"
+    const multiAtivos =
+      dispositivos?.filter((d) => d.ativo && d.tipoLicenca === "2").length ?? 0;
+    return { dispositivosAtivos: ativos, dispositivosMultiAtivos: multiAtivos };
+  }, [dispositivos]);
 
   useEffect(() => {
     if (isLoading) {
@@ -97,6 +118,7 @@ const DispositivosPage: React.FC = () => {
         ? "desc"
         : "asc";
     setSortConfig({ key, direction });
+    setPaginaAtual(1);
   };
 
   const handleDeleteDevice = async (codDispositivo: string) => {
@@ -140,6 +162,7 @@ const DispositivosPage: React.FC = () => {
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
         </button>
       </div>
+
       <div className={styles.mainContent}>
         <div className={styles.tableContainer}>
           {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
@@ -171,6 +194,12 @@ const DispositivosPage: React.FC = () => {
                   <tr key={dispositivo.codDispositivo}>
                     <td>{dispositivo.nomeDispositivo}</td>
                     <td>{dispositivo.codDispositivo}</td>
+                    <td>
+                      {/* MODIFICADO: Compara com a string "2" */}
+                      {dispositivo.tipoLicenca === "2"
+                        ? "Multiempresa"
+                        : "Padrão"}
+                    </td>
                     <td>
                       <span
                         className={`${styles.statusBadge} ${
@@ -212,17 +241,17 @@ const DispositivosPage: React.FC = () => {
             </table>
           )}
         </div>
+
         <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
             <p>Total de Dispositivos:</p>
-            <span className={styles.situacaoValue}>
-              {dispositivos?.length ?? 0}
-            </span>
+            <span className={styles.situacaoValue}>{totalElementos ?? 0}</span>
           </div>
+
           {!loadingConfig && (
             <div className={styles.situacaoItem}>
-              <p>Dispositivos Disponíveis:</p>
+              <p>Disponíveis (Padrão):</p>
               <span className={styles.situacaoValue}>
                 {maximoDispositivos - dispositivosAtivos}
               </span>
@@ -231,6 +260,27 @@ const DispositivosPage: React.FC = () => {
           <div className={styles.situacaoItem}>
             <p>Máximo de Dispositivos:</p>
             <span className={styles.situacaoValue}>{maximoDispositivos}</span>
+          </div>
+
+          <div className={styles.situacaoItem}>
+            <p>Ativos (Multiempresa):</p>
+            <span className={styles.situacaoValue}>
+              {dispositivosMultiAtivos}
+            </span>
+          </div>
+          {!loadingConfig && (
+            <div className={styles.situacaoItem}>
+              <p>Disponíveis (Multiempresa):</p>
+              <span className={styles.situacaoValue}>
+                {maximoDispositivosMulti - dispositivosMultiAtivos}
+              </span>
+            </div>
+          )}
+          <div className={styles.situacaoItem}>
+            <p>Máximo de Dispositivos Multiempresa:</p>
+            <span className={styles.situacaoValue}>
+              {maximoDispositivosMulti}
+            </span>
           </div>
         </div>
       </div>
