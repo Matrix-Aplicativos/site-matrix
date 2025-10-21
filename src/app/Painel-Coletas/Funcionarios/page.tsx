@@ -9,10 +9,10 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
-import ModalPermissoes from "../components/ModalPermissoes";
-import { getCookie } from "cookies-next"; // --- ADIÇÃO 1: IMPORTS ---
-import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
+// import ModalPermissoes from "../components/ModalPermissoes"; // Comentado (Permissões)
+// import { getCookie } from "cookies-next"; // Comentado (Permissões)
+// import { getUserFromToken } from "../utils/functions/getUserFromToken"; // Comentado (Permissões)
+// import useGetLoggedUser from "../hooks/useGetLoggedUser"; // Comentado (Permissões)
 
 // --- Ícones (código omitido para brevidade) ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -84,7 +84,7 @@ const columns: ColumnConfig[] = [
   { key: "cpf", label: "CPF", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "status", label: "Status", sortable: true },
-  { key: "acoes", label: "Ações", sortable: false },
+  // { key: "acoes", label: "Ações", sortable: false }, // Comentado (Coluna de Ações)
 ];
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
@@ -105,17 +105,19 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
+  // const [isModalOpen, setIsModalOpen] = useState(false); // Comentado (Permissões)
+  // const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // Comentado (Permissões)
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // --- ADIÇÃO 2: BUSCA DO USUÁRIO LOGADO (LÓGICA "IMPROVISADA") ---
+  // --- LÓGICA DE BUSCA DO USUÁRIO LOGADO COMENTADA (Permissões) ---
+  /*
   const token = getCookie("token");
   const { usuario: usuarioLogado, loading: loggedUserLoading } =
     useGetLoggedUser(getUserFromToken(String(token)) || 0);
+  */
   // -------------------------------------------------------------------
 
   const filtrosParaApi = useMemo(() => {
@@ -149,7 +151,7 @@ const FuncionariosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  const isLoading = companyLoading || usuariosLoading || loggedUserLoading;
+  const isLoading = companyLoading || usuariosLoading; // Removido 'loggedUserLoading' que era das Permissões
 
   const displayedData: FuncionarioExibido[] = useMemo(() => {
     if (!usuarios) return [];
@@ -168,6 +170,8 @@ const FuncionariosPage: React.FC = () => {
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
+  // --- FUNÇÕES DE CONTROLE DO MODAL COMENTADAS (Permissões) ---
+  /*
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
@@ -180,6 +184,7 @@ const FuncionariosPage: React.FC = () => {
     handleCloseModal();
     refetch();
   };
+  */
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -215,7 +220,8 @@ const FuncionariosPage: React.FC = () => {
     <div className={styles.container}>
       <LoadingOverlay />
 
-      {/* --- ADIÇÃO 3: PASSANDO A PROP PARA O MODAL --- */}
+      {/* --- RENDERIZAÇÃO DO MODAL COMENTADA (Permissões) --- */}
+      {/*
       {selectedUser && usuarioLogado && (
         <ModalPermissoes
           isOpen={isModalOpen}
@@ -225,6 +231,7 @@ const FuncionariosPage: React.FC = () => {
           codUsuarioLogado={usuarioLogado.codUsuario} // Prop adicionada
         />
       )}
+      */}
       {/* ----------------------------------------------- */}
 
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
@@ -336,6 +343,8 @@ const FuncionariosPage: React.FC = () => {
                     {getStatusText(row.status)}
                   </span>
                 </td>
+                {/* --- CÉLULA DA COLUNA DE AÇÕES COMENTADA --- */}
+                {/*
                 <td>
                   {row.originalUser.codUsuario &&
                   row.originalUser.codUsuario > 0 ? (
@@ -349,6 +358,7 @@ const FuncionariosPage: React.FC = () => {
                     "—"
                   )}
                 </td>
+                */}
               </tr>
             ))}
           </tbody>
