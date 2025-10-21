@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
-import useConfiguracao from "../hooks/useConfiguracao";
+import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
 
@@ -29,7 +29,7 @@ const IconSort = () => (
   </svg>
 );
 
-// Interface para controle de ordenação e colunas
+// Interfaces e constantes
 interface DispositivoExibido {
   nome: string;
   codigo: string;
@@ -37,7 +37,6 @@ interface DispositivoExibido {
   status: boolean;
 }
 
-// Mapeamento de chaves para os nomes dos campos da API para ordenação
 const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   nome: "nome",
   codigo: "id.codDispositivo",
@@ -45,7 +44,6 @@ const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   status: "ativo",
 };
 
-// Definição das colunas da tabela
 const columns: { key: keyof DispositivoExibido; label: string }[] = [
   { key: "nome", label: "Nome" },
   { key: "codigo", label: "Código" },
@@ -54,7 +52,6 @@ const columns: { key: keyof DispositivoExibido; label: string }[] = [
 ];
 
 const DispositivosPage: React.FC = () => {
-  // Estados para paginação e ordenação
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
@@ -62,12 +59,10 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
-  // Hooks para obter dados da empresa, configurações e controle de loading
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
-  // Hook principal para buscar os dispositivos
   const {
     dispositivos,
     loading: dispositivosLoading,
@@ -84,25 +79,15 @@ const DispositivosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  // Hooks para ações de deletar e ativar/desativar
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
   const {
-    maximoDispositivos,
-    maximoDispositivosMulti,
-    loading: loadingConfig,
-  } = useConfiguracao(codEmpresa || 0);
+    dados: dadosDispositivo,
+    loading: loadingDados,
+    refetch: refetchDados,
+  } = useGetDadosDispositivo(codEmpresa || 0);
 
-  const isLoading = companyLoading || dispositivosLoading || loadingConfig;
-
-  // Cálculos para a seção "Situação"
-  const { dispositivosAtivos, dispositivosMultiAtivos } = useMemo(() => {
-    const ativos = dispositivos?.filter((d) => d.ativo).length ?? 0;
-    // MODIFICADO: Compara com a string "2"
-    const multiAtivos =
-      dispositivos?.filter((d) => d.ativo && d.tipoLicenca === "2").length ?? 0;
-    return { dispositivosAtivos: ativos, dispositivosMultiAtivos: multiAtivos };
-  }, [dispositivos]);
+  const isLoading = companyLoading || dispositivosLoading || loadingDados;
 
   useEffect(() => {
     if (isLoading) {
@@ -111,6 +96,10 @@ const DispositivosPage: React.FC = () => {
       hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
+
+  const handleRefresh = async () => {
+    await Promise.all([refetch(), refetchDados()]);
+  };
 
   const handleSort = (key: keyof DispositivoExibido) => {
     const direction =
@@ -124,7 +113,7 @@ const DispositivosPage: React.FC = () => {
   const handleDeleteDevice = async (codDispositivo: string) => {
     if (window.confirm("Deseja mesmo excluir esse dispositivo?")) {
       await deleteDispositivo(codDispositivo);
-      await refetch();
+      await handleRefresh();
     }
   };
 
@@ -139,7 +128,7 @@ const DispositivosPage: React.FC = () => {
       codEmpresaApi: codEmpresa || 0,
       ativo: !statusAtual,
     });
-    await refetch();
+    await handleRefresh();
   };
 
   const handleItemsPerPageChange = (newSize: number) => {
@@ -155,7 +144,7 @@ const DispositivosPage: React.FC = () => {
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
           className={styles.refreshButton}
-          onClick={() => refetch()}
+          onClick={handleRefresh}
           title="Atualizar dispositivos"
         >
           <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
@@ -195,7 +184,6 @@ const DispositivosPage: React.FC = () => {
                     <td>{dispositivo.nomeDispositivo}</td>
                     <td>{dispositivo.codDispositivo}</td>
                     <td>
-                      {/* MODIFICADO: Compara com a string "2" */}
                       {dispositivo.tipoLicenca === "2"
                         ? "Multiempresa"
                         : "Padrão"}
@@ -245,41 +233,34 @@ const DispositivosPage: React.FC = () => {
         <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
-            <p>Total de Dispositivos:</p>
-            <span className={styles.situacaoValue}>{totalElementos ?? 0}</span>
-          </div>
-
-          {!loadingConfig && (
-            <div className={styles.situacaoItem}>
-              <p>Disponíveis (Padrão):</p>
-              <span className={styles.situacaoValue}>
-                {maximoDispositivos - dispositivosAtivos}
-              </span>
-            </div>
-          )}
-          <div className={styles.situacaoItem}>
-            <p>Máximo de Dispositivos:</p>
-            <span className={styles.situacaoValue}>{maximoDispositivos}</span>
-          </div>
-
-          <div className={styles.situacaoItem}>
-            <p>Ativos (Multiempresa):</p>
+            <p>Total dispositivos:</p>
             <span className={styles.situacaoValue}>
-              {dispositivosMultiAtivos}
+              {dadosDispositivo?.totalDispositivos ?? 0}
             </span>
           </div>
-          {!loadingConfig && (
-            <div className={styles.situacaoItem}>
-              <p>Disponíveis (Multiempresa):</p>
-              <span className={styles.situacaoValue}>
-                {maximoDispositivosMulti - dispositivosMultiAtivos}
-              </span>
-            </div>
-          )}
           <div className={styles.situacaoItem}>
-            <p>Máximo de Dispositivos Multiempresa:</p>
+            <p>Licenças Padrão:</p>
             <span className={styles.situacaoValue}>
-              {maximoDispositivosMulti}
+              {dadosDispositivo?.licencasPadrao ?? 0}
+            </span>
+          </div>
+          <div className={styles.situacaoItem}>
+            <p>Licenças Padrão utilizadas:</p>
+            <span className={styles.situacaoValue}>
+              {dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
+            </span>
+          </div>
+          <div className={styles.situacaoItem}>
+            <p>Licenças MultiEmpresa:</p>
+            <span className={styles.situacaoValue}>
+              {dadosDispositivo?.licencasMulti ?? 0}
+            </span>
+          </div>
+
+          <div className={styles.situacaoItem}>
+            <p>Licenças MultiEmpresa utilizadas:</p>
+            <span className={styles.situacaoValue}>
+              {dadosDispositivo?.licencasMultiUtilizadas ?? 0}
             </span>
           </div>
         </div>
