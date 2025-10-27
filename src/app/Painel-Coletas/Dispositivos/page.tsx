@@ -9,9 +9,9 @@ import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
+import useConfiguracao from "../hooks/useConfiguracao";
 import PaginationControls from "../components/PaginationControls";
 
-// Componente do ícone de ordenação
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,6 @@ const IconSort = () => (
   </svg>
 );
 
-// Interfaces e constantes
 interface DispositivoExibido {
   nome: string;
   codigo: string;
@@ -87,7 +86,16 @@ const DispositivosPage: React.FC = () => {
     refetch: refetchDados,
   } = useGetDadosDispositivo(codEmpresa || 0);
 
-  const isLoading = companyLoading || dispositivosLoading || loadingDados;
+  const {
+    validadeLicenca,
+    loading: loadingLicencaGeral, 
+    error: errorLicencaGeral, 
+    loadingLicenca,
+    errorLicenca, 
+  } = useConfiguracao(codEmpresa || 0);
+
+  const isLoading =
+    companyLoading || dispositivosLoading || loadingDados || loadingLicenca; 
 
   useEffect(() => {
     if (isLoading) {
@@ -157,6 +165,12 @@ const DispositivosPage: React.FC = () => {
           {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
           {dispositivosError && (
             <p>Erro ao carregar dispositivos: {dispositivosError}</p>
+          )}
+          {errorLicenca && (
+            <p>Erro ao carregar validade da licença: {errorLicenca.message}</p>
+          )}
+          {errorLicencaGeral && (
+            <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
           )}
 
           {!isLoading && dispositivos && (
@@ -261,6 +275,19 @@ const DispositivosPage: React.FC = () => {
             <p>Licenças MultiEmpresa utilizadas:</p>
             <span className={styles.situacaoValue}>
               {dadosDispositivo?.licencasMultiUtilizadas ?? 0}
+            </span>
+          </div>
+
+          <div className={styles.situacaoItem}>
+            <p>Licenças válidas até:</p>
+            <span className={styles.situacaoValue}>
+              {loadingLicenca
+                ? "..."
+                : errorLicenca
+                ? "Erro"
+                : validadeLicenca
+                ? validadeLicenca.toLocaleDateString("pt-BR") 
+                : "N/D"}
             </span>
           </div>
         </div>
