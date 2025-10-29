@@ -11,13 +11,14 @@ interface RankingItem {
 }
 
 export const useRankingItensMais = (
-  codEmpresa: unknown, 
-  periodoIni: unknown, 
-  periodoFim: unknown
+  // <-- CORREÇÃO: Tipagem correta
+  codEmpresa: number | string,
+  periodoIni: string,
+  periodoFim: string
 ) => {
   const [data, setData] = useState<RankingItem[]>([]);
-  const [error, setError] = useState<Error | null>(null); // Properly typed error state
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // Já estava 'false', ótimo.
 
   useEffect(() => {
     if (!codEmpresa || !periodoIni || !periodoFim) return;
@@ -34,7 +35,7 @@ export const useRankingItensMais = (
         setData(response.data || []);
       } catch (err) {
         console.error("❌ Erro ao buscar itens mais vendidos:", err);
-        setError(err instanceof Error ? err : new Error(String(err))); // Proper error handling
+        setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
       }

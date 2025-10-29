@@ -1,6 +1,6 @@
 .container {
   padding: 10px;
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   height: 100vh;
 }
@@ -42,6 +42,7 @@
 .table th {
   background-color: white;
   font-weight: bold;
+  cursor: pointer; /* [NOVO] Adicionado cursor pointer ao header */
 }
 
 /* Specific styling for tfoot to remove bottom border */
@@ -55,7 +56,6 @@
 
 .table tr:hover {
   background-color: #eee;
-  cursor: pointer;
 }
 
 .additionalInfo {
@@ -141,6 +141,7 @@
   display: flex;
   height: 36px;
   align-items: center;
+  padding: 0 6px; /* [MODIFICADO] Adicionado padding */
 }
 
 .paginationControls button:disabled {
@@ -189,4 +190,70 @@
 
 .expandedRow {
   background-color: #f9f9f9;
+}
+
+/* [NOVO] Classe para o botão de expandir (do padrão) */
+.expandButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* --- [NOVO] Estilos do padrão (Search/Actions/Spin) --- */
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+}
+
+.searchActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.searchContainer > :first-child {
+  flex-grow: 1;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #1769e3; /* Cor azul do texto e ícone */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #f0f7ff;
+  border-color: #d2e6fa;
+}
+
+.actionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
 }

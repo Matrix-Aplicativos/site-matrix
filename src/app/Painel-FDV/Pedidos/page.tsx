@@ -1,41 +1,70 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "../../shared/components/SearchBar";
+import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import styles from "./Pedidos.module.css";
-import useGetPedidos from "../hooks/useGetPedidos";
+import useGetPedidos from "../hooks/useGetPedidos"; // Hook atualizado
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
-import { FaSort } from "react-icons/fa";
+// [REMOVIDO] import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
 import { Pedido } from "../utils/types/Pedido";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+
+// [NOVO] Ícone de Refresh do padrão
+const IconRefresh = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+  </svg>
+);
+
+// [NOVO] Ícone de Sort do padrão
+const IconSort = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: "0.5em" }}
+  >
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+  </svg>
+);
 
 const PedidosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
-  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
-
-  const { pedidos, isLoading } = useGetPedidos(
-    codEmpresa,
-    paginaAtual,
-    porPagina
-  );
-
   const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState<Pedido[]>([]);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Pedido;
+    key: string;
     direction: "asc" | "desc";
   } | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("codPedido");
@@ -44,45 +73,34 @@ const PedidosPage: React.FC = () => {
     endDate: "",
   });
 
-  useEffect(() => {
-    if (pedidos) {
-      setHasMoreData(pedidos.length > 0);
-      let data = pedidos;
-      // Apply filtering right away
-      if (
-        query !== "" ||
-        dateRange.startDate !== "" ||
-        dateRange.endDate !== ""
-      ) {
-        if (query) {
-          data = data.filter((pedido) =>
-            pedido[selectedFilter as keyof Pedido]
-              ?.toString()
-              .toLowerCase()
-              .includes(query.toLowerCase())
-          );
-        }
-        if (dateRange.startDate && dateRange.endDate) {
-          data = data.filter((pedido) => {
-            const pedidoDate = new Date(pedido.dataCadastro);
-            return (
-              pedidoDate >= new Date(dateRange.startDate) &&
-              pedidoDate <= new Date(dateRange.endDate)
-            );
-          });
-        }
-      }
-      setFilteredData(data);
-    }
-  }, [pedidos, query, dateRange, selectedFilter]);
+  const {
+    pedidos,
+    loading, // Renomeado de isLoading
+    error,
+    qtdPaginas,
+    qtdElementos,
+    refetch, // [NOVO] Adicionado para o botão "Atualizar"
+  } = useGetPedidos(
+    codEmpresa,
+    paginaAtual,
+    porPagina,
+    sortConfig?.key,
+    sortConfig?.direction,
+    selectedFilter,
+    query,
+    dateRange.startDate,
+    dateRange.endDate
+  );
+
+  const filteredData = pedidos || []; // Apenas usa os dados do hook
 
   useEffect(() => {
-    if (isLoading) {
+    if (loading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [isLoading, showLoading, hideLoading]);
+  }, [loading, showLoading, hideLoading]);
 
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prevRow) => (prevRow === index ? null : index));
@@ -94,7 +112,7 @@ const PedidosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1);
+    setPaginaAtual(1); // Reseta a página
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,10 +121,10 @@ const PedidosPage: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    setPaginaAtual(1);
+    setPaginaAtual(1); // Reseta a página
   };
 
-  const sortData = (key: keyof Pedido) => {
+  const sortData = (key: string) => {
     let direction: "asc" | "desc" = "asc";
     if (
       sortConfig &&
@@ -115,17 +133,14 @@ const PedidosPage: React.FC = () => {
     ) {
       direction = "desc";
     }
-    const sortedData = [...filteredData].sort((a, b) => {
-      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-    setFilteredData(sortedData);
     setSortConfig({ key, direction });
+    setPaginaAtual(1); // Reseta a página
   };
 
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1);
+  };
 
   const getStatusLabel = (status: string) =>
     status === "4" ? "Faturado" : status === "5" ? "Cancelado" : "Outro Status";
@@ -143,15 +158,39 @@ const PedidosPage: React.FC = () => {
     { key: "status", label: "Status" },
   ];
 
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>PEDIDOS</h1>
+        <p>Erro ao carregar pedidos: {error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <LoadingOverlay />
       <h1 className={styles.title}>PEDIDOS</h1>
-      <SearchBar
-        placeholder="Qual pedido deseja buscar?"
-        onSearch={handleSearch}
-        onFilterClick={toggleFilterExpansion}
-      />
+
+      {/* [NOVO] Estrutura de search container + actions do padrão */}
+      <div className={styles.searchContainer}>
+        <SearchBar
+          placeholder="Qual pedido deseja buscar?"
+          onSearch={handleSearch}
+          onFilterClick={toggleFilterExpansion}
+        />
+        <div className={styles.searchActions}>
+          <button
+            className={styles.actionButton}
+            onClick={() => refetch()} // Assumindo que o hook provê refetch
+            title="Atualizar pedidos"
+          >
+            <span>Atualizar</span>
+            <IconRefresh className={loading ? styles.spinning : ""} />
+          </button>
+        </div>
+      </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -192,8 +231,13 @@ const PedidosPage: React.FC = () => {
                 <th
                   key={col.key}
                   onClick={() => sortData(col.key as keyof Pedido)}
+                  style={{ cursor: "pointer" }} // [MODIFICADO]
                 >
-                  {col.label} <FaSort />
+                  {/* [MODIFICADO] Padrão de ícone de sort */}
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>{col.label}</span>
+                    <IconSort />
+                  </div>
                 </th>
               ))}
               <th></th>
@@ -260,49 +304,22 @@ const PedidosPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
-          {/* *** MODIFICATION START *** */}
+
           <tfoot>
             <tr>
               <td colSpan={columns.length + 1}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronsLeft />
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Pedidos por página: </span>
-                    <select
-                      value={porPagina}
-                      onChange={(e) => {
-                        setPorPagina(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
+                <PaginationControls
+                  paginaAtual={paginaAtual}
+                  totalPaginas={qtdPaginas || 1}
+                  totalElementos={qtdElementos || 0}
+                  porPagina={porPagina}
+                  onPageChange={setPaginaAtual}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  isLoading={loading}
+                />
               </td>
             </tr>
           </tfoot>
-          {/* *** MODIFICATION END *** */}
         </table>
       </div>
     </div>

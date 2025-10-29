@@ -8,9 +8,13 @@ import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
-import useCurrentCompany from "../hooks/useCurrentCompany";
 import useConfiguracao from "../hooks/useConfiguracao";
-import PaginationControls from "../components/PaginationControls";
+
+// [NOVO] Importações para obter usuário logado e codEmpresa
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
 const IconSort = () => (
   <svg
@@ -58,8 +62,14 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
-  const { empresa, loading: companyLoading } = useCurrentCompany();
-  const codEmpresa = empresa?.codEmpresa;
+  // [MODIFICADO] Obter codEmpresa via useGetLoggedUser (sem 'loading')
+  const token = getCookie("token");
+  const codUsuario = getUserFromToken(String(token));
+  const { usuario } = useGetLoggedUser(codUsuario || 0);
+
+  // [MODIFICADO] Usando fallback '1' (ou o padrão que você usa)
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
+
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -70,34 +80,39 @@ const DispositivosPage: React.FC = () => {
     totalPaginas,
     totalElementos,
   } = useGetDispositivos(
-    codEmpresa || 0,
+    codEmpresa, // Passa o codEmpresa (com fallback)
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    !!codEmpresa
+    !!codEmpresa // Habilita o hook
   );
 
-  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
+  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
   const {
     dados: dadosDispositivo,
     loading: loadingDados,
     refetch: refetchDados,
-  } = useGetDadosDispositivo(codEmpresa || 0);
+  } = useGetDadosDispositivo(codEmpresa);
 
   const {
     validadeLicenca,
-    loading: loadingLicencaGeral,
+    loading: loadingLicencaGeral, // Este é o loading do hook de config geral
     error: errorLicencaGeral,
-    loadingLicenca,
+    loadingLicenca, // Este é o loading específico da licença
     errorLicenca,
-  } = useConfiguracao(codEmpresa || 0);
+  } = useConfiguracao(codEmpresa);
 
+  // [MODIFICADO] isLoading (remove 'usuarioLoading')
   const isLoading =
-    companyLoading || dispositivosLoading || loadingDados || loadingLicenca;
+    dispositivosLoading ||
+    loadingDados ||
+    loadingLicenca ||
+    loadingLicencaGeral; // Adicionado loading geral do useConfiguracao
 
   useEffect(() => {
+    // O useEffect agora só depende do isLoading dos hooks de dados
     if (isLoading) {
       showLoading();
     } else {
@@ -133,7 +148,7 @@ const DispositivosPage: React.FC = () => {
     await ativarDispositivo({
       codDispositivo,
       nomeDispositivo,
-      codEmpresaApi: codEmpresa || 0,
+      codEmpresaApi: codEmpresa, // Passa o codEmpresa obtido
       ativo: !statusAtual,
     });
     await handleRefresh();
@@ -143,6 +158,8 @@ const DispositivosPage: React.FC = () => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
+
+  // [REMOVIDO] Bloco 'if (usuarioLoading || ...)' que causava o lock.
 
   return (
     <div className={styles.container}>
@@ -154,6 +171,7 @@ const DispositivosPage: React.FC = () => {
           className={styles.refreshButton}
           onClick={handleRefresh}
           title="Atualizar dispositivos"
+          disabled={isLoading} // Desabilita apenas se os hooks de dados estiverem carregando
         >
           <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
@@ -173,6 +191,7 @@ const DispositivosPage: React.FC = () => {
             <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
           )}
 
+          {/* Renderiza a tabela se não estiver em loading E tiver dispositivos */}
           {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
@@ -249,35 +268,37 @@ const DispositivosPage: React.FC = () => {
           <div className={styles.situacaoItem}>
             <p>Total dispositivos:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.totalDispositivos ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.totalDispositivos ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadrao ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.licencasPadrao ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
-            <p>Licenças Padrãoizadas:</p>
+            <p>Licenças Padrão utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
+              {loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMulti ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.licencasMulti ?? 0}
             </span>
           </div>
-
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMultiUtilizadas ?? 0}
+              {loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasMultiUtilizadas ?? 0}
             </span>
           </div>
-
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>

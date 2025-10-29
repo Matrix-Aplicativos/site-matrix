@@ -10,9 +10,14 @@ import { useTotalClientes } from "./hooks/useTotalClientes";
 import { useLoading } from "../shared/Context/LoadingContext";
 import styles from "./Home.module.css";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
+import useCurrentCompany from "../Painel-Coletas/hooks/useCurrentCompany";
 
 export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
+
+  // 1. BUSCA DINÂMICA DA EMPRESA
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+  const codEmpresa = empresa?.codEmpresa;
 
   const today = new Date();
   const firstDayCurrentMonth = new Date(
@@ -47,9 +52,9 @@ export default function HomePage() {
 
   const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
   const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
-  const codEmpresa = 1;
   const porPagina = 1000;
 
+  // 2. HOOKS USANDO O codEmpresa DINÂMICO
   const {
     data: maisVendidos,
     error: errorMaisVendidos,
@@ -98,38 +103,52 @@ export default function HomePage() {
       ? ((clientesAtual - clientesAnterior) / clientesAnterior) * 100
       : null;
 
+  // 3. VARIÁVEL DE LOADING AGREGADA
+  const isLoading =
+    companyLoading ||
+    isLoadingMaisVendidos ||
+    isLoadingMenosVendidos ||
+    isLoadingPedidosAtual ||
+    isLoadingPedidosAnterior ||
+    isLoadingClientesAtual ||
+    isLoadingClientesAnterior;
+
+  // 4. LÓGICA DE LOADING CORRIGIDA
   useEffect(() => {
-    showLoading();
-    if (
-      !isLoadingMaisVendidos &&
-      !isLoadingMenosVendidos &&
-      !isLoadingPedidosAtual &&
-      !isLoadingPedidosAnterior &&
-      !isLoadingClientesAtual &&
-      !isLoadingClientesAnterior
-    ) {
+    if (isLoading) {
+      showLoading();
+    } else {
       setTimeout(() => {
         hideLoading();
-      }, 1000);
+      }, 1000); // 1s de delay para suavizar a transição
     }
-  }, [
-    isLoadingMaisVendidos,
-    isLoadingMenosVendidos,
-    isLoadingPedidosAtual,
-    isLoadingPedidosAnterior,
-    isLoadingClientesAtual,
-    isLoadingClientesAnterior,
-    showLoading,
-    hideLoading,
-  ]);
+  }, [isLoading, showLoading, hideLoading]);
 
-  if (errorMaisVendidos || errorMenosVendidos)
+  // 5. GUARDS DE LOADING E "SEM EMPRESA"
+  if (companyLoading) {
+    return <div className={styles.container}>Carregando painel...</div>;
+  }
+
+  if (!empresa) {
+    return (
+      <div className={styles.container}>
+        <h2>Nenhuma empresa associada</h2>
+        <p>Sua conta não está vinculada a nenhuma empresa.</p>
+      </div>
+    );
+  }
+
+  if (errorMaisVendidos || errorMenosVendidos) {
     return <p>Ocorreu um erro ao carregar os dados!</p>;
+  }
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>PAINEL DE CONTROLE</h1>
+      {/* 6. TÍTULO DINÂMICO */}
+      <h1 className={styles.title}>
+        PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
+      </h1>
       <div className={styles.border}>
         <RelatorioPedidos />
       </div>

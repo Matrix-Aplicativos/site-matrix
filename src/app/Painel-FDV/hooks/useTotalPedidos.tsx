@@ -9,14 +9,16 @@ export const useTotalPedidos = (
   porPagina: number
 ) => {
   const [totalPedidos, setTotalPedidos] = useState<Pedido[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // <-- CORREÇÃO: Iniciar com false
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Esta guarda é essencial e está correta.
+    // Se não tiver codEmpresa, ele para e o isLoading continua 'false'.
     if (!codEmpresa || !periodoIni || !periodoFim) return;
 
     const fetchTotalPedidos = async () => {
-      setIsLoading(true);
+      setIsLoading(true); // Fica 'true' apenas quando a busca *começa*
       try {
         const response = await axiosInstance.get<Pedido[]>(
           `/pedido/empresa/${codEmpresa}`,

@@ -1,18 +1,57 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "../../shared/components/SearchBar";
+
 import styles from "./Usuarios.module.css";
 import useGetUsuarios from "../hooks/useGetUsuarios";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
-import { FaSort } from "react-icons/fa";
+// [REMOVIDO] import { FaSort } from "react-icons/fa";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 import useAtivarUsuario from "../hooks/useAtivarUsuario";
 import { toast } from "react-toastify";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+import SearchBar from "@/app/Painel-Coletas/components/SearchBar";
+
+// [NOVO] Ícone de Refresh do padrão
+const IconRefresh = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+  </svg>
+);
+
+// [NOVO] Ícone de Sort do padrão
+const IconSort = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: "0.5em" }}
+  >
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+  </svg>
+);
 
 interface ColumnDefinition {
   key: string;
@@ -24,7 +63,6 @@ const UsuariosPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
@@ -34,13 +72,15 @@ const UsuariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  const { usuarios, loading, error } = useGetUsuarios(
-    usuario?.empresas[0]?.codEmpresa || 1,
-    paginaAtual,
-    itemsPerPage,
-    sortConfig?.key,
-    sortConfig?.direction
-  );
+  // [MODIFICADO] Adicionado "refetch"
+  const { usuarios, loading, error, qtdPaginas, qtdElementos, refetch } =
+    useGetUsuarios(
+      usuario?.empresas[0]?.codEmpresa || 1,
+      paginaAtual,
+      itemsPerPage,
+      sortConfig?.key,
+      sortConfig?.direction
+    );
 
   const { ativarUsuario, error: activationError } = useAtivarUsuario();
 
@@ -52,10 +92,9 @@ const UsuariosPage: React.FC = () => {
 
   useEffect(() => {
     if (usuarios) {
-      setHasMoreData(usuarios.length >= itemsPerPage);
       setFilteredData(usuarios);
     }
-  }, [usuarios, itemsPerPage]);
+  }, [usuarios]);
 
   useEffect(() => {
     if (loading) {
@@ -82,9 +121,8 @@ const UsuariosPage: React.FC = () => {
   const handleAtivarUsuario = async (codUsuario: string | number) => {
     await ativarUsuario(String(codUsuario), true, () => {
       toast.success("Usuário ativado com sucesso!");
-      // This logic forces a re-render/refetch. A better approach might be a dedicated refetch function.
       const currentPage = paginaAtual;
-      setPaginaAtual(0); // Temporarily change to trigger useEffect
+      setPaginaAtual(0);
       setTimeout(() => setPaginaAtual(currentPage), 0);
     });
   };
@@ -102,9 +140,7 @@ const UsuariosPage: React.FC = () => {
           case "Email":
             return usuario.email.toLowerCase().includes(searchValue);
           case "CPF":
-            return usuario.cpf.toLowerCase().includes(searchValue);
-          case "Login":
-            return usuario.login.toLowerCase().includes(searchValue);
+            return usuario.cpf?.toLowerCase().includes(searchValue) || false;
           default:
             return true;
         }
@@ -122,14 +158,21 @@ const UsuariosPage: React.FC = () => {
     setPaginaAtual(1);
   };
 
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
+  const handleItemsPerPageChange = (newSize: number) => {
+    setItemsPerPage(newSize);
+    setPaginaAtual(1); // Reseta para a página 1 ao mudar a quantidade
+  };
 
   const columns: ColumnDefinition[] = [
     { key: "nome", label: "Nome" },
     { key: "email", label: "Email" },
     { key: "cpf", label: "CPF" },
-    { key: "tipoUsuario.nome", label: "Tipo de Usuário" },
+    { key: "codFuncionarioErp", label: "Cód. ERP" },
+    {
+      key: "utilizaApp",
+      label: "Usa App",
+      render: (value: boolean) => (value ? "Sim" : "Não"),
+    },
     {
       key: "ativo",
       label: "Status",
@@ -139,7 +182,9 @@ const UsuariosPage: React.FC = () => {
         ) : (
           <button
             className={`${styles.actionButton} ${styles.activateButton}`}
-            onClick={() => handleAtivarUsuario(row.codUsuario)}
+            onClick={() =>
+              handleAtivarUsuario(row.codUsuario || row.codFuncionario)
+            }
           >
             Ativar
           </button>
@@ -170,14 +215,36 @@ const UsuariosPage: React.FC = () => {
     );
   }
 
+  const getCellValue = (row: any, colKey: string) => {
+    if (colKey.includes(".")) {
+      return colKey.split(".").reduce((o: any, i) => o?.[i], row) || "N/A";
+    }
+    return row[colKey as keyof UsuarioGet] ?? "N/A";
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>USUÁRIOS</h1>
-      <SearchBar
-        placeholder="Qual usuário deseja buscar?"
-        onSearch={handleSearch}
-        onFilterClick={toggleFilterExpansion}
-      />
+
+      {/* [NOVO] Estrutura de search container + actions do padrão */}
+      <div className={styles.searchContainer}>
+        <SearchBar
+          placeholder="Qual usuário deseja buscar?"
+          onSearch={handleSearch}
+          onFilterClick={toggleFilterExpansion}
+        />
+        <div className={styles.searchActions}>
+          <button
+            className={styles.actionButton} // Usa o actionButton padrão
+            onClick={() => refetch()} // Assumindo que o hook provê refetch
+            title="Atualizar usuários"
+          >
+            <span>Atualizar</span>
+            <IconRefresh className={loading ? styles.spinning : ""} />
+          </button>
+        </div>
+      </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -189,7 +256,6 @@ const UsuariosPage: React.FC = () => {
               <option value="Nome">Nome</option>
               <option value="Email">Email</option>
               <option value="CPF">CPF</option>
-              <option value="Login">Login</option>
             </select>
           </div>
         </div>
@@ -200,35 +266,28 @@ const UsuariosPage: React.FC = () => {
             <tr>
               {columns.map((col) => (
                 <th key={col.key} onClick={() => handleSort(col.key)}>
-                  {col.label}
-                  {col.key !== "actions" && col.key !== "ativo" && (
-                    <FaSort style={{ marginLeft: "0.5em" }} />
-                  )}
+                  {/* [MODIFICADO] Padrão de ícone de sort */}
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>{col.label}</span>
+                    {col.key !== "actions" && col.key !== "ativo" && (
+                      <IconSort />
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
-              <React.Fragment key={row.codUsuario}>
+              <React.Fragment key={row.codFuncionario}>
                 <tr
                   className={row.ativo ? styles.activeRow : styles.inactiveRow}
                 >
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render
-                        ? col.render(
-                            col.key.includes(".")
-                              ? col.key
-                                  .split(".")
-                                  .reduce((o: any, i) => o?.[i], row)
-                              : row[col.key as keyof UsuarioGet],
-                            row,
-                            rowIndex
-                          )
-                        : col.key.includes(".")
-                        ? col.key.split(".").reduce((o: any, i) => o?.[i], row)
-                        : row[col.key as keyof UsuarioGet]}
+                        ? col.render(getCellValue(row, col.key), row, rowIndex)
+                        : getCellValue(row, col.key)}
                     </td>
                   ))}
                 </tr>
@@ -237,7 +296,12 @@ const UsuariosPage: React.FC = () => {
                     <td colSpan={columns.length}>
                       <div className={styles.additionalInfo}>
                         <p>
-                          <strong>Código Usuário:</strong> {row.codUsuario}
+                          <strong>Código Usuário:</strong>{" "}
+                          {row.codUsuario ?? "N/A"}
+                        </p>
+                        <p>
+                          <strong>Código Funcionário:</strong>{" "}
+                          {row.codFuncionario}
                         </p>
                         <p>
                           <strong>Código ERP:</strong> {row.codUsuarioErp}
@@ -246,18 +310,12 @@ const UsuariosPage: React.FC = () => {
                           <strong>Nome:</strong> {row.nome}
                         </p>
                         <p>
-                          <strong>CPF:</strong> {row.cpf}
+                          <strong>CPF:</strong> {row.cpf ?? "N/A"}
                         </p>
                         <p>
                           <strong>Email:</strong> {row.email}
                         </p>
-                        <p>
-                          <strong>Login:</strong> {row.login}
-                        </p>
-                        <p>
-                          <strong>Tipo de Usuário:</strong>{" "}
-                          {row.tipoUsuario.nome}
-                        </p>
+
                         <p>
                           <strong>Status:</strong>{" "}
                           {row.ativo ? "Ativo" : "Inativo"}
@@ -269,49 +327,21 @@ const UsuariosPage: React.FC = () => {
               </React.Fragment>
             ))}
           </tbody>
-          {/* *** MODIFICATION START *** */}
           <tfoot>
             <tr>
               <td colSpan={columns.length}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronsLeft />
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Usuários por página: </span>
-                    <select
-                      value={itemsPerPage}
-                      onChange={(e) => {
-                        setItemsPerPage(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
+                <PaginationControls
+                  paginaAtual={paginaAtual}
+                  totalPaginas={qtdPaginas || 1}
+                  totalElementos={qtdElementos || 0}
+                  porPagina={itemsPerPage}
+                  onPageChange={setPaginaAtual}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  isLoading={loading}
+                />
               </td>
             </tr>
           </tfoot>
-          {/* *** MODIFICATION END *** */}
         </table>
       </div>
     </div>

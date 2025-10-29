@@ -1,50 +1,109 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SearchBar from "../../shared/components/SearchBar";
+import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import styles from "./Clientes.module.css";
-import useGetClientes from "../hooks/useGetClientes";
+import useGetClientes from "../hooks/useGetClientes"; // Hook atualizado
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft } from "react-icons/fi";
-import { FaSort } from "react-icons/fa";
+// [REMOVIDO] import { FaSort } from "react-icons/fa";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import { formatTelefone } from "../utils/functions/formatTelefone";
 import { formatCep } from "../utils/functions/formatCep";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+
+// [NOVO] Ícone de Refresh do padrão
+const IconRefresh = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+  </svg>
+);
+
+// [NOVO] Ícone de Sort do padrão
+const IconSort = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: "0.5em" }}
+  >
+    <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
+  </svg>
+);
+
+// A interface Cliente pode ser movida para um arquivo 'types'
+interface Cliente {
+  codClienteErp: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  cnpjcpf: string;
+  fone1: string;
+  email: string;
+  endereco: string;
+  complemento: string;
+  cep: string;
+  status: string;
+  municipio: { codMunicipio: string };
+  territorio?: { descricao: string };
+  rota?: { descricao: string };
+  segmento?: { descricao: string };
+  classificacao?: { descricao: string };
+}
 
 const ClientesPage: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
-  const [hasMoreData, setHasMoreData] = useState(true);
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const { clientes, loading, error } = useGetClientes(
-    usuario?.empresas[0]?.codEmpresa || 1,
-    paginaAtual,
-    porPagina
-  );
 
-  const [query, setQuery] = useState("");
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [sortedData, setSortedData] = useState<any[]>([]);
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
-    direction: "asc" | "desc" | null;
+    direction: "asc" | "desc";
   } | null>(null);
+
+  // [MODIFICADO] Adicionado "refetch" para seguir o padrão do botão "Atualizar"
+  const { clientes, loading, error, qtdPaginas, qtdElementos, refetch } =
+    useGetClientes(
+      usuario?.empresas[0]?.codEmpresa || 1,
+      paginaAtual,
+      porPagina,
+      sortConfig?.key,
+      sortConfig?.direction
+    );
+
+  const [query, setQuery] = useState("");
+  const [filteredData, setFilteredData] = useState<Cliente[]>([]); // Tipagem ajustada
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [searchTopic, setSearchTopic] = useState<string>("RazaoSocial");
 
   useEffect(() => {
     if (clientes) {
-      setHasMoreData(clientes.length > 0);
-      setFilteredData(clientes);
-      setSortedData(clientes);
+      setFilteredData(clientes); // Atualiza dados filtrados
     }
   }, [clientes]);
 
@@ -66,10 +125,10 @@ const ClientesPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Reset to first page on search
+    setPaginaAtual(1); // Reseta a página
 
     if (clientes) {
-      const filtered = clientes.filter((cliente: any) => {
+      const filtered = clientes.filter((cliente: Cliente) => {
         const searchValue = searchQuery.toLowerCase();
         switch (searchTopic) {
           case "RazaoSocial":
@@ -88,30 +147,22 @@ const ClientesPage: React.FC = () => {
         }
       });
       setFilteredData(filtered);
-      setSortedData(filtered);
     }
   };
 
   const handleSort = (key: string) => {
-    let direction: "asc" | "desc" | null = "asc";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "asc"
-    ) {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig?.key === key && sortConfig.direction === "asc") {
       direction = "desc";
     }
-    const sorted = [...filteredData].sort((a: any, b: any) => {
-      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-    setSortedData(sorted);
     setSortConfig({ key, direction });
+    setPaginaAtual(1); // Reseta para a página 1 ao ordenar
   };
 
-  const handleNextPage = () => setPaginaAtual((prev) => prev + 1);
-  const handlePrevPage = () => setPaginaAtual((prev) => Math.max(1, prev - 1));
+  const handleItemsPerPageChange = (newSize: number) => {
+    setPorPagina(newSize);
+    setPaginaAtual(1); // Reseta para a página 1
+  };
 
   const columns = [
     { key: "codClienteErp", label: "Código" },
@@ -124,11 +175,26 @@ const ClientesPage: React.FC = () => {
     <div className={styles.container}>
       <LoadingOverlay />
       <h1 className={styles.title}>CLIENTES</h1>
-      <SearchBar
-        placeholder="Qual cliente deseja buscar?"
-        onSearch={handleSearch}
-        onFilterClick={toggleFilterExpansion}
-      />
+
+      {/* [NOVO] Estrutura de search container + actions do padrão */}
+      <div className={styles.searchContainer}>
+        <SearchBar
+          placeholder="Qual cliente deseja buscar?"
+          onSearch={handleSearch}
+          onFilterClick={toggleFilterExpansion}
+        />
+        <div className={styles.searchActions}>
+          <button
+            className={styles.actionButton}
+            onClick={() => refetch()} // Assumindo que o hook provê refetch
+            title="Atualizar clientes"
+          >
+            <span>Atualizar</span>
+            <IconRefresh className={loading ? styles.spinning : ""} />
+          </button>
+        </div>
+      </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -151,20 +217,23 @@ const ClientesPage: React.FC = () => {
             <tr>
               {columns.map((col) => (
                 <th key={col.key} onClick={() => handleSort(col.key)}>
-                  {col.label}
-                  <FaSort style={{ marginLeft: "0.5em" }} />
+                  {/* [MODIFICADO] Padrão de ícone de sort */}
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>{col.label}</span>
+                    <IconSort />
+                  </div>
                 </th>
               ))}
-              <th></th> {/* Header for expand button */}
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(sortedData) &&
-              sortedData.map((row, rowIndex) => (
+            {Array.isArray(filteredData) &&
+              filteredData.map((row, rowIndex) => (
                 <React.Fragment key={row.codClienteErp}>
                   <tr
                     className={
-                      row.status === "A"
+                      row.status === "A" // Assumindo 'A' como Ativo
                         ? styles.statusActive
                         : styles.statusInactive
                     }
@@ -252,49 +321,21 @@ const ClientesPage: React.FC = () => {
                 </React.Fragment>
               ))}
           </tbody>
-          {/* *** MODIFICATION START *** */}
           <tfoot>
             <tr>
               <td colSpan={columns.length + 1}>
-                <div className={styles.paginationContainer}>
-                  <div className={styles.paginationControls}>
-                    <button
-                      onClick={() => setPaginaAtual(1)}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronsLeft />
-                    </button>
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={paginaAtual === 1}
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <span>{paginaAtual}</span>
-                    <button onClick={handleNextPage} disabled={!hasMoreData}>
-                      <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className={styles.itemsPerPageContainer}>
-                    <span>Clientes por página: </span>
-                    <select
-                      value={porPagina}
-                      onChange={(e) => {
-                        setPorPagina(Number(e.target.value));
-                        setPaginaAtual(1);
-                      }}
-                      className={styles.itemsPerPageSelect}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                </div>
+                <PaginationControls
+                  paginaAtual={paginaAtual}
+                  totalPaginas={qtdPaginas || 1}
+                  totalElementos={qtdElementos || 0}
+                  porPagina={porPagina}
+                  onPageChange={setPaginaAtual}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  isLoading={loading}
+                />
               </td>
             </tr>
           </tfoot>
-          {/* *** MODIFICATION END *** */}
         </table>
       </div>
     </div>
