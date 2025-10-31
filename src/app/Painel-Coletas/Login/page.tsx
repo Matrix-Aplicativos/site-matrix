@@ -137,6 +137,7 @@ export default function LoginPage() {
         );
         setTipoMensagem("");
       } else {
+        localStorage.setItem("authToken", token);
         try {
           const response = await axiosInstance.get(
             "/usuario/" + getUserFromToken(token)

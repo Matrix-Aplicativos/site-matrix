@@ -10,8 +10,8 @@ import { Usuario, Empresa } from "../utils/types/Usuario";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 
 import Logo from "@/app/img/Logo.png";
-import SearchBar from "../components/SearchBar";
 import "./SelecionarEmpresa.css";
+import SearchBar from "../components/SearchBar";
 
 export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
