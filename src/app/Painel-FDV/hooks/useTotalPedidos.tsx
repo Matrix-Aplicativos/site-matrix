@@ -6,19 +6,23 @@ export const useTotalPedidos = (
   codEmpresa: number | string,
   periodoIni: string,
   periodoFim: string,
-  porPagina: number
+  porPagina: number,
+  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
 ) => {
   const [totalPedidos, setTotalPedidos] = useState<Pedido[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // <-- CORREÇÃO: Iniciar com false
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Esta guarda é essencial e está correta.
-    // Se não tiver codEmpresa, ele para e o isLoading continua 'false'.
-    if (!codEmpresa || !periodoIni || !periodoFim) return;
+    // 2. GUARDA ATUALIZADA
+    if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
+      setTotalPedidos([]); // Limpa os dados se estiver desabilitado
+      setIsLoading(false);
+      return;
+    }
 
     const fetchTotalPedidos = async () => {
-      setIsLoading(true); // Fica 'true' apenas quando a busca *começa*
+      setIsLoading(true);
       try {
         const response = await axiosInstance.get<Pedido[]>(
           `/pedido/empresa/${codEmpresa}`,
@@ -37,7 +41,7 @@ export const useTotalPedidos = (
     };
 
     fetchTotalPedidos();
-  }, [codEmpresa, periodoIni, periodoFim, porPagina]);
+  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
 
   return { totalPedidos, isLoading, error };
 };

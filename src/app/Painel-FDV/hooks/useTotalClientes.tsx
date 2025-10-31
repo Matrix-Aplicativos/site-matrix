@@ -6,17 +6,23 @@ export const useTotalClientes = (
   codEmpresa: number | string,
   periodoIni: string,
   periodoFim: string,
-  porPagina: number
+  porPagina: number,
+  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
 ) => {
   const [totalClientes, setTotalClientes] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // <-- CORREÇÃO: Iniciar com false
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!codEmpresa || !periodoIni || !periodoFim) return;
+    // 2. GUARDA ATUALIZADA
+    if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
+      setTotalClientes(0); // Limpa os dados se estiver desabilitado
+      setIsLoading(false);
+      return;
+    }
 
     const fetchTotalClientes = async () => {
-      setIsLoading(true); // Fica 'true' apenas quando a busca *começa*
+      setIsLoading(true);
       try {
         const response = await axiosInstance.get<Pedido[]>(
           `/pedido/empresa/${codEmpresa}`,
@@ -40,7 +46,7 @@ export const useTotalClientes = (
     };
 
     fetchTotalClientes();
-  }, [codEmpresa, periodoIni, periodoFim, porPagina]);
+  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
 
   return { totalClientes, isLoading, error };
 };

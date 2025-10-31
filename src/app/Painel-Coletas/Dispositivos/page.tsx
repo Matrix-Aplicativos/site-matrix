@@ -88,14 +88,14 @@ const DispositivosPage: React.FC = () => {
 
   const {
     validadeLicenca,
-    loading: loadingLicencaGeral,
-    error: errorLicencaGeral,
+    loading: loadingLicencaGeral, 
+    error: errorLicencaGeral, 
     loadingLicenca,
-    errorLicenca,
+    errorLicenca, 
   } = useConfiguracao(codEmpresa || 0);
 
   const isLoading =
-    companyLoading || dispositivosLoading || loadingDados || loadingLicenca;
+    companyLoading || dispositivosLoading || loadingDados || loadingLicenca; 
 
   useEffect(() => {
     if (isLoading) {
@@ -259,7 +259,7 @@ const DispositivosPage: React.FC = () => {
             </span>
           </div>
           <div className={styles.situacaoItem}>
-            <p>Licenças Padrãoizadas:</p>
+            <p>Licenças Padrão utilizadas:</p>
             <span className={styles.situacaoValue}>
               {dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
             </span>
@@ -286,7 +286,7 @@ const DispositivosPage: React.FC = () => {
                 : errorLicenca
                 ? "Erro"
                 : validadeLicenca
-                ? validadeLicenca.toLocaleDateString("pt-BR")
+                ? validadeLicenca.toLocaleDateString("pt-BR") 
                 : "N/D"}
             </span>
           </div>

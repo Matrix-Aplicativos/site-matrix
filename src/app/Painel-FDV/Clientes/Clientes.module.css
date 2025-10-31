@@ -31,6 +31,7 @@
   text-align: left;
   padding: 12px 15px;
   border-bottom: 1px solid #ddd;
+  vertical-align: middle; /* Alinha a badge verticalmente */
 }
 
 .table th {
@@ -47,23 +48,12 @@
   background-color: #f1f1f1;
 }
 
+/* TFOOT foi adicionado na estrutura */
 .table tfoot tr:last-child td {
   border-bottom: 0;
 }
 
-.additionalInfo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  background: #fdfdfd;
-  padding: 15px;
-}
-
-.additionalInfo p {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #333;
-}
+/* --- REMOVIDO: .additionalInfo --- */
 
 .filterExpansion {
   display: flex;
@@ -94,17 +84,6 @@
   font-size: 13px;
   border: 1px solid #ccc;
   border-radius: 4px;
-}
-
-/* *** MODIFICATION START *** */
-
-/* New border-based status indicators */
-.statusActive {
-  border-right: 5px solid #4caf50; /* Green */
-}
-
-.statusInactive {
-  border-right: 5px solid #f44336; /* Red */
 }
 
 /* Pagination container in the table footer */
@@ -168,18 +147,9 @@
   cursor: pointer;
 }
 
-.expandButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-}
+/* --- REMOVIDO: .expandButton e .expandedRow --- */
 
-.expandedRow > td {
-  background-color: #fdfdfd;
-}
-
-/* --- [NOVO] Estilos do padrão (Search/Actions/Spin) --- */
+/* --- Estilos do padrão (Search/Actions/Spin) --- */
 
 .searchContainer {
   display: flex;
@@ -235,4 +205,22 @@
 
 .spinning {
   animation: spin 1s linear infinite;
+}
+
+/* --- [ADICIONADO] Estilos de Badge para Status (do seu exemplo) --- */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  white-space: nowrap;
+}
+.statusCompleted {
+  background-color: #e8f5e9; /* Verde (Ativo) */
+  color: #2e7d32;
+}
+.statusNotStarted {
+  background-color: #ffebee; /* Vermelho (Inativo) */
+  color: #c62828;
 }

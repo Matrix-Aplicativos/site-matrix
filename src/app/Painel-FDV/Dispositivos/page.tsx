@@ -9,8 +9,6 @@ import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
 import useConfiguracao from "../hooks/useConfiguracao";
-
-// [NOVO] Importações para obter usuário logado e codEmpresa
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
@@ -54,7 +52,7 @@ const columns: { key: keyof DispositivoExibido; label: string }[] = [
   { key: "status", label: "Status" },
 ];
 
-const DispositivosPage: React.FC = () => {
+export default function DispositivosPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
@@ -62,14 +60,10 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
-  // [MODIFICADO] Obter codEmpresa via useGetLoggedUser (sem 'loading')
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-
-  // [MODIFICADO] Usando fallback '1' (ou o padrão que você usa)
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
-
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -80,12 +74,12 @@ const DispositivosPage: React.FC = () => {
     totalPaginas,
     totalElementos,
   } = useGetDispositivos(
-    codEmpresa, // Passa o codEmpresa (com fallback)
+    codEmpresa,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    !!codEmpresa // Habilita o hook
+    !!codEmpresa
   );
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
@@ -98,21 +92,19 @@ const DispositivosPage: React.FC = () => {
 
   const {
     validadeLicenca,
-    loading: loadingLicencaGeral, // Este é o loading do hook de config geral
+    loading: loadingLicencaGeral,
     error: errorLicencaGeral,
-    loadingLicenca, // Este é o loading específico da licença
+    loadingLicenca,
     errorLicenca,
   } = useConfiguracao(codEmpresa);
 
-  // [MODIFICADO] isLoading (remove 'usuarioLoading')
   const isLoading =
     dispositivosLoading ||
     loadingDados ||
     loadingLicenca ||
-    loadingLicencaGeral; // Adicionado loading geral do useConfiguracao
+    loadingLicencaGeral;
 
   useEffect(() => {
-    // O useEffect agora só depende do isLoading dos hooks de dados
     if (isLoading) {
       showLoading();
     } else {
@@ -148,7 +140,7 @@ const DispositivosPage: React.FC = () => {
     await ativarDispositivo({
       codDispositivo,
       nomeDispositivo,
-      codEmpresaApi: codEmpresa, // Passa o codEmpresa obtido
+      codEmpresaApi: codEmpresa,
       ativo: !statusAtual,
     });
     await handleRefresh();
@@ -158,8 +150,6 @@ const DispositivosPage: React.FC = () => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
-
-  // [REMOVIDO] Bloco 'if (usuarioLoading || ...)' que causava o lock.
 
   return (
     <div className={styles.container}>
@@ -171,7 +161,7 @@ const DispositivosPage: React.FC = () => {
           className={styles.refreshButton}
           onClick={handleRefresh}
           title="Atualizar dispositivos"
-          disabled={isLoading} // Desabilita apenas se os hooks de dados estiverem carregando
+          disabled={isLoading}
         >
           <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
@@ -191,7 +181,6 @@ const DispositivosPage: React.FC = () => {
             <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
           )}
 
-          {/* Renderiza a tabela se não estiver em loading E tiver dispositivos */}
           {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
@@ -328,6 +317,4 @@ const DispositivosPage: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default DispositivosPage;
+}

@@ -14,7 +14,6 @@ import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
-  // Declaração de todos os useStates e Hooks
   const [definirPrimeiraSenha, setDefinirPrimeiraSenha] = useState(false);
   const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
   const [login, setLogin] = useState("");
@@ -35,7 +34,6 @@ export default function LoginPage() {
     solicitarRedefinicaoSenha,
   } = useLogin();
 
-  // Declaração de Funções e Lógica
   useEffect(() => {
     if (!textoIdentificacao) return;
     const timer = setTimeout(() => {
@@ -67,7 +65,6 @@ export default function LoginPage() {
   const handleDefinirSenha = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 👇 VALIDAÇÃO DE MÁXIMO DE 50 CARACTERES
     if (senha.length > 50) {
       setTextoIdentificacao("A senha não pode ter mais de 50 caracteres.");
       setTipoMensagem("erro");
@@ -137,6 +134,7 @@ export default function LoginPage() {
         );
         setTipoMensagem("");
       } else {
+        localStorage.setItem("authToken", token);
         try {
           const response = await axiosInstance.get(
             "/usuario/" + getUserFromToken(token)
@@ -204,7 +202,7 @@ export default function LoginPage() {
               placeholder="Digite seu login"
               value={login}
               onChange={(e) => setLogin(e.target.value)}
-              disabled={definirPrimeiraSenha} // <-- CAMPO DE LOGIN BLOQUEADO
+              disabled={definirPrimeiraSenha}
             />
             <label htmlFor="login">Login</label>
           </div>
@@ -220,7 +218,7 @@ export default function LoginPage() {
                     : "Digite sua senha"
                 }
                 value={senha}
-                maxLength={50} // <-- LIMITE DE CARACTERES
+                maxLength={50}
                 onChange={(e) => {
                   setSenha(e.target.value);
                   if (definirPrimeiraSenha) {
@@ -293,7 +291,7 @@ export default function LoginPage() {
                 type={mostrarConfirmacao ? "text" : "password"}
                 placeholder="Confirme sua nova senha"
                 value={confirmacaoSenha}
-                maxLength={50} // <-- LIMITE DE CARACTERES
+                maxLength={50}
                 onChange={(e) => setConfirmacaoSenha(e.target.value)}
               />
               <label htmlFor="confirmacaoSenha">Confirmar Senha</label>

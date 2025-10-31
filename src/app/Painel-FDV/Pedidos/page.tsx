@@ -3,18 +3,16 @@
 import React, { useEffect, useState } from "react";
 import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import styles from "./Pedidos.module.css";
-import useGetPedidos from "../hooks/useGetPedidos"; // Hook atualizado
+import useGetPedidos from "../hooks/useGetPedidos";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
-// [REMOVIDO] import { FaSort } from "react-icons/fa";
 import { formatPreco } from "../utils/functions/formatPreco";
 import { Pedido } from "../utils/types/Pedido";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
-// [NOVO] Ícone de Refresh do padrão
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +32,6 @@ const IconRefresh = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// [NOVO] Ícone de Sort do padrão
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -52,14 +49,9 @@ const IconSort = () => (
   </svg>
 );
 
-const PedidosPage: React.FC = () => {
-  const { showLoading, hideLoading } = useLoading();
+export default function PedidosPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
-  const token = getCookie("token");
-  const codUsuario = getUserFromToken(String(token));
-  const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
   const [query, setQuery] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
@@ -73,26 +65,33 @@ const PedidosPage: React.FC = () => {
     endDate: "",
   });
 
-  const {
-    pedidos,
-    loading, // Renomeado de isLoading
-    error,
-    qtdPaginas,
-    qtdElementos,
-    refetch, // [NOVO] Adicionado para o botão "Atualizar"
-  } = useGetPedidos(
-    codEmpresa,
-    paginaAtual,
-    porPagina,
-    sortConfig?.key,
-    sortConfig?.direction,
-    selectedFilter,
-    query,
-    dateRange.startDate,
-    dateRange.endDate
-  );
+  const { showLoading, hideLoading } = useLoading();
+  const token = getCookie("token");
+  const codUsuario = getUserFromToken(String(token));
+  const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
 
-  const filteredData = pedidos || []; // Apenas usa os dados do hook
+  const { pedidos, loading, error, qtdPaginas, qtdElementos, refetch } =
+    useGetPedidos(
+      codEmpresa,
+      paginaAtual,
+      porPagina,
+      sortConfig?.key,
+      sortConfig?.direction,
+      selectedFilter,
+      query,
+      dateRange.startDate,
+      dateRange.endDate
+    );
+
+  const filteredData = pedidos || [];
+
+  const columns = [
+    { key: "codPedido", label: "Código " },
+    { key: "dataCadastro", label: "Data" },
+    { key: "valorTotal", label: "Valor Total" },
+    { key: "status", label: "Status" },
+  ];
 
   useEffect(() => {
     if (loading) {
@@ -112,7 +111,7 @@ const PedidosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1); // Reseta a página
+    setPaginaAtual(1);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +120,7 @@ const PedidosPage: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    setPaginaAtual(1); // Reseta a página
+    setPaginaAtual(1);
   };
 
   const sortData = (key: string) => {
@@ -134,7 +133,7 @@ const PedidosPage: React.FC = () => {
       direction = "desc";
     }
     setSortConfig({ key, direction });
-    setPaginaAtual(1); // Reseta a página
+    setPaginaAtual(1);
   };
 
   const handleItemsPerPageChange = (newSize: number) => {
@@ -144,19 +143,13 @@ const PedidosPage: React.FC = () => {
 
   const getStatusLabel = (status: string) =>
     status === "4" ? "Faturado" : status === "5" ? "Cancelado" : "Outro Status";
+
   const getStatusColorClass = (status: string) =>
     status === "4"
       ? styles["status-invoiced"]
       : status === "5"
       ? styles["status-canceled"]
       : "";
-
-  const columns = [
-    { key: "codPedido", label: "Código " },
-    { key: "dataCadastro", label: "Data" },
-    { key: "valorTotal", label: "Valor Total" },
-    { key: "status", label: "Status" },
-  ];
 
   if (error) {
     return (
@@ -172,7 +165,6 @@ const PedidosPage: React.FC = () => {
       <LoadingOverlay />
       <h1 className={styles.title}>PEDIDOS</h1>
 
-      {/* [NOVO] Estrutura de search container + actions do padrão */}
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual pedido deseja buscar?"
@@ -182,7 +174,7 @@ const PedidosPage: React.FC = () => {
         <div className={styles.searchActions}>
           <button
             className={styles.actionButton}
-            onClick={() => refetch()} // Assumindo que o hook provê refetch
+            onClick={() => refetch()}
             title="Atualizar pedidos"
           >
             <span>Atualizar</span>
@@ -231,9 +223,8 @@ const PedidosPage: React.FC = () => {
                 <th
                   key={col.key}
                   onClick={() => sortData(col.key as keyof Pedido)}
-                  style={{ cursor: "pointer" }} // [MODIFICADO]
+                  style={{ cursor: "pointer" }}
                 >
-                  {/* [MODIFICADO] Padrão de ícone de sort */}
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
                     <IconSort />
@@ -324,6 +315,4 @@ const PedidosPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default PedidosPage;
+}

@@ -84,9 +84,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         </li>
 
         <li>
-          <Link href="/Painel-FDV/Usuarios" className="menu-item">
+          <Link href="/Painel-FDV/Funcionarios" className="menu-item">
             <FiUsers size={24} />
-            {isOpen && <span className="menu-text">Usuários</span>}
+            {isOpen && <span className="menu-text">Funcionários</span>}
           </Link>
         </li>
         <li>

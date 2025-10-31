@@ -22,8 +22,9 @@ ChartJS.register(
   Legend
 );
 
+const today = new Date();
+
 export default function RelatorioPedidos() {
-  const today = new Date();
   const [view, setView] = useState<"mensal" | "anual">("mensal");
   const [periodoIni, setPeriodoIni] = useState("");
   const [periodoFim, setPeriodoFim] = useState("");
@@ -48,14 +49,21 @@ export default function RelatorioPedidos() {
       setPeriodoIni(firstDay);
       setPeriodoFim(lastDay);
     }
-  }, [view, today]);
+  }, [view]);
+
+  // --- [CORREÇÃO APLICADA AQUI] ---
+  // 1. Definimos a flag de habilitação. O hook só deve rodar se as datas existirem.
+  const isHookEnabled = !!periodoIni && !!periodoFim;
 
   const { totalPedidos, isLoading, error } = useTotalPedidos(
     1,
     periodoIni,
     periodoFim,
-    10000
+    10000,
+    isHookEnabled // 2. Adicionamos o 5º argumento 'isHookEnabled'
   );
+  // --- [FIM DA CORREÇÃO] ---
+
   const chartData = useGraficoPedidos(totalPedidos, view);
 
   const options: ChartOptions<"bar"> = {

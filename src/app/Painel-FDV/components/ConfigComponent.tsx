@@ -7,7 +7,7 @@ const ConfigComponent = () => {
   const [allowSalesWithDebts, setAllowSalesWithDebts] = useState(false);
   const [allowSalesWithInsufficientLimit, setAllowSalesWithInsufficientLimit] =
     useState(false);
-    const [allowProductsNone, setAllowProductsNone] = useState(false);
+  const [allowProductsNone, setAllowProductsNone] = useState(false);
 
   return (
     <div className={styles.container}>
@@ -48,10 +48,7 @@ const ConfigComponent = () => {
         </label>
       </div>
       <div className={styles.fieldGroup}>
-        <label
-          htmlFor="allowProductsNone"
-          className={styles.label}
-        >
+        <label htmlFor="allowProductsNone" className={styles.label}>
           Permitir fazer pedido com produtos sem saldo
         </label>
         <label className={styles.switch}>
@@ -59,9 +56,7 @@ const ConfigComponent = () => {
             id="allowProductsNone"
             type="checkbox"
             checked={allowProductsNone}
-            onChange={(e) =>
-              setAllowProductsNone(e.target.checked)
-            }
+            onChange={(e) => setAllowProductsNone(e.target.checked)}
           />
           <span className={styles.slider}></span>
         </label>

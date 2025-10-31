@@ -19,7 +19,7 @@
   position: relative;
   border: 1px solid #ddd;
   border-radius: 4px;
-  overflow-x: auto; /* Good practice for tables */
+  overflow-x: auto;
 }
 
 .table {
@@ -32,7 +32,7 @@
 .table td {
   text-align: left;
   padding: 10px;
-  border-bottom: 1px solid #ddd; /* Added for consistency in the footer */
+  border-bottom: 1px solid #ddd;
 }
 
 .table tr {
@@ -42,10 +42,9 @@
 .table th {
   background-color: white;
   font-weight: bold;
-  cursor: pointer; /* [NOVO] Adicionado cursor pointer ao header */
+  cursor: pointer;
 }
 
-/* Specific styling for tfoot to remove bottom border */
 .table tfoot tr:last-child td {
   border-bottom: 0;
 }
@@ -112,18 +111,15 @@
   color: #333;
 }
 
-/* *** MODIFICATION START *** */
-
-/* Updated pagination container style */
+/* --- Estilos de Paginação (Mantidos) --- */
 .paginationContainer {
   display: flex;
-  justify-content: space-between; /* Aligns children to opposite ends */
+  justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-top: 10px; /* Add some space above */
+  padding-top: 10px;
 }
 
-/* New wrapper for pagination buttons for grouping */
 .paginationControls {
   display: flex;
   align-items: center;
@@ -141,7 +137,7 @@
   display: flex;
   height: 36px;
   align-items: center;
-  padding: 0 6px; /* [MODIFICADO] Adicionado padding */
+  padding: 0 6px;
 }
 
 .paginationControls button:disabled {
@@ -162,15 +158,12 @@
   font-weight: bold;
 }
 
-/* Updated items per page container style */
 .itemsPerPageContainer {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: 0; /* Remove fixed margin */
+  margin-left: 0;
 }
-
-/* *** MODIFICATION END *** */
 
 .itemsPerPageSelect {
   padding: 0.25rem 0.5rem;
@@ -180,19 +173,14 @@
   cursor: pointer;
 }
 
-.saldoZero {
-  border-right: 5px solid #f44336;
-}
-
-.emPromocao {
-  border-right: 5px solid #4caf50;
-}
+/* --- [REMOVIDO] Bordas laterais coloridas --- */
+/* .saldoZero { ... } */
+/* .emPromocao { ... } */
 
 .expandedRow {
   background-color: #f9f9f9;
 }
 
-/* [NOVO] Classe para o botão de expandir (do padrão) */
 .expandButton {
   background: none;
   border: none;
@@ -200,8 +188,7 @@
   font-size: 16px;
 }
 
-/* --- [NOVO] Estilos do padrão (Search/Actions/Spin) --- */
-
+/* --- Estilos de Search/Actions/Spin (Mantidos) --- */
 .searchContainer {
   display: flex;
   align-items: center;
@@ -231,7 +218,7 @@
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  color: #1769e3; /* Cor azul do texto e ícone */
+  color: #1769e3;
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 

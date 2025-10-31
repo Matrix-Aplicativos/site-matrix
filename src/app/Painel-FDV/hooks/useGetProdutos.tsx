@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react"; // [MODIFICADO] Importa useCallback
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
 
-// A interface 'Produto' permanece a mesma que você definiu
+// Interface 'Produto'
 interface Produto {
   codItemApi: number;
   codIntegracao: number;
@@ -35,7 +35,6 @@ interface Produto {
   ativo: true;
 }
 
-// [MODIFICADO] Interface de retorno atualizada para incluir refetch
 interface UseGetProdutosHook {
   produtos: Produto[] | null;
   loading: boolean;
@@ -43,7 +42,7 @@ interface UseGetProdutosHook {
   paginaAtual: number;
   qtdPaginas: number;
   qtdElementos: number;
-  refetch: () => void; // [NOVO]
+  refetch: () => void;
 }
 
 const useGetProdutos = (
@@ -51,38 +50,50 @@ const useGetProdutos = (
   pagina: number,
   porPagina: number,
   orderBy?: string,
-  direction?: "asc" | "desc"
+  direction?: "asc" | "desc", 
+  filtros?: Record<string, string | boolean>,
+  enabled: boolean = true
 ): UseGetProdutosHook => {
   const [produtos, setProdutos] = useState<Produto[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados para paginação
   const [apiPaginaAtual, setApiPaginaAtual] = useState(1);
   const [apiQtdPaginas, setApiQtdPaginas] = useState(1);
   const [apiQtdElementos, setApiQtdElementos] = useState(0);
 
-  // [MODIFICADO] Função envolvida com useCallback para ser exportada como 'refetch'
   const fetchProdutos = useCallback(async () => {
+    if (!enabled || !codEmpresa) {
+      setProdutos([]);
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true);
-      const queryParams = [
-        `pagina=${pagina}`,
-        `porPagina=${porPagina}`,
-        orderBy ? `orderBy=${orderBy}` : null,
-        direction ? `direction=${direction}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+      setLoading(true); 
+
+      const queryParams = new URLSearchParams({
+        pagina: pagina.toString(),
+        porPagina: porPagina.toString(),
+      });
+
+      if (orderBy) queryParams.append("orderBy", orderBy);
+      if (direction) queryParams.append("direction", direction); 
+
+      if (filtros) {
+        Object.entries(filtros).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            queryParams.append(key, String(value));
+          }
+        });
+      } 
 
       const response = await axiosInstance.get(
         `/item/empresa/${codEmpresa}?${queryParams}`
       );
 
-      // *** AJUSTE PRINCIPAL ***
       const responseData = response.data;
 
-      // Valida a estrutura da API
       if (
         !responseData ||
         typeof responseData.conteudo === "undefined" ||
@@ -93,14 +104,10 @@ const useGetProdutos = (
         );
       }
 
-      // Define os dados com base na chave "conteudo"
       setProdutos(responseData.conteudo);
-
-      // Define os dados de paginação
       setApiPaginaAtual(responseData.paginaAtual || 1);
       setApiQtdPaginas(responseData.qtdPaginas || 1);
       setApiQtdElementos(responseData.qtdElementos || 0);
-
       setError(null);
     } catch (err) {
       const errorMessage =
@@ -110,24 +117,18 @@ const useGetProdutos = (
 
       setError(errorMessage);
       setProdutos(null);
-
-      // Limpa paginação em caso de erro
       setApiPaginaAtual(1);
       setApiQtdPaginas(1);
       setApiQtdElementos(0);
     } finally {
       setLoading(false);
-    }
-  }, [codEmpresa, pagina, porPagina, orderBy, direction]); // Dependências do useCallback
+    } 
+  }, [codEmpresa, pagina, porPagina, orderBy, direction, filtros, enabled]);
 
   useEffect(() => {
-    if (codEmpresa) {
-      fetchProdutos();
-    }
-    // [MODIFICADO] O useEffect agora depende da função memoizada
-  }, [codEmpresa, fetchProdutos]);
+    fetchProdutos();
+  }, [fetchProdutos]); 
 
-  // [MODIFICADO] Retorna os novos dados de paginação e a função refetch
   return {
     produtos,
     loading,
@@ -135,8 +136,9 @@ const useGetProdutos = (
     paginaAtual: apiPaginaAtual,
     qtdPaginas: apiQtdPaginas,
     qtdElementos: apiQtdElementos,
-    refetch: fetchProdutos, // [NOVO]
+    refetch: fetchProdutos,
   };
 };
+
 
 export default useGetProdutos;
