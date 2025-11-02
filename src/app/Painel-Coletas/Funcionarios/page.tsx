@@ -9,10 +9,10 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
-// import ModalPermissoes from "../components/ModalPermissoes"; // Comentado (Permissões)
-// import { getCookie } from "cookies-next"; // Comentado (Permissões)
-// import { getUserFromToken } from "../utils/functions/getUserFromToken"; // Comentado (Permissões)
-// import useGetLoggedUser from "../hooks/useGetLoggedUser"; // Comentado (Permissões)
+import ModalPermissoes from "../components/ModalPermissoes"; // Comentado (Permissões)
+import { getCookie } from "cookies-next"; // Comentado (Permissões)
+import { getUserFromToken } from "../utils/functions/getUserFromToken"; // Comentado (Permissões)
+import useGetLoggedUser from "../hooks/useGetLoggedUser"; // Comentado (Permissões)
 
 // --- Ícones (código omitido para brevidade) ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -105,20 +105,17 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  // const [isModalOpen, setIsModalOpen] = useState(false); // Comentado (Permissões)
-  // const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // Comentado (Permissões)
+  const [isModalOpen, setIsModalOpen] = useState(false); // Comentado (Permissões)
+  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // Comentado (Permissões)
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
 
-  // --- LÓGICA DE BUSCA DO USUÁRIO LOGADO COMENTADA (Permissões) ---
-  /*
+
   const token = getCookie("token");
   const { usuario: usuarioLogado, loading: loggedUserLoading } =
     useGetLoggedUser(getUserFromToken(String(token)) || 0);
-  */
-  // -------------------------------------------------------------------
 
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
@@ -170,8 +167,7 @@ const FuncionariosPage: React.FC = () => {
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
-  // --- FUNÇÕES DE CONTROLE DO MODAL COMENTADAS (Permissões) ---
-  /*
+
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
@@ -184,7 +180,7 @@ const FuncionariosPage: React.FC = () => {
     handleCloseModal();
     refetch();
   };
-  */
+  
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -220,8 +216,7 @@ const FuncionariosPage: React.FC = () => {
     <div className={styles.container}>
       <LoadingOverlay />
 
-      {/* --- RENDERIZAÇÃO DO MODAL COMENTADA (Permissões) --- */}
-      {/*
+
       {selectedUser && usuarioLogado && (
         <ModalPermissoes
           isOpen={isModalOpen}
@@ -231,8 +226,6 @@ const FuncionariosPage: React.FC = () => {
           codUsuarioLogado={usuarioLogado.codUsuario} // Prop adicionada
         />
       )}
-      */}
-      {/* ----------------------------------------------- */}
 
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
       <div className={styles.searchContainer}>
@@ -343,8 +336,6 @@ const FuncionariosPage: React.FC = () => {
                     {getStatusText(row.status)}
                   </span>
                 </td>
-                {/* --- CÉLULA DA COLUNA DE AÇÕES COMENTADA --- */}
-                {/*
                 <td>
                   {row.originalUser.codUsuario &&
                   row.originalUser.codUsuario > 0 ? (
@@ -358,7 +349,6 @@ const FuncionariosPage: React.FC = () => {
                     "—"
                   )}
                 </td>
-                */}
               </tr>
             ))}
           </tbody>
