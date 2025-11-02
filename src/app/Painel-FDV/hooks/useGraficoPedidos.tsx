@@ -10,7 +10,7 @@ export default function useGraficoPedidos(
   view: "mensal" | "anual"
 ): ChartData<"bar"> {
   return useMemo(() => {
-    if (!pedidos || pedidos.length === 0) {
+    if (!Array.isArray(pedidos) || pedidos.length === 0) {
       return {
         labels: [],
         datasets: [],

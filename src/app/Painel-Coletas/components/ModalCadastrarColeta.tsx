@@ -164,7 +164,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
     if (tipoColeta === 1) {
       if (!codAlocEstoqueDestino) {
-        alert("Para inventário, o estoque de destino é obrigatório.");
+        alert("Para inventário, o estoque de origem é obrigatório.");
         return;
       }
       payloadOrigem = payloadDestino;
@@ -305,7 +305,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
               ) : (
                 // tipoColeta === 1 (Inventário)
                 <label>
-                  Destino
+                  Origem
                   <select
                     value={codAlocEstoqueDestino}
                     onChange={(e) => setCodAlocEstoqueDestino(e.target.value)}
@@ -314,7 +314,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     <option value="">
                       {estoquesLoading
                         ? "Carregando..."
-                        : "Selecione o Destino"}
+                        : "Selecione a Origem"}
                     </option>
                     {estoques.map((e) => (
                       <option

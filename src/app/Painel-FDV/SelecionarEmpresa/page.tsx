@@ -7,11 +7,11 @@ import { ArrowLeft } from "lucide-react";
 
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import { Usuario, Empresa } from "../utils/types/Usuario";
-import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 
 import Logo from "@/app/img/Logo.png";
 import "./SelecionarEmpresa.css";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "@/app/Painel-Coletas/components/SearchBar";
 
 export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -26,7 +26,7 @@ export default function SelecionarEmpresaPage() {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
-          router.push("/Painel-Coletas/Login");
+          router.push("/Painel-FDV/Login");
           return;
         }
         const userId = getUserFromToken(token);
@@ -55,7 +55,7 @@ export default function SelecionarEmpresaPage() {
 
   const handleSelectEmpresa = (empresa: Empresa) => {
     localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
-    router.push("/Painel-Coletas");
+    router.push("/Painel-FDV");
   };
 
   const formatCpfCnpj = (cnpj: string) => {

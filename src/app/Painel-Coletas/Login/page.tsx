@@ -66,6 +66,14 @@ export default function LoginPage() {
 
   const handleDefinirSenha = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 👇 VALIDAÇÃO DE MÁXIMO DE 50 CARACTERES
+    if (senha.length > 50) {
+      setTextoIdentificacao("A senha não pode ter mais de 50 caracteres.");
+      setTipoMensagem("erro");
+      return;
+    }
+
     const data = await definirPrimeiraSenhaUsuario({
       senha,
       confirmacaoSenha,
@@ -129,6 +137,7 @@ export default function LoginPage() {
         );
         setTipoMensagem("");
       } else {
+        localStorage.setItem("authToken", token);
         try {
           const response = await axiosInstance.get(
             "/usuario/" + getUserFromToken(token)
@@ -176,10 +185,6 @@ export default function LoginPage() {
     setLogin("");
   };
 
-  // Declaração de Funções de renderização
-  // (Nenhuma função de renderização separada neste componente)
-
-  // Return
   return (
     <div className="container">
       <div className="content">
@@ -193,18 +198,17 @@ export default function LoginPage() {
           className="login-form"
           onSubmit={definirPrimeiraSenha ? handleDefinirSenha : handleSubmit}
         >
-          {!definirPrimeiraSenha && (
-            <div className="input-field">
-              <input
-                id="login"
-                type="text"
-                placeholder="Digite seu login"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-              />
-              <label htmlFor="login">Login</label>
-            </div>
-          )}
+          <div className="input-field">
+            <input
+              id="login"
+              type="text"
+              placeholder="Digite seu login"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+              disabled={definirPrimeiraSenha} // <-- CAMPO DE LOGIN BLOQUEADO
+            />
+            <label htmlFor="login">Login</label>
+          </div>
 
           {!modoEsqueciSenha && (
             <div className="input-field senha-container">
@@ -217,6 +221,7 @@ export default function LoginPage() {
                     : "Digite sua senha"
                 }
                 value={senha}
+                maxLength={50} // <-- LIMITE DE CARACTERES
                 onChange={(e) => {
                   setSenha(e.target.value);
                   if (definirPrimeiraSenha) {
@@ -289,6 +294,7 @@ export default function LoginPage() {
                 type={mostrarConfirmacao ? "text" : "password"}
                 placeholder="Confirme sua nova senha"
                 value={confirmacaoSenha}
+                maxLength={50} // <-- LIMITE DE CARACTERES
                 onChange={(e) => setConfirmacaoSenha(e.target.value)}
               />
               <label htmlFor="confirmacaoSenha">Confirmar Senha</label>

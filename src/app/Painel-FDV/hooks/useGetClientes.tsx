@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+// hooks/useGetClientes.ts
+
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
+// (Interfaces Rota, Segmento, Classificacao, Cliente... sem alteração)
 import { Rota } from "../utils/types/Rota";
 import { Segmento } from "../utils/types/Segmento";
 import { Classificacao } from "../utils/types/Classificacao";
 
 interface Cliente {
+  // ... (toda a sua interface Cliente)
   codIntegracao: number;
   codEmpresaApi: number;
   codClienteApi: number;
@@ -47,55 +51,107 @@ interface UseGetClientesHook {
   clientes: Cliente[] | null;
   loading: boolean;
   error: string | null;
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+  refetch: () => void;
 }
 
+// --- [INÍCIO DA ALTERAÇÃO] ---
 const useGetClientes = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
-  sortKey?: string,
-  sortDirection?: "asc" | "desc"
+  orderBy?: string,
+  direction?: "asc" | "desc", // 1. Adicionar parâmetros de filtro e 'enabled'
+  filtros?: Record<string, string | boolean>,
+  enabled: boolean = true
 ): UseGetClientesHook => {
+  // ... (states 'clientes', 'loading', 'error' sem alteração) ...
   const [clientes, setClientes] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiPaginaAtual, setApiPaginaAtual] = useState(1);
+  const [apiQtdPaginas, setApiQtdPaginas] = useState(1);
+  const [apiQtdElementos, setApiQtdElementos] = useState(0);
 
-  const fetchClientes = async () => {
+  const fetchClientes = useCallback(async () => {
+    // 2. Adicionar 'guard clause' para evitar busca desnecessária
+    if (!enabled || !codEmpresa) {
+      setClientes([]);
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true);
-      const queryParams = [
-        `pagina=${pagina}`,
-        `porPagina=${porPagina}`,
-        sortKey ? `sortKey=${sortKey}` : null,
-        sortDirection ? `sortDirection=${sortDirection}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+      setLoading(true); // 3. Mudar para URLSearchParams para construir a query
+      const queryParams = new URLSearchParams({
+        pagina: pagina.toString(),
+        porPagina: porPagina.toString(),
+      });
+
+      if (orderBy) queryParams.append("orderBy", orderBy);
+      if (direction) queryParams.append("direction", direction); // 4. Adicionar a lógica de filtros
+      if (filtros) {
+        Object.entries(filtros).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            queryParams.append(key, String(value));
+          }
+        });
+      }
 
       const response = await axiosInstance.get(
         `/cliente/empresa/${codEmpresa}?${queryParams}`
-      );
-      setClientes(response.data);
+      ); // ... (O resto da sua lógica de 'responseData' está perfeita) ...
+
+      const responseData = response.data;
+
+      if (
+        !responseData ||
+        typeof responseData.conteudo === "undefined" ||
+        !Array.isArray(responseData.conteudo)
+      ) {
+        throw new Error(
+          "Formato de dados inválido da API. 'conteudo' não foi encontrado."
+        );
+      }
+
+      setClientes(responseData.conteudo);
+      setApiPaginaAtual(responseData.paginaAtual || 1);
+      setApiQtdPaginas(responseData.qtdPaginas || 1);
+      setApiQtdElementos(responseData.qtdElementos || 0);
       setError(null);
     } catch (err) {
-      setError(
+      // ... (Sua lógica de erro está perfeita) ...
+      const errorMessage =
         err instanceof AxiosError
-          ? err.message
-          : "Ocorreu um erro ao buscar os clientes."
-      );
+          ? err.response?.data?.message || err.message
+          : "Ocorreu um erro ao buscar os clientes.";
+      setError(errorMessage);
       setClientes(null);
+      setApiPaginaAtual(1);
+      setApiQtdPaginas(1);
+      setApiQtdElementos(0);
     } finally {
       setLoading(false);
-    }
-  };
+    } // 5. Adicionar 'filtros' e 'enabled' ao array de dependências
+  }, [codEmpresa, pagina, porPagina, orderBy, direction, filtros, enabled]);
 
   useEffect(() => {
-    if (codEmpresa) {
-      fetchClientes();
-    }
-  }, [codEmpresa, pagina, porPagina, sortKey, sortDirection]);
+    // 6. Simplificar o useEffect
+    fetchClientes();
+  }, [fetchClientes]); // Dispara sempre que 'fetchClientes' (e suas dependências) mudar
 
-  return { clientes, loading, error };
+  return {
+    clientes,
+    loading,
+    error,
+    paginaAtual: apiPaginaAtual,
+    qtdPaginas: apiQtdPaginas,
+    qtdElementos: apiQtdElementos,
+    refetch: fetchClientes,
+  };
 };
+// --- [FIM DA ALTERAÇÃO] ---
 
 export default useGetClientes;

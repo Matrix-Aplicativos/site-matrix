@@ -8,9 +8,11 @@ import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
-import useCurrentCompany from "../hooks/useCurrentCompany";
 import useConfiguracao from "../hooks/useConfiguracao";
-import PaginationControls from "../components/PaginationControls";
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
 const IconSort = () => (
   <svg
@@ -50,7 +52,7 @@ const columns: { key: keyof DispositivoExibido; label: string }[] = [
   { key: "status", label: "Status" },
 ];
 
-const DispositivosPage: React.FC = () => {
+export default function DispositivosPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
@@ -58,8 +60,10 @@ const DispositivosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
-  const { empresa, loading: companyLoading } = useCurrentCompany();
-  const codEmpresa = empresa?.codEmpresa;
+  const token = getCookie("token");
+  const codUsuario = getUserFromToken(String(token));
+  const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -70,7 +74,7 @@ const DispositivosPage: React.FC = () => {
     totalPaginas,
     totalElementos,
   } = useGetDispositivos(
-    codEmpresa || 0,
+    codEmpresa,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -78,24 +82,27 @@ const DispositivosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
+  const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
   const {
     dados: dadosDispositivo,
     loading: loadingDados,
     refetch: refetchDados,
-  } = useGetDadosDispositivo(codEmpresa || 0);
+  } = useGetDadosDispositivo(codEmpresa);
 
   const {
     validadeLicenca,
-    loading: loadingLicencaGeral, 
-    error: errorLicencaGeral, 
+    loading: loadingLicencaGeral,
+    error: errorLicencaGeral,
     loadingLicenca,
-    errorLicenca, 
-  } = useConfiguracao(codEmpresa || 0);
+    errorLicenca,
+  } = useConfiguracao(codEmpresa);
 
   const isLoading =
-    companyLoading || dispositivosLoading || loadingDados || loadingLicenca; 
+    dispositivosLoading ||
+    loadingDados ||
+    loadingLicenca ||
+    loadingLicencaGeral;
 
   useEffect(() => {
     if (isLoading) {
@@ -133,7 +140,7 @@ const DispositivosPage: React.FC = () => {
     await ativarDispositivo({
       codDispositivo,
       nomeDispositivo,
-      codEmpresaApi: codEmpresa || 0,
+      codEmpresaApi: codEmpresa,
       ativo: !statusAtual,
     });
     await handleRefresh();
@@ -154,6 +161,7 @@ const DispositivosPage: React.FC = () => {
           className={styles.refreshButton}
           onClick={handleRefresh}
           title="Atualizar dispositivos"
+          disabled={isLoading}
         >
           <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
@@ -249,35 +257,37 @@ const DispositivosPage: React.FC = () => {
           <div className={styles.situacaoItem}>
             <p>Total dispositivos:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.totalDispositivos ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.totalDispositivos ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadrao ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.licencasPadrao ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
+              {loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMulti ?? 0}
+              {loadingDados ? "..." : dadosDispositivo?.licencasMulti ?? 0}
             </span>
           </div>
-
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMultiUtilizadas ?? 0}
+              {loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasMultiUtilizadas ?? 0}
             </span>
           </div>
-
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>
@@ -286,7 +296,7 @@ const DispositivosPage: React.FC = () => {
                 : errorLicenca
                 ? "Erro"
                 : validadeLicenca
-                ? validadeLicenca.toLocaleDateString("pt-BR") 
+                ? validadeLicenca.toLocaleDateString("pt-BR")
                 : "N/D"}
             </span>
           </div>
@@ -307,6 +317,4 @@ const DispositivosPage: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default DispositivosPage;
+}

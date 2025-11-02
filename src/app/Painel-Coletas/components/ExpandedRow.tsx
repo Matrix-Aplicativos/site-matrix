@@ -62,9 +62,12 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
                     <tr key={lote.numLote}>
                       <td>{lote.numLote}</td>
                       <td>
-                        {new Date(lote.dataFabricacao).toLocaleDateString(
-                          "pt-BR"
-                        )}
+                        {/* MODIFICADO: Adicionada verificação para a data de fabricação */}
+                        {lote.dataFabricacao
+                          ? new Date(lote.dataFabricacao).toLocaleDateString(
+                              "pt-BR"
+                            )
+                          : "Sem data de fabricação"}
                       </td>
                       <td>
                         {new Date(lote.dataValidade).toLocaleDateString(

@@ -6,14 +6,20 @@ export const useTotalPedidos = (
   codEmpresa: number | string,
   periodoIni: string,
   periodoFim: string,
-  porPagina: number
+  porPagina: number,
+  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
 ) => {
   const [totalPedidos, setTotalPedidos] = useState<Pedido[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!codEmpresa || !periodoIni || !periodoFim) return;
+    // 2. GUARDA ATUALIZADA
+    if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
+      setTotalPedidos([]); // Limpa os dados se estiver desabilitado
+      setIsLoading(false);
+      return;
+    }
 
     const fetchTotalPedidos = async () => {
       setIsLoading(true);
@@ -35,7 +41,7 @@ export const useTotalPedidos = (
     };
 
     fetchTotalPedidos();
-  }, [codEmpresa, periodoIni, periodoFim, porPagina]);
+  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
 
   return { totalPedidos, isLoading, error };
 };

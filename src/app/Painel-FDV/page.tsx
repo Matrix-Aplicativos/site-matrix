@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import RankingTable from "./components/RankingTable";
 import RelatorioPedidos from "./components/RelatorioPedidos";
 import { useRankingItensMais } from "./hooks/useRankingMais";
@@ -10,67 +10,81 @@ import { useTotalClientes } from "./hooks/useTotalClientes";
 import { useLoading } from "../shared/Context/LoadingContext";
 import styles from "./Home.module.css";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
+import useCurrentCompany from "../Painel-Coletas/hooks/useCurrentCompany";
+
+const today = new Date();
+const firstDayCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+  .toISOString()
+  .split("T")[0];
+const lastDayCurrentMonth = new Date(
+  today.getFullYear(),
+  today.getMonth() + 1,
+  0
+)
+  .toISOString()
+  .split("T")[0];
+
+const firstDayPreviousMonth = new Date(
+  today.getFullYear(),
+  today.getMonth() - 1,
+  1
+)
+  .toISOString()
+  .split("T")[0];
+const lastDayPreviousMonth = new Date(today.getFullYear(), today.getMonth(), 0)
+  .toISOString()
+  .split("T")[0];
 
 export default function HomePage() {
-  const { showLoading, hideLoading } = useLoading();
-
-  const today = new Date();
-  const firstDayCurrentMonth = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1
-  )
-    .toISOString()
-    .split("T")[0];
-  const lastDayCurrentMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    0
-  )
-    .toISOString()
-    .split("T")[0];
-
-  const firstDayPreviousMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() - 1,
-    1
-  )
-    .toISOString()
-    .split("T")[0];
-  const lastDayPreviousMonth = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    0
-  )
-    .toISOString()
-    .split("T")[0];
-
   const [periodoIni, setPeriodoIni] = useState(firstDayCurrentMonth);
   const [periodoFim, setPeriodoFim] = useState(lastDayCurrentMonth);
-  const codEmpresa = 1;
+
+  const { showLoading, hideLoading } = useLoading();
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+
+  const codEmpresaParaBusca = empresa?.codEmpresa || 1;
+  const isHookEnabled = !companyLoading && !!empresa?.codEmpresa;
+
   const porPagina = 1000;
 
   const {
     data: maisVendidos,
     error: errorMaisVendidos,
     isLoading: isLoadingMaisVendidos,
-  } = useRankingItensMais(codEmpresa, periodoIni, periodoFim);
+  } = useRankingItensMais(
+    codEmpresaParaBusca, // Use a variável segura
+    periodoIni,
+    periodoFim,
+    isHookEnabled // Adicione a flag de habilitação
+  );
 
   const {
     data: menosVendidos,
     error: errorMenosVendidos,
     isLoading: isLoadingMenosVendidos,
-  } = useRankingItensMenos(codEmpresa, periodoIni, periodoFim);
+  } = useRankingItensMenos(
+    codEmpresaParaBusca, // Use a variável segura
+    periodoIni,
+    periodoFim,
+    isHookEnabled // Adicione a flag de habilitação
+  );
 
   const { totalPedidos: pedidosAtual, isLoading: isLoadingPedidosAtual } =
-    useTotalPedidos(codEmpresa, periodoIni, periodoFim, porPagina);
+    useTotalPedidos(
+      codEmpresaParaBusca, // Use a variável segura
+      periodoIni,
+      periodoFim,
+      porPagina,
+      isHookEnabled // Adicione a flag de habilitação
+    );
 
   const { totalPedidos: pedidosAnterior, isLoading: isLoadingPedidosAnterior } =
     useTotalPedidos(
-      codEmpresa,
+      codEmpresaParaBusca, // Use a variável segura
       firstDayPreviousMonth,
       lastDayPreviousMonth,
-      porPagina
+      porPagina,
+      isHookEnabled // Adicione a flag de habilitação
     );
 
   const variacaoPedidos =
@@ -81,16 +95,23 @@ export default function HomePage() {
       : null;
 
   const { totalClientes: clientesAtual, isLoading: isLoadingClientesAtual } =
-    useTotalClientes(codEmpresa, periodoIni, periodoFim, porPagina);
+    useTotalClientes(
+      codEmpresaParaBusca, // Use a variável segura
+      periodoIni,
+      periodoFim,
+      porPagina,
+      isHookEnabled // Adicione a flag de habilitação
+    );
 
   const {
     totalClientes: clientesAnterior,
     isLoading: isLoadingClientesAnterior,
   } = useTotalClientes(
-    codEmpresa,
+    codEmpresaParaBusca, // Use a variável segura
     firstDayPreviousMonth,
     lastDayPreviousMonth,
-    porPagina
+    porPagina,
+    isHookEnabled // Adicione a flag de habilitação
   );
 
   const variacaoClientes =
@@ -98,38 +119,48 @@ export default function HomePage() {
       ? ((clientesAtual - clientesAnterior) / clientesAnterior) * 100
       : null;
 
+  const isLoading =
+    companyLoading ||
+    isLoadingMaisVendidos ||
+    isLoadingMenosVendidos ||
+    isLoadingPedidosAtual ||
+    isLoadingPedidosAnterior ||
+    isLoadingClientesAtual ||
+    isLoadingClientesAnterior;
+
   useEffect(() => {
-    showLoading();
-    if (
-      !isLoadingMaisVendidos &&
-      !isLoadingMenosVendidos &&
-      !isLoadingPedidosAtual &&
-      !isLoadingPedidosAnterior &&
-      !isLoadingClientesAtual &&
-      !isLoadingClientesAnterior
-    ) {
+    if (isLoading) {
+      showLoading();
+    } else {
       setTimeout(() => {
         hideLoading();
       }, 1000);
     }
-  }, [
-    isLoadingMaisVendidos,
-    isLoadingMenosVendidos,
-    isLoadingPedidosAtual,
-    isLoadingPedidosAnterior,
-    isLoadingClientesAtual,
-    isLoadingClientesAnterior,
-    showLoading,
-    hideLoading,
-  ]);
+  }, [isLoading, showLoading, hideLoading]);
 
-  if (errorMaisVendidos || errorMenosVendidos)
+  if (companyLoading) {
+    return <div className={styles.container}>Carregando painel...</div>;
+  }
+
+  if (!empresa) {
+    return (
+      <div className={styles.container}>
+        <h2>Nenhuma empresa associada</h2>
+        <p>Sua conta não está vinculada a nenhuma empresa.</p>
+      </div>
+    );
+  }
+
+  if (errorMaisVendidos || errorMenosVendidos) {
     return <p>Ocorreu um erro ao carregar os dados!</p>;
+  }
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>PAINEL DE CONTROLE</h1>
+      <h1 className={styles.title}>
+        PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
+      </h1>
       <div className={styles.border}>
         <RelatorioPedidos />
       </div>

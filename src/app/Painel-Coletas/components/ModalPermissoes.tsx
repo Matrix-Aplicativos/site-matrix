@@ -29,10 +29,10 @@ const PERMISSION_DISPLAY_MAP = [
   {
     title: "Acessos Gerais",
     permissions: [
-      { key: GESTOR_ROLE, description: "Acesso de Gestor (Painel Web)" },
+      { key: GESTOR_ROLE, description: "Acesso ao Painel Web" },
       {
         key: FUNCIONARIO_ROLE,
-        description: "Acesso de Funcionário (Apenas App)",
+        description: "Acesso ao App",
       },
     ],
   },

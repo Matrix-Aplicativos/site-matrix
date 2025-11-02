@@ -10,16 +10,22 @@ interface RankingItem {
 }
 
 export const useRankingItensMenos = (
-  codEmpresa: number | string, // Explicit type for company code
-  periodoIni: string, // Explicit type for start date (ISO string)
-  periodoFim: string // Explicit type for end date (ISO string)
+  codEmpresa: number | string,
+  periodoIni: string,
+  periodoFim: string,
+  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
 ) => {
   const [data, setData] = useState<RankingItem[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!codEmpresa || !periodoIni || !periodoFim) return;
+    // 2. GUARDA ATUALIZADA
+    if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
+      setData([]); // Limpa os dados se estiver desabilitado
+      setIsLoading(false);
+      return;
+    }
 
     const fetchRankingItensMenos = async () => {
       setIsLoading(true);
@@ -40,7 +46,7 @@ export const useRankingItensMenos = (
     };
 
     fetchRankingItensMenos();
-  }, [codEmpresa, periodoIni, periodoFim]);
+  }, [codEmpresa, periodoIni, periodoFim, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
 
   return { data, error, isLoading };
 };
