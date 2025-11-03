@@ -30,6 +30,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -46,6 +47,7 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
+
 const IconSync = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -78,6 +80,7 @@ interface ColetaExibida {
   volumeTotal: number;
   volumeConferido: number;
 }
+
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
@@ -95,13 +98,14 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   volumeTotal: "volumeTotal",
   volumeConferido: "volumeConferido",
 };
-const TIPOS_DE_COLETA = ["3", "4"];
+
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
-  "Em Andamento": "4",
   "Finalizada Parcialmente": "2",
   "Finalizada Completa": "3",
+  "Em Andamento": "4",
 };
+
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
 const columns: ColumnConfig[] = [
@@ -175,23 +179,27 @@ const ConferenciasPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
+
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
 
+  const tipoColetaVenda = React.useMemo(() => ["3"], []);
+  const tipoColetaCompra = React.useMemo(() => ["4"], []);
+
   const {
-    coletas,
-    loading: coletasLoading,
-    error: coletasError,
-    refetch,
-    totalPaginas,
-    totalElementos,
+    coletas: coletasVenda,
+    loading: loadingVenda,
+    error: errorVenda,
+    refetch: refetchVenda,
+    totalPaginas: totalPaginasVenda,
+    totalElementos: totalElementosVenda,
   } = useGetColetas(
     codEmpresa || 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    TIPOS_DE_COLETA,
+    tipoColetaVenda,
     statusFiltro || undefined,
     origemFiltro || undefined,
     "descricao",
@@ -200,11 +208,38 @@ const ConferenciasPage: React.FC = () => {
     dateRange.endDate,
     !!codEmpresa
   );
-  const isLoading = companyLoading || coletasLoading;
+
+  const {
+    coletas: coletasCompra,
+    loading: loadingCompra,
+    error: errorCompra,
+    refetch: refetchCompra,
+    totalPaginas: totalPaginasCompra,
+    totalElementos: totalElementosCompra,
+  } = useGetColetas(
+    codEmpresa || 0,
+    paginaAtual,
+    porPagina,
+    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
+    sortConfig?.direction,
+    tipoColetaCompra,
+    statusFiltro || undefined,
+    origemFiltro || undefined,
+    "descricao",
+    query,
+    dateRange.startDate,
+    dateRange.endDate,
+    !!codEmpresa
+  );
+
+  const coletasCombinadas = useMemo(() => {
+    if (!coletasVenda && !coletasCompra) return [];
+    return [...(coletasVenda || []), ...(coletasCompra || [])];
+  }, [coletasVenda, coletasCompra]);
 
   const filteredData = useMemo(() => {
-    if (!coletas) return [];
-    return coletas.map((c) => ({
+    if (!coletasCombinadas) return [];
+    return coletasCombinadas.map((c) => ({
       id: c.codConferencia,
       descricao: c.descricao,
       data: c.dataCadastro,
@@ -219,38 +254,59 @@ const ConferenciasPage: React.FC = () => {
       volumeTotal: c.volumeTotal,
       volumeConferido: c.volumeConferido,
     }));
-  }, [coletas]);
+  }, [coletasCombinadas]);
+
+  const isLoading = companyLoading || loadingVenda || loadingCompra;
+  const coletasError = errorVenda || errorCompra;
+
+  const totalElementos =
+    (totalElementosVenda || 0) + (totalElementosCompra || 0);
+  const totalPaginas = Math.max(
+    totalPaginasVenda || 1,
+    totalPaginasCompra || 1
+  );
+
+  const refetchAll = React.useCallback(() => {
+    refetchVenda();
+    refetchCompra();
+  }, [refetchVenda, refetchCompra]);
 
   useEffect(() => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
+
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
-    refetch();
-  }, [refetch]);
+    refetchAll();
+  }, [refetchAll]);
 
   const handleStatusChange = (statusValue: string) => {
     setStatusFiltro(statusValue);
     setPaginaAtual(1);
   };
+
   const handleOrigemChange = (origemValue: string) => {
     setOrigemFiltro(origemValue);
     setPaginaAtual(1);
   };
+
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
   };
+
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
+
   const sortData = (key: keyof ColetaExibida) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -258,9 +314,11 @@ const ConferenciasPage: React.FC = () => {
     }
     setSortConfig({ key, direction });
   };
+
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prev) => (prev === index ? null : index));
   };
+
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
   };
@@ -269,16 +327,18 @@ const ConferenciasPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <h2>Erro ao Carregar Conferências</h2>
-        <button onClick={() => refetch()}>Tentar novamente</button>
+        <button onClick={() => refetchAll()}>Tentar novamente</button>
       </div>
     );
-  if (companyLoading || (!coletas && coletasLoading))
+
+  if (companyLoading || (isLoading && !coletasCombinadas.length))
     return <div className={styles.container}>Carregando dados...</div>;
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
       <h1 className={styles.title}>CONFERÊNCIAS</h1>
+
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual conferência deseja buscar?"
@@ -296,7 +356,7 @@ const ConferenciasPage: React.FC = () => {
           </button>
           <button
             className={styles.actionButton}
-            onClick={() => refetch()}
+            onClick={() => refetchAll()}
             title="Atualizar conferências"
           >
             <span>Atualizar</span>
@@ -332,6 +392,7 @@ const ConferenciasPage: React.FC = () => {
               ))}
             </div>
           </div>
+
           <div className={styles.filterSection}>
             <label>Origem:</label>
             <div className={styles.radioGroup}>
@@ -357,6 +418,7 @@ const ConferenciasPage: React.FC = () => {
               ))}
             </div>
           </div>
+
           <div className={styles.filterSection}>
             <label>Período:</label>
             <div className={styles.dateRange}>
@@ -450,26 +512,29 @@ const ConferenciasPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
       <PaginationControls
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
+        onPageChange={setPaginaAtual}
         totalElementos={totalElementos}
         porPagina={porPagina}
-        onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
+
       {codEmpresa && (
         <ModalCadastrarColeta
-          isOpen={isModalOpen}
+          isOpen={isModalOpen} // <-- obrigatório
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={3}
-          titulo="Cadastrar Nova Conferência"
+          tipoColeta={3} // <-- passar o tipo padrão (3) ou conforme desejar
+          titulo="Cadastrar Nova Conferência" // <-- passar título
         />
       )}
     </div>
   );
 };
+
 export default ConferenciasPage;
