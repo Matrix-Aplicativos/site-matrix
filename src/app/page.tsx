@@ -13,16 +13,29 @@ import {
   FaBars,
   FaBarcode,
   FaShoppingCart,
+  FaShippingFast,
+  FaPiggyBank,
+  FaChartLine,
+  FaUsb,
+  FaHeadset,
+  FaUsers,
+  FaPlayCircle,
+  FaChevronRight,
+  FaRocket,
+  FaSearch,
 } from "react-icons/fa";
 import Image from "next/image";
 import Logo from "./img/Logo.svg";
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
 import Coleta from "./img/CapaColeta.png";
-import HomeColeta from "./img/homecoleta.png";
+import HomeColeta from "./img/HomeColetas.png";
 import CapaColeta from "./img/capacoleta (2).png";
-import ColetasColeta from "./img/itenscoleta.png";
-import ConferenciasColeta from "./img/conferenciacoleta.png";
+import ConferenciasColetaCompras from "./img/ConfCompra.png";
+import ConferenciasColetaVendas from "./img/ConfVenda.png";
+import TransferenciaColeta from "./img/Transferencias.png";
+import InventariosColeta from "./img/Inventarios.png";
+import ColetaScreen from "./img/itenscoleta.png";
 import BuscarProdutos from "./img/buscarProdutos.png";
 import HomeFDV from "./img/home-fdv.png";
 import CapaFDV from "./img/capa-fdv.png";
@@ -37,6 +50,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import InputMask from "react-input-mask";
+import { Link as ScrollLink } from "react-scroll";
 
 interface Feature {
   title: string;
@@ -77,8 +91,11 @@ export default function SiteMatrix() {
   const [carouselImagesColetas] = useState([
     CapaColeta,
     HomeColeta,
-    ConferenciasColeta,
-    ColetasColeta,
+    InventariosColeta,
+    TransferenciaColeta,
+    ConferenciasColetaCompras,
+    ConferenciasColetaVendas,
+    ColetaScreen,
     BuscarProdutos,
   ]);
 
@@ -116,32 +133,6 @@ export default function SiteMatrix() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  useEffect(() => {
-    const handleSmoothScroll = (e: Event) => {
-      e.preventDefault();
-      const target = e.currentTarget as HTMLAnchorElement;
-      const targetId = target.getAttribute("href")?.replace("#", "");
-      if (!targetId) return;
-
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-      setMobileMenuOpen(false);
-    };
-
-    const links = document.querySelectorAll<HTMLAnchorElement>("a[href^='#']");
-    links.forEach((link) => {
-      link.addEventListener("click", handleSmoothScroll);
-    });
-
-    return () => {
-      links.forEach((link) => {
-        link.removeEventListener("click", handleSmoothScroll);
-      });
-    };
-  }, []);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -156,7 +147,7 @@ export default function SiteMatrix() {
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL ?? "";
-      const api = API_URL.replace("/v1","")
+      const api = API_URL.replace("/v1", "");
 
       const response = await fetch(`${api}/contato`, {
         method: "POST",
@@ -191,6 +182,7 @@ export default function SiteMatrix() {
       setIsSubmitting(false);
     }
   };
+
   const tabContent = {
     vendas: {
       title: "Força de Vendas Matrix",
@@ -273,6 +265,10 @@ export default function SiteMatrix() {
           text: "Faça bipagens tanto por código do produto quanto código de barras.",
         },
         {
+          icon: <FaUsb className="w-10 h-10 text-[#1769E3] self-center" />,
+          text: "Suporte a leitores externos para maior agilidade na bipagem.",
+        },
+        {
           icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
           text: "Tenha acesso aos balanços e aos inventários em tempo real com nosso painel administrativo.",
         },
@@ -291,6 +287,7 @@ export default function SiteMatrix() {
       productImage: Scanner,
     },
   };
+
   return (
     <div className="font-roboto">
       <header
@@ -311,12 +308,27 @@ export default function SiteMatrix() {
           </div>
 
           <nav className="hidden md:flex space-x-6 items-center">
-            <Link
-              href="#sobre-nos"
-              className="hover:underline whitespace-nowrap text-base"
+            <ScrollLink
+              to="sobre-nos"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline whitespace-nowrap text-base cursor-pointer"
             >
               Sobre nós
-            </Link>
+            </ScrollLink>
+
+            <ScrollLink
+              to="metodologia"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline whitespace-nowrap text-base cursor-pointer"
+            >
+              Nossa Metodologia
+            </ScrollLink>
 
             <div className="flex space-x-2 bg-blue-600 p-1 rounded-lg">
               <button
@@ -343,12 +355,16 @@ export default function SiteMatrix() {
               </button>
             </div>
 
-            <Link
-              href="#contato"
-              className="hover:underline whitespace-nowrap text-base"
+            <ScrollLink
+              to="contato"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline whitespace-nowrap text-base cursor-pointer"
             >
               Contato
-            </Link>
+            </ScrollLink>
 
             <Link
               href={
@@ -382,13 +398,28 @@ export default function SiteMatrix() {
           }`}
         >
           <div className="container mx-auto px-4 flex flex-col space-y-4">
-            <Link
-              href="#sobre-nos"
-              className="hover:underline text-lg"
+            <ScrollLink
+              to="sobre-nos"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline text-lg cursor-pointer"
               onClick={() => setMobileMenuOpen(false)}
             >
               Sobre nós
-            </Link>
+            </ScrollLink>
+            <ScrollLink
+              to="metodologia"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline text-lg cursor-pointer"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Nossa Metodologia
+            </ScrollLink>
             <div className="flex space-x-2">
               <button
                 onClick={() => {
@@ -415,13 +446,17 @@ export default function SiteMatrix() {
                 MOVIX
               </button>
             </div>
-            <Link
-              href="#contato"
-              className="hover:underline text-lg"
+            <ScrollLink
+              to="contato"
+              spy={true}
+              smooth={true}
+              offset={0}
+              duration={800}
+              className="hover:underline text-lg cursor-pointer"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contato
-            </Link>
+            </ScrollLink>
             <Link
               href="https://wa.me/5565992233566"
               target="_blank"
@@ -487,7 +522,7 @@ export default function SiteMatrix() {
         id="produto"
         className="bg-[#f9f9f9] py-16 flex flex-col items-center"
       >
-        <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center lg:items-stretch">
           <div className="text-center lg:col-span-2 mb-8">
             <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
               {tabContent[activeTab].title}
@@ -527,8 +562,7 @@ export default function SiteMatrix() {
           </h2>
         </div>
 
-        <div className="container mx-auto px-4 flex flex-col lg:flex-row gap-8 items-center">
-          {/* Coluna dos pontos */}
+        <div className="container mx-auto px-4 flex flex-col lg:flex-row gap-8 items-center lg:items-stretch">
           <div className="w-full lg:w-1/2 grid grid-cols-1 gap-2">
             {tabContent[activeTab].whyPoints.map((point, index) => (
               <div
@@ -545,13 +579,12 @@ export default function SiteMatrix() {
             ))}
           </div>
 
-          {/* Coluna do carrossel - COM CORREÇÕES */}
-          <div className="w-full lg:w-1/2 max-w-md mx-auto">
+          <div className="w-full lg:w-1/2 max-w-lg mx-auto flex flex-col">
             <Swiper
               spaceBetween={30}
               centeredSlides={true}
               autoplay={{
-                delay: 2000,
+                delay: 4000,
                 disableOnInteraction: false,
               }}
               pagination={{
@@ -559,7 +592,7 @@ export default function SiteMatrix() {
               }}
               navigation={true}
               modules={[Autoplay, Pagination, Navigation]}
-              className="mySwiper"
+              className="mySwiper w-full h-full"
               style={{ background: "transparent" }}
             >
               {(activeTab === "vendas"
@@ -568,18 +601,19 @@ export default function SiteMatrix() {
               ).map((image, index) => (
                 <SwiperSlide
                   key={index}
+                  className="h-full"
                   style={{
                     background: "transparent",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
+                    position: "relative",
                   }}
                 >
                   <Image
                     src={image}
                     alt={`Demonstração ${index + 1}`}
-                    width={300}
-                    height={300}
+                    fill={true}
                     className="object-contain rounded-lg"
                     style={{ background: "transparent" }}
                   />
@@ -608,6 +642,186 @@ export default function SiteMatrix() {
             color: #1769e3 !important;
           }
         `}</style>
+      </section>
+
+      {activeTab === "coletas" && (
+        <section id="resultados-movix" className="bg-[#f9f9f9] pt-8 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
+                Principais Resultados
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="mb-4">
+                  <FaChartLine className="w-12 h-12 text-[#1769E3]" />
+                </div>
+                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                  Mais Controle e Produtividade
+                </h3>
+                <p className="text-base text-[#666666]">
+                  Monitore cada coleta em tempo real e tenha total visibilidade
+                  das operações. Com relatórios no painel administrativo e
+                  processos integrados, sua equipe trabalha de forma mais
+                  eficiente e produtiva.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="mb-4">
+                  <FaPiggyBank className="w-12 h-12 text-[#1769E3]" />
+                </div>
+                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                  Redução dos Custos
+                </h3>
+                <p className="text-base text-[#666666]">
+                  Economize tempo e recursos com tarefas automatizadas. Menos
+                  papel, menos retrabalho e mais resultado para o seu negócio.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="mb-4">
+                  <FaBarcode className="w-12 h-12 text-[#1769E3]" />
+                </div>
+                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                  Flexibilidade e Agilidade
+                </h3>
+                <p className="text-base text-[#666666]">
+                  Tenha mais autonomia para gerenciar coletas com rapidez e
+                  eficiência, de onde estiver.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="metodologia" className="bg-white py-16 lg:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
+              Metodologia de Entrega
+            </h2>
+            <p className="text-lg text-gray-600 mt-2">
+              Nosso caminho para o seu sucesso em 6 etapas.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-y-12 lg:gap-y-8 gap-x-8 max-w-7xl mx-auto">
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  1
+                </div>
+                <FaSearch className="w-10 h-10 text-[#1769E3] mb-3" />{" "}
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Diagnóstico
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Análise e diagnóstico do seu cenário atual para entender
+                  processos, dores e objetivos.
+                </p>
+              </div>
+              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
+                <FaChevronRight className="w-8 h-8 text-blue-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  2
+                </div>
+                <FaPlayCircle className="w-10 h-10 text-[#1769E3] mb-3" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Demonstração
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Mostrar de forma prática as funcionalidades do sistema
+                  resolvendo seus problemas do dia a dia.
+                </p>
+              </div>
+              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
+                <FaChevronRight className="w-8 h-8 text-blue-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  3
+                </div>
+                <FaLink className="w-10 h-10 text-[#1769E3] mb-3" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Integração
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Configurar as integrações (APIs) com os sistemas que sua
+                  empresa já utiliza, como o ERP.
+                </p>
+              </div>
+              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
+                <FaChevronRight className="w-8 h-8 text-blue-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  4
+                </div>
+                <FaUsers className="w-10 h-10 text-[#1769E3] mb-3" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Treinamento
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Treinamento da equipe separado de acordo com a rotina
+                  individual de cada perfil.
+                </p>
+              </div>
+              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
+                <FaChevronRight className="w-8 h-8 text-blue-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  5
+                </div>
+                <FaRocket className="w-10 h-10 text-[#1769E3] mb-3" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Início das Operações
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Inicio dos processos da Empresa com o Movix, com treinamento e
+                  acompanhamento na prática.
+                </p>
+              </div>
+              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
+                <FaChevronRight className="w-8 h-8 text-blue-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
+                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
+                  6
+                </div>
+                <FaHeadset className="w-10 h-10 text-[#1769E3] mb-3" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Suporte
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Nossa equipe disponível para solucionar incidentes técnicos,
+                  esclarecer dúvidas e gerenciar atualizações futuras.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="contato" className="bg-[#f9f9f9] py-10">
@@ -752,7 +966,10 @@ export default function SiteMatrix() {
           <div className="text-center">
             <p className="mb-2 text-base">Nossas redes</p>
             <div className="flex justify-center space-x-6">
-              <Link href="https://www.instagram.com/matrixaplicativos" target="_blank">
+              <Link
+                href="https://www.instagram.com/matrixaplicativos"
+                target="_blank"
+              >
                 <FaInstagram className="text-2xl hover:text-gray-400" />
               </Link>
               <Link
