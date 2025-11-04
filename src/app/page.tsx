@@ -580,66 +580,125 @@ export default function SiteMatrix() {
           </div>
 
           <div className="w-full lg:w-1/2 max-w-lg mx-auto flex flex-col">
-            <Swiper
-              spaceBetween={30}
-              centeredSlides={true}
-              autoplay={{
-                delay: 4000,
-                disableOnInteraction: false,
-              }}
-              pagination={{
-                clickable: true,
-              }}
-              navigation={true}
-              modules={[Autoplay, Pagination, Navigation]}
-              className="mySwiper w-full h-full"
-              style={{ background: "transparent" }}
-            >
-              {(activeTab === "vendas"
-                ? carouselImages
-                : carouselImagesColetas
-              ).map((image, index) => (
-                <SwiperSlide
-                  key={index}
-                  className="h-full"
-                  style={{
-                    background: "transparent",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    position: "relative",
-                  }}
-                >
-                  <Image
-                    src={image}
-                    alt={`Demonstração ${index + 1}`}
-                    fill={true}
-                    className="object-contain rounded-lg"
-                    style={{ background: "transparent" }}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
+            {/* Container do Swiper com altura responsiva */}
+            <div className="w-full h-80 lg:h-[650px] relative">
+              {" "}
+              {/* Altura maior no web */}
+              <Swiper
+                spaceBetween={30}
+                centeredSlides={true}
+                autoplay={{
+                  delay: 4000,
+                  disableOnInteraction: false,
+                }}
+                pagination={{
+                  clickable: true,
+                }}
+                navigation={true}
+                modules={[Autoplay, Pagination, Navigation]}
+                className="mySwiper w-full h-full"
+                style={{
+                  background: "transparent",
+                  display: "block",
+                  visibility: "visible",
+                  opacity: "1",
+                }}
+              >
+                {(activeTab === "vendas"
+                  ? carouselImages
+                  : carouselImagesColetas
+                ).map((image, index) => (
+                  <SwiperSlide
+                    key={index}
+                    className="h-full"
+                    style={{
+                      background: "transparent",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div className="relative w-full h-full flex justify-center items-center">
+                      <Image
+                        src={image}
+                        alt={`Demonstração ${index + 1}`}
+                        width={600} // Aumentei a largura para web
+                        height={800} // Aumentei a altura para web
+                        className="object-contain rounded-lg"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                          background: "transparent",
+                        }}
+                        priority={index === 0}
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </div>
         </div>
 
-        {/* Adicione o estilo inline */}
-        <style jsx>{`
+        {/* CSS ATUALIZADO - Mantendo bolinhas embaixo e ajustando web */}
+        <style jsx global>{`
           .mySwiper {
             background: transparent !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
           }
           .mySwiper .swiper-slide {
             background: transparent !important;
-            display: flex;
+            display: flex !important;
             justify-content: center;
             align-items: center;
           }
+
+          /* PAGINATION - BOLINHAS EMBAIXO */
+          .mySwiper .swiper-pagination {
+            bottom: 0px !important;
+            position: relative !important;
+            margin-top: 20px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+          }
+
           .mySwiper .swiper-pagination-bullet {
             background: #1769e3 !important;
+            width: 10px;
+            height: 10px;
+            opacity: 0.5;
+            margin: 0 5px !important;
           }
+
+          .mySwiper .swiper-pagination-bullet-active {
+            opacity: 1;
+            width: 12px;
+            height: 12px;
+          }
+
           .mySwiper .swiper-button-next,
           .mySwiper .swiper-button-prev {
             color: #1769e3 !important;
+          }
+
+          /* MOBILE */
+          @media (max-width: 767px) {
+            .mySwiper {
+              min-height: 320px !important;
+            }
+            .mySwiper .swiper-slide {
+              min-height: 300px !important;
+            }
+          }
+
+          /* WEB - Ajustes para telas maiores */
+          @media (min-width: 1024px) {
+            .mySwiper .swiper-slide {
+              min-height: 450px !important;
+            }
           }
         `}</style>
       </section>
