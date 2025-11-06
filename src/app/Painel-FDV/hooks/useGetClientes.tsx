@@ -9,42 +9,22 @@ import { Segmento } from "../utils/types/Segmento";
 import { Classificacao } from "../utils/types/Classificacao";
 
 interface Cliente {
-  // ... (toda a sua interface Cliente)
-  codIntegracao: number;
-  codEmpresaApi: number;
-  codClienteApi: number;
-  codClienteErp: string;
+  codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string;
+  cnpjCpf: string | null;
   fone1: string;
-  fone2: string;
   email: string;
-  bairro: string;
   endereco: string;
-  complemento: string;
+  complemento?: string;
   cep: string;
-  limiteCredito: number;
   status: string;
-  tipo: number;
-  rota: Rota;
-  segmento: Segmento;
-  classificacao: Classificacao;
-  areceber: [
-    {
-      id: {
-        numDocumento: number;
-        numParcela: number;
-      };
-      observacao: string;
-      dataLancamento: string;
-      dataVencimento: string;
-      valor: number;
-      dataCadastro: string;
-      dataUltimaAlteracao: string;
-    }
-  ];
-  ativo: true;
+  ativo: boolean;
+  municipio?: { codMunicipio: string };
+  territorio?: { descricao: string };
+  rota?: { descricao: string };
+  segmento?: { descricao: string };
+  classificacao?: { descricao: string };
 }
 
 interface UseGetClientesHook {

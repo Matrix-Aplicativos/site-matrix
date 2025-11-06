@@ -42,8 +42,8 @@ export default function HomePage() {
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
 
-  const codEmpresaParaBusca = empresa?.codEmpresa || 1;
-  const isHookEnabled = !companyLoading && !!empresa?.codEmpresa;
+  const codEmpresaParaBusca = empresa?.codEmpresa;
+  const isHookEnabled = !companyLoading && !!codEmpresaParaBusca;
 
   const porPagina = 1000;
 
@@ -52,10 +52,10 @@ export default function HomePage() {
     error: errorMaisVendidos,
     isLoading: isLoadingMaisVendidos,
   } = useRankingItensMais(
-    codEmpresaParaBusca, // Use a variável segura
+    codEmpresaParaBusca, // Passa 'undefined' na primeira renderização
     periodoIni,
     periodoFim,
-    isHookEnabled // Adicione a flag de habilitação
+    isHookEnabled // Esta flag (false) impede a chamada
   );
 
   const {
@@ -63,28 +63,28 @@ export default function HomePage() {
     error: errorMenosVendidos,
     isLoading: isLoadingMenosVendidos,
   } = useRankingItensMenos(
-    codEmpresaParaBusca, // Use a variável segura
+    codEmpresaParaBusca, // Passa 'undefined'
     periodoIni,
     periodoFim,
-    isHookEnabled // Adicione a flag de habilitação
+    isHookEnabled // Impede a chamada
   );
 
   const { totalPedidos: pedidosAtual, isLoading: isLoadingPedidosAtual } =
     useTotalPedidos(
-      codEmpresaParaBusca, // Use a variável segura
+      codEmpresaParaBusca, // Passa 'undefined'
       periodoIni,
       periodoFim,
       porPagina,
-      isHookEnabled // Adicione a flag de habilitação
+      isHookEnabled // Impede a chamada
     );
 
   const { totalPedidos: pedidosAnterior, isLoading: isLoadingPedidosAnterior } =
     useTotalPedidos(
-      codEmpresaParaBusca, // Use a variável segura
+      codEmpresaParaBusca, // Passa 'undefined'
       firstDayPreviousMonth,
       lastDayPreviousMonth,
       porPagina,
-      isHookEnabled // Adicione a flag de habilitação
+      isHookEnabled // Impede a chamada
     );
 
   const variacaoPedidos =
@@ -96,22 +96,22 @@ export default function HomePage() {
 
   const { totalClientes: clientesAtual, isLoading: isLoadingClientesAtual } =
     useTotalClientes(
-      codEmpresaParaBusca, // Use a variável segura
+      codEmpresaParaBusca, // Passa 'undefined'
       periodoIni,
       periodoFim,
       porPagina,
-      isHookEnabled // Adicione a flag de habilitação
+      isHookEnabled // Impede a chamada
     );
 
   const {
     totalClientes: clientesAnterior,
     isLoading: isLoadingClientesAnterior,
   } = useTotalClientes(
-    codEmpresaParaBusca, // Use a variável segura
+    codEmpresaParaBusca, // Passa 'undefined'
     firstDayPreviousMonth,
     lastDayPreviousMonth,
     porPagina,
-    isHookEnabled // Adicione a flag de habilitação
+    isHookEnabled // Impede a chamada
   );
 
   const variacaoClientes =
@@ -138,10 +138,12 @@ export default function HomePage() {
     }
   }, [isLoading, showLoading, hideLoading]);
 
+  // Esta parte do código já lida com 'companyLoading'
   if (companyLoading) {
     return <div className={styles.container}>Carregando painel...</div>;
   }
 
+  // Esta parte já lida com 'empresa' sendo 'undefined'
   if (!empresa) {
     return (
       <div className={styles.container}>
@@ -161,9 +163,11 @@ export default function HomePage() {
       <h1 className={styles.title}>
         PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
       </h1>
+
       <div className={styles.border}>
         <RelatorioPedidos />
       </div>
+
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
           <div className={styles.statWithTable}>
@@ -178,10 +182,10 @@ export default function HomePage() {
                         variacaoPedidos >= 0 ? styles.positive : styles.negative
                       }
                     >
-                      {variacaoPedidos >= 0 ? "▲" : "▼"}{" "}
+                      {variacaoPedidos >= 0 ? "▲" : "▼"}
                       {Math.abs(variacaoPedidos).toFixed(1)}%
                     </span>{" "}
-                    em relação a{" "}
+                    em relação a
                     {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
                       month: "long",
                     })}
@@ -191,6 +195,7 @@ export default function HomePage() {
                 )}
               </span>
             </div>
+
             <RankingTable
               title="Produtos Mais Vendidos"
               data={(maisVendidos ?? []).slice(0, 5)}
@@ -211,10 +216,10 @@ export default function HomePage() {
                           : styles.negative
                       }
                     >
-                      {variacaoClientes >= 0 ? "▲" : "▼"}{" "}
+                      {variacaoClientes >= 0 ? "▲" : "▼"}
                       {Math.abs(variacaoClientes).toFixed(1)}%
                     </span>{" "}
-                    em relação a{" "}
+                    em relação a
                     {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
                       month: "long",
                     })}
@@ -224,6 +229,7 @@ export default function HomePage() {
                 )}
               </span>
             </div>
+
             <RankingTable
               title="Produtos Menos Vendidos"
               data={(menosVendidos ?? []).slice(0, 5)}

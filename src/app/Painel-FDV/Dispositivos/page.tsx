@@ -63,7 +63,8 @@ export default function DispositivosPage() {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
+
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -84,6 +85,7 @@ export default function DispositivosPage() {
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
+
   const {
     dados: dadosDispositivo,
     loading: loadingDados,
@@ -113,7 +115,9 @@ export default function DispositivosPage() {
   }, [isLoading, showLoading, hideLoading]);
 
   const handleRefresh = async () => {
-    await Promise.all([refetch(), refetchDados()]);
+    if (codEmpresa) {
+      await Promise.all([refetch(), refetchDados()]);
+    }
   };
 
   const handleSort = (key: keyof DispositivoExibido) => {
@@ -137,6 +141,8 @@ export default function DispositivosPage() {
     nomeDispositivo: string,
     statusAtual: boolean
   ) => {
+    if (!codEmpresa) return;
+
     await ativarDispositivo({
       codDispositivo,
       nomeDispositivo,
@@ -156,12 +162,13 @@ export default function DispositivosPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>DISPOSITIVOS</h1>
       </div>
+
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
           className={styles.refreshButton}
           onClick={handleRefresh}
           title="Atualizar dispositivos"
-          disabled={isLoading}
+          disabled={isLoading || !codEmpresa}
         >
           <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
@@ -174,13 +181,14 @@ export default function DispositivosPage() {
           {dispositivosError && (
             <p>Erro ao carregar dispositivos: {dispositivosError}</p>
           )}
+
           {errorLicenca && (
             <p>Erro ao carregar validade da licença: {errorLicenca.message}</p>
           )}
+
           {errorLicencaGeral && (
             <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
           )}
-
           {!isLoading && dispositivos && (
             <table className={styles.table}>
               <thead>
@@ -200,16 +208,19 @@ export default function DispositivosPage() {
                   <th>Ações</th>
                 </tr>
               </thead>
+
               <tbody>
                 {dispositivos.map((dispositivo) => (
                   <tr key={dispositivo.codDispositivo}>
                     <td>{dispositivo.nomeDispositivo}</td>
                     <td>{dispositivo.codDispositivo}</td>
+
                     <td>
                       {dispositivo.tipoLicenca === "2"
                         ? "Multiempresa"
                         : "Padrão"}
                     </td>
+
                     <td>
                       <span
                         className={`${styles.statusBadge} ${
@@ -219,6 +230,7 @@ export default function DispositivosPage() {
                         {dispositivo.ativo ? "Ativo" : "Inativo"}
                       </span>
                     </td>
+
                     <td className={styles.actionsCell}>
                       {!dispositivo.ativo && (
                         <button
@@ -235,6 +247,7 @@ export default function DispositivosPage() {
                           <FiPower />
                         </button>
                       )}
+
                       <button
                         onClick={() =>
                           handleDeleteDevice(dispositivo.codDispositivo)
@@ -257,41 +270,52 @@ export default function DispositivosPage() {
           <div className={styles.situacaoItem}>
             <p>Total dispositivos:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados ? "..." : dadosDispositivo?.totalDispositivos ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.totalDispositivos ?? 0}
             </span>
           </div>
+
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados ? "..." : dadosDispositivo?.licencasPadrao ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasPadrao ?? 0}
             </span>
           </div>
+
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados
+              {!codEmpresa || loadingDados
                 ? "..."
                 : dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
             </span>
           </div>
+
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados ? "..." : dadosDispositivo?.licencasMulti ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasMulti ?? 0}
             </span>
           </div>
+
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados
+              {!codEmpresa || loadingDados
                 ? "..."
                 : dadosDispositivo?.licencasMultiUtilizadas ?? 0}
             </span>
           </div>
+
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>
-              {loadingLicenca
+              {!codEmpresa || loadingLicenca
                 ? "..."
                 : errorLicenca
                 ? "Erro"
