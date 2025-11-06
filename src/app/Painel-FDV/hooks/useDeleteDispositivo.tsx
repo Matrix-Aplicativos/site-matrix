@@ -9,7 +9,7 @@ interface UseDeleteDispositivoHook {
   deleteDispositivo: (codDispositivo: string) => Promise<void>;
 }
 
-const useDeleteDispositivo = (codEmpresa: number): UseDeleteDispositivoHook => {
+const useDeleteDispositivo = (codEmpresa: number | undefined): UseDeleteDispositivoHook => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);

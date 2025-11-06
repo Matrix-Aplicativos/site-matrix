@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 
 interface Configuracao {
-  codEmpresa: number;
+  codEmpresa: number | undefined;
   codConfiguracao: number;
   descricao: string;
   valor: string;
   ativo: boolean;
 }
 
-const useConfiguracao = (codEmpresa: number) => {
+const useConfiguracao = (codEmpresa: number | undefined) => {
   const [configuracoes, setConfiguracoes] = useState<Configuracao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

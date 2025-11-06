@@ -8,8 +8,6 @@ import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
-import { formatTelefone } from "../utils/functions/formatTelefone"; // Mantido para uso futuro, se necessário
-import { formatCep } from "../utils/functions/formatCep"; // Mantido para uso futuro, se necessário
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
@@ -53,17 +51,18 @@ const IconSort = () => (
 // --- Fim Ícones ---
 
 interface Cliente {
-  codClienteApi: number;
+  codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string;
+  cnpjCpf: string | null;
   fone1: string;
   email: string;
   endereco: string;
-  complemento?: string; // <-- TORNADO OPCIONAL
+  complemento?: string;
   cep: string;
   status: string;
-  municipio?: { codMunicipio: string }; // <-- MANTIDO OPCIONAL
+  ativo: boolean;
+  municipio?: { codMunicipio: string };
   territorio?: { descricao: string };
   rota?: { descricao: string };
   segmento?: { descricao: string };
@@ -81,8 +80,8 @@ interface ColumnDefinition {
 const FILTER_TO_API_PARAM: Record<string, string> = {
   RazaoSocial: "razaoSocial",
   NomeFantasia: "nomeFantasia",
-  CnpjCpf: "cnpjCpf",
-  Codigo: "codCliente",
+  cnpjCpf: "cnpjCpf",
+  Codigo: "codClienteErp",
 };
 
 export default function ClientesPage() {
@@ -96,7 +95,6 @@ export default function ClientesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTopic, setSearchTopic] = useState<string>("RazaoSocial");
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  // const [expandedRow, setExpandedRow] = useState<number | null>(null); // REMOVIDO
 
   const { showLoading, hideLoading } = useLoading();
   const token = getCookie("token");
@@ -129,17 +127,20 @@ export default function ClientesPage() {
       sortConfig?.direction,
       filtrosParaApi,
       isHookEnabled
-    );
+    ); // --- Definição de Colunas com Render ---
 
-  // --- [NOVO] Definição de Colunas com Render ---
   const columns: ColumnDefinition[] = [
-    { key: "codClienteApi", label: "Código" },
+    { key: "codClienteErp", label: "Código" }, // <-- AJUSTE: Renomeado de codClienteErpApi
     { key: "razaoSocial", label: "Razão Social" },
     { key: "nomeFantasia", label: "Nome Fantasia" },
     {
-      key: "cnpjcpf",
-      label: "CNPJ/CPF",
-      render: (value: string) => formatCnpjCpf(value),
+      key: "cnpjCpf",
+      label: "CNPJ/CPF", // <-- AJUSTE: Adicionada verificação de valor nulo
+      render: (value: string | null) => {
+        // Se o valor for 'null', 'undefined' ou uma string vazia, mostra "N/A"
+        // Caso contrário, formata o valor.
+        return value ? formatCnpjCpf(value) : "N/A";
+      },
     },
     {
       key: "status",
@@ -147,36 +148,31 @@ export default function ClientesPage() {
       render: (value: string) => (
         <span
           className={`${styles.statusBadge} ${
-            value === "A"
-              ? styles.statusCompleted // Classe para "Ativo"
-              : styles.statusNotStarted // Classe para "Inativo"
+            // Ajuste esta lógica se "0" for Ativo ou Inativo
+            // Pela sua imagem, "0" está sendo renderizado como Inativo.
+            value === "A" // ou talvez value === "1" ?
+              ? styles.statusCompleted
+              : styles.statusNotStarted
           }`}
         >
           {value === "A" ? "Ativo" : "Inativo"}
         </span>
       ),
     },
-  ];
+  ]; // --- Helper para obter valor da célula ---
 
-  // --- [NOVO] Helper para obter valor da célula (do seu exemplo) ---
   const getCellValue = (row: Cliente, colKey: string): any => {
-    // Simples, pois nossas chaves são planas na interface Cliente
+    // Agora 'codClienteErp' será encontrado corretamente
     return row[colKey as keyof Cliente] ?? "N/A";
-  };
+  }; // Effect para o loading global
 
-  // Effect para o loading global
   useEffect(() => {
     if (loading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]);
-
-  // --- Handlers ---
-  // const toggleExpandRow = (index: number) => { // REMOVIDO
-  //   setExpandedRow((prevRow) => (prevRow === index ? null : index));
-  // };
+  }, [loading, showLoading, hideLoading]); // --- Handlers ---
 
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
@@ -188,7 +184,6 @@ export default function ClientesPage() {
   };
 
   const handleSort = (key: string) => {
-    // Não permite ordenar a coluna de status (exemplo)
     if (key === "status") return;
 
     let direction: "asc" | "desc" = "asc";
@@ -221,6 +216,7 @@ export default function ClientesPage() {
             title="Atualizar clientes"
           >
             <span>Atualizar</span>
+
             <IconRefresh className={loading ? styles.spinning : ""} />
           </button>
         </div>
@@ -244,7 +240,6 @@ export default function ClientesPage() {
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
-            {/* --- [MODIFICADO] Cabeçalho agora usa o array 'columns' --- */}
             <tr>
               {columns.map((col) => (
                 <th
@@ -256,7 +251,6 @@ export default function ClientesPage() {
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
-                    {/* Não mostra ícone de sort para status */}
                     {col.key !== "status" && <IconSort />}
                   </div>
                 </th>
@@ -265,10 +259,9 @@ export default function ClientesPage() {
           </thead>
 
           <tbody>
-            {/* --- [MODIFICADO] Corpo da tabela limpo, sem expansão --- */}
             {Array.isArray(clientes) &&
               clientes.map((row, rowIndex) => (
-                <tr key={row.codClienteApi}>
+                <tr key={row.codClienteErp}>
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render
@@ -280,7 +273,6 @@ export default function ClientesPage() {
               ))}
           </tbody>
 
-          {/* --- [MODIFICADO] Paginação movida para TFOOT --- */}
           <tfoot>
             <tr>
               <td colSpan={columns.length}>

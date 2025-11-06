@@ -10,7 +10,7 @@ interface RankingItem {
 }
 
 export const useRankingItensMenos = (
-  codEmpresa: number | string,
+  codEmpresa: number | string | undefined,
   periodoIni: string,
   periodoFim: string,
   isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO

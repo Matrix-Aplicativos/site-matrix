@@ -33,7 +33,7 @@ interface UseGetDispositivosHook {
  * Hook customizado para buscar uma lista paginada de dispositivos de uma empresa.
  */
 const useGetDispositivos = (
-  codEmpresa: number,
+  codEmpresa: number | undefined,
   pagina: number = 1,
   porPagina: number = 20,
   orderBy?: string,

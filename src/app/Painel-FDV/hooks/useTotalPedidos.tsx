@@ -3,7 +3,7 @@ import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Pedido } from "../utils/types/Pedido";
 
 export const useTotalPedidos = (
-  codEmpresa: number | string,
+  codEmpresa: number | string | undefined,
   periodoIni: string,
   periodoFim: string,
   porPagina: number,

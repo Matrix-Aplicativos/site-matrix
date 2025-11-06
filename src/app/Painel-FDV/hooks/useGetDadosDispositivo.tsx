@@ -48,7 +48,7 @@ const initialState: DadosDispositivo = {
  * @returns {UseGetDadosDispositivoResult} Um objeto contendo os dados, o estado de carregamento, erros e uma função para refazer a busca.
  */
 const useGetDadosDispositivo = (
-  codEmpresa: number
+  codEmpresa: number | undefined
 ): UseGetDadosDispositivoResult => {
   const [dados, setDados] = useState<DadosDispositivo | null>(initialState);
   const [loading, setLoading] = useState(true);
