@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import {
@@ -12,6 +14,7 @@ import {
 import type { ChartOptions } from "chart.js";
 import { useTotalPedidos } from "../hooks/useTotalPedidos";
 import useGraficoPedidos from "../hooks/useGraficoPedidos";
+import useCurrentCompany from "../hooks/useCurrentCompany";
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +31,10 @@ export default function RelatorioPedidos() {
   const [view, setView] = useState<"mensal" | "anual">("mensal");
   const [periodoIni, setPeriodoIni] = useState("");
   const [periodoFim, setPeriodoFim] = useState("");
+
+  // --- [AJUSTE 2: Buscar a empresa atual] ---
+  const { empresa, loading: companyLoading } = useCurrentCompany();
+  const codEmpresaParaBusca = empresa?.codEmpresa; // Será 'undefined' no início
 
   useEffect(() => {
     if (view === "mensal") {
@@ -51,18 +58,18 @@ export default function RelatorioPedidos() {
     }
   }, [view]);
 
-  // --- [CORREÇÃO APLICADA AQUI] ---
-  // 1. Definimos a flag de habilitação. O hook só deve rodar se as datas existirem.
-  const isHookEnabled = !!periodoIni && !!periodoFim;
+  // --- [AJUSTE 3: Flag de habilitação completa] ---
+  // O hook só deve rodar se as datas E a empresa estiverem prontos.
+  const isHookEnabled =
+    !!periodoIni && !!periodoFim && !companyLoading && !!codEmpresaParaBusca;
 
   const { totalPedidos, isLoading, error } = useTotalPedidos(
-    1,
+    codEmpresaParaBusca, // <-- AJUSTE 4: Usar o código da empresa dinâmico
     periodoIni,
     periodoFim,
     10000,
-    isHookEnabled // 2. Adicionamos o 5º argumento 'isHookEnabled'
+    isHookEnabled // <-- AJUSTE 5: A flag agora impede a chamada até TUDO estar pronto
   );
-  // --- [FIM DA CORREÇÃO] ---
 
   const chartData = useGraficoPedidos(totalPedidos, view);
 
@@ -79,6 +86,9 @@ export default function RelatorioPedidos() {
     },
     maintainAspectRatio: false,
   };
+
+  // Define um estado de carregamento combinado
+  const isComponentLoading = isLoading || companyLoading;
 
   return (
     <div style={{ padding: "20px 0", width: "100%" }}>
@@ -107,6 +117,7 @@ export default function RelatorioPedidos() {
           >
             Mensal
           </button>
+
           <button
             style={{
               padding: "5px 10px",
@@ -122,6 +133,7 @@ export default function RelatorioPedidos() {
           </button>
         </div>
       </div>
+
       <div
         style={{
           height: "250px",
@@ -129,7 +141,8 @@ export default function RelatorioPedidos() {
           margin: "0 auto",
         }}
       >
-        {isLoading ? (
+        {/* <-- AJUSTE 6: Usar o estado de loading combinado --> */}
+        {isComponentLoading ? (
           <p>Carregando...</p>
         ) : error ? (
           <p>{error.message}</p>

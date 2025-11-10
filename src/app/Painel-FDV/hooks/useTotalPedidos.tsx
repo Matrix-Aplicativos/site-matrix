@@ -2,21 +2,28 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Pedido } from "../utils/types/Pedido";
 
+// Interface para a resposta paginada da API
+interface PedidoResponse {
+  conteudo: Pedido[];
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+}
+
 export const useTotalPedidos = (
   codEmpresa: number | string | undefined,
   periodoIni: string,
   periodoFim: string,
   porPagina: number,
-  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
+  isHookEnabled: boolean
 ) => {
   const [totalPedidos, setTotalPedidos] = useState<Pedido[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // 2. GUARDA ATUALIZADA
     if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
-      setTotalPedidos([]); // Limpa os dados se estiver desabilitado
+      setTotalPedidos([]);
       setIsLoading(false);
       return;
     }
@@ -24,13 +31,14 @@ export const useTotalPedidos = (
     const fetchTotalPedidos = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get<Pedido[]>(
+        // <-- AJUSTE 1: Tipagem da resposta corrigida
+        const response = await axiosInstance.get<PedidoResponse>(
           `/pedido/empresa/${codEmpresa}`,
           {
             params: { periodoIni, periodoFim, porPagina },
           }
-        );
-        setTotalPedidos(response.data);
+        ); // <-- AJUSTE 2: Extrair o array de 'conteudo'
+        setTotalPedidos(response.data.conteudo || []); // Usar || [] para segurança
       } catch (err) {
         console.error("Erro ao buscar pedidos:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -41,7 +49,7 @@ export const useTotalPedidos = (
     };
 
     fetchTotalPedidos();
-  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
+  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]);
 
   return { totalPedidos, isLoading, error };
 };
