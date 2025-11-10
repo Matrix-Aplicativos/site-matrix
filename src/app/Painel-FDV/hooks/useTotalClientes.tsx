@@ -2,21 +2,28 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { Pedido } from "../utils/types/Pedido";
 
+// Interface para a resposta paginada da API
+interface PedidoResponse {
+  conteudo: Pedido[];
+  paginaAtual: number;
+  qtdPaginas: number;
+  qtdElementos: number;
+}
+
 export const useTotalClientes = (
   codEmpresa: number | string | undefined,
   periodoIni: string,
   periodoFim: string,
   porPagina: number,
-  isHookEnabled: boolean // <-- 1. ARGUMENTO ADICIONADO
+  isHookEnabled: boolean
 ) => {
   const [totalClientes, setTotalClientes] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // 2. GUARDA ATUALIZADA
     if (!codEmpresa || !periodoIni || !periodoFim || !isHookEnabled) {
-      setTotalClientes(0); // Limpa os dados se estiver desabilitado
+      setTotalClientes(0);
       setIsLoading(false);
       return;
     }
@@ -24,15 +31,20 @@ export const useTotalClientes = (
     const fetchTotalClientes = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get<Pedido[]>(
+        // <-- AJUSTE 1: Tipagem da resposta corrigida
+        const response = await axiosInstance.get<PedidoResponse>(
           `/pedido/empresa/${codEmpresa}`,
           {
             params: { periodoIni, periodoFim, porPagina },
           }
         );
 
+        // <-- AJUSTE 2: Usar 'response.data.conteudo.map'
         const clientesUnicos = new Set(
-          response.data.map((pedido: Pedido) => pedido.codCliente)
+          (response.data.conteudo || []).map(
+            // Usar || [] para segurança
+            (pedido: Pedido) => pedido.codCliente
+          )
         );
 
         setTotalClientes(clientesUnicos.size);
@@ -46,7 +58,7 @@ export const useTotalClientes = (
     };
 
     fetchTotalClientes();
-  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]); // <-- 3. DEPENDÊNCIA ADICIONADA
+  }, [codEmpresa, periodoIni, periodoFim, porPagina, isHookEnabled]);
 
   return { totalClientes, isLoading, error };
 };

@@ -69,11 +69,12 @@ export default function PedidosPage() {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
-  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa || 1;
+
+  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa;
 
   const { pedidos, loading, error, qtdPaginas, qtdElementos, refetch } =
     useGetPedidos(
-      codEmpresa,
+      codEmpresa, 
       paginaAtual,
       porPagina,
       sortConfig?.key,
@@ -162,27 +163,27 @@ export default function PedidosPage() {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay />
-      <h1 className={styles.title}>PEDIDOS</h1>
-
+      <LoadingOverlay /> <h1 className={styles.title}>PEDIDOS</h1>
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual pedido deseja buscar?"
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
         />
+
         <div className={styles.searchActions}>
           <button
             className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar pedidos"
+            // Desabilita o botão se o 'codEmpresa' ainda não chegou
+            disabled={loading || !codEmpresa}
           >
             <span>Atualizar</span>
             <IconRefresh className={loading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
-
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -196,6 +197,7 @@ export default function PedidosPage() {
               <option value="status">Status</option>
             </select>
           </div>
+
           <div className={styles.filterSection}>
             <label>Período que deseja ver os pedidos:</label>
             <div className={styles.dateRange}>
@@ -205,6 +207,7 @@ export default function PedidosPage() {
                 value={dateRange.startDate}
                 onChange={handleDateChange}
               />
+
               <input
                 type="date"
                 name="endDate"
@@ -234,6 +237,7 @@ export default function PedidosPage() {
               <th></th>
             </tr>
           </thead>
+
           <tbody>
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.codPedido}>
@@ -244,54 +248,7 @@ export default function PedidosPage() {
                   </td>
                   <td>{formatPreco(row.valorTotal)}</td>
                   <td>{getStatusLabel(row.status)}</td>
-                  <td>
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleExpandRow(rowIndex)}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
-                  </td>
                 </tr>
-                {expandedRow === rowIndex && (
-                  <tr className={styles.expandedRow}>
-                    <td colSpan={columns.length + 1}>
-                      <div className={styles.additionalInfo}>
-                        <div>
-                          <p>
-                            <strong>Cliente:</strong>{" "}
-                            {row.codCliente.razaoSocial}
-                          </p>
-                          <p>
-                            <strong>CNPJ/CPF:</strong> {row.codCliente.cnpjCpf}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Status:</strong>{" "}
-                            {getStatusLabel(row.status)}
-                          </p>
-                          <p>
-                            <strong>Data:</strong>{" "}
-                            {new Date(row.dataCadastro).toLocaleDateString(
-                              "pt-BR"
-                            )}
-                          </p>
-                        </div>
-                        <div>
-                          <p>
-                            <strong>Valor Total:</strong>{" "}
-                            {formatPreco(row.valorTotal)}
-                          </p>
-                          <p>
-                            <strong>Observação:</strong>{" "}
-                            {row.observacao || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
               </React.Fragment>
             ))}
           </tbody>
