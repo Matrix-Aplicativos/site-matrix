@@ -16,12 +16,12 @@ import {
   FiHome,
   FiLogOut,
   FiPackage,
-  FiSmartphone, // <-- Ícone de celular adicionado
+  FiSmartphone, 
   FiTarget,
   FiUsers,
   FiMenu,
 } from "react-icons/fi";
-import { HiOfficeBuilding } from "react-icons/hi";
+import { HiCog, HiOfficeBuilding } from "react-icons/hi";
 
 // --- Interface de Props ---
 interface SidebarProps {
@@ -99,6 +99,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           <Link href="/Painel-FDV/SelecionarEmpresa" className="menu-item">
             <HiOfficeBuilding size={24} />
             {isOpen && <span className="menu-text">Mudar Empresa</span>}
+          </Link>
+        </li>
+        <li>
+          <Link href="/Painel-FDV/Configuracoes" className="menu-item">
+            <HiCog size={24} />
+            {isOpen && <span className="menu-text">Configurações</span>}
           </Link>
         </li>
       </ul>

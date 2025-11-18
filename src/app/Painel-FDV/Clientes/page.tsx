@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import styles from "./Clientes.module.css";
-import useGetClientes from "../hooks/useGetClientes"; // Hook atualizado
+import useGetClientes from "../hooks/useGetClientes";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
@@ -54,7 +54,7 @@ interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjCpf: string | null;
+  cnpjcpf: string | null;
   fone1: string;
   email: string;
   endereco: string;
@@ -69,18 +69,16 @@ interface Cliente {
   classificacao?: { descricao: string };
 }
 
-// Interface para definição de colunas (baseado no seu exemplo)
 interface ColumnDefinition {
   key: string;
   label: string;
   render?: (value: any, row: Cliente) => React.ReactNode;
 }
 
-// Mapeamento de Filtros
 const FILTER_TO_API_PARAM: Record<string, string> = {
   RazaoSocial: "razaoSocial",
   NomeFantasia: "nomeFantasia",
-  cnpjCpf: "cnpjCpf",
+  cnpjcpf: "cnpjcpf",
   Codigo: "codClienteErp",
 };
 
@@ -127,44 +125,40 @@ export default function ClientesPage() {
       sortConfig?.direction,
       filtrosParaApi,
       isHookEnabled
-    ); // --- Definição de Colunas com Render ---
+    );
 
+  // --- Definição de Colunas com Render Corrigido ---
   const columns: ColumnDefinition[] = [
-    { key: "codClienteErp", label: "Código" }, // <-- AJUSTE: Renomeado de codClienteErpApi
+    { key: "codClienteErp", label: "Código" },
     { key: "razaoSocial", label: "Razão Social" },
     { key: "nomeFantasia", label: "Nome Fantasia" },
     {
-      key: "cnpjCpf",
-      label: "CNPJ/CPF", // <-- AJUSTE: Adicionada verificação de valor nulo
+      key: "cnpjcpf",
+      label: "CNPJ/CPF",
       render: (value: string | null) => {
-        // Se o valor for 'null', 'undefined' ou uma string vazia, mostra "N/A"
-        // Caso contrário, formata o valor.
         return value ? formatCnpjCpf(value) : "N/A";
       },
     },
     {
-      key: "status",
+      key: "ativo", // Mudei de "status" para "ativo"
       label: "Status",
-      render: (value: string) => (
+      render: (value: boolean, row: Cliente) => (
         <span
           className={`${styles.statusBadge} ${
-            // Ajuste esta lógica se "0" for Ativo ou Inativo
-            // Pela sua imagem, "0" está sendo renderizado como Inativo.
-            value === "A" // ou talvez value === "1" ?
+            value === true // Agora verificamos o valor booleano
               ? styles.statusCompleted
               : styles.statusNotStarted
           }`}
         >
-          {value === "A" ? "Ativo" : "Inativo"}
+          {value === true ? "Ativo" : "Inativo"}
         </span>
       ),
     },
-  ]; // --- Helper para obter valor da célula ---
+  ];
 
   const getCellValue = (row: Cliente, colKey: string): any => {
-    // Agora 'codClienteErp' será encontrado corretamente
     return row[colKey as keyof Cliente] ?? "N/A";
-  }; // Effect para o loading global
+  };
 
   useEffect(() => {
     if (loading) {
@@ -172,7 +166,7 @@ export default function ClientesPage() {
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]); // --- Handlers ---
+  }, [loading, showLoading, hideLoading]);
 
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
@@ -184,7 +178,7 @@ export default function ClientesPage() {
   };
 
   const handleSort = (key: string) => {
-    if (key === "status") return;
+    if (key === "ativo") return; // Agora é "ativo" em vez de "status"
 
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -201,7 +195,9 @@ export default function ClientesPage() {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay /> <h1 className={styles.title}>CLIENTES</h1>
+      <LoadingOverlay />
+      <h1 className={styles.title}>CLIENTES</h1>
+
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual cliente deseja buscar?"
@@ -216,11 +212,11 @@ export default function ClientesPage() {
             title="Atualizar clientes"
           >
             <span>Atualizar</span>
-
             <IconRefresh className={loading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -231,12 +227,13 @@ export default function ClientesPage() {
             >
               <option value="RazaoSocial">Razão Social</option>
               <option value="NomeFantasia">Nome Fantasia</option>
-              <option value="CnpjCpf">CNPJ/CPF</option>
+              <option value="cnpjcpf">CNPJ/CPF</option>
               <option value="Codigo">Código</option>
             </select>
           </div>
         </div>
       )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -246,12 +243,13 @@ export default function ClientesPage() {
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   style={{
-                    cursor: col.key === "status" ? "default" : "pointer",
+                    cursor: col.key === "ativo" ? "default" : "pointer", // Atualizado para "ativo"
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
-                    {col.key !== "status" && <IconSort />}
+                    {col.key !== "ativo" && <IconSort />}{" "}
+                    {/* Atualizado para "ativo" */}
                   </div>
                 </th>
               ))}
@@ -260,7 +258,7 @@ export default function ClientesPage() {
 
           <tbody>
             {Array.isArray(clientes) &&
-              clientes.map((row, rowIndex) => (
+              clientes.map((row) => (
                 <tr key={row.codClienteErp}>
                   {columns.map((col) => (
                     <td key={col.key}>

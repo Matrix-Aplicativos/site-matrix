@@ -12,7 +12,7 @@ interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjCpf: string | null;
+  cnpjcpf: string | null;
   fone1: string;
   email: string;
   endereco: string;

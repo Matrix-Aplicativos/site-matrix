@@ -107,17 +107,14 @@ const useConfiguracao = (codEmpresa: number | undefined) => {
   const maximoDispositivosMulti = parseInt(
     getConfiguracao("maximo-de-dispositivos-multi")?.valor || "0"
   );
-  const configuracaoTeste1 =
-    getConfiguracao("configuracao-teste1")?.ativo || false;
-  const configuracaoTeste2 =
-    getConfiguracao("configuracao-teste2")?.ativo || false;
+  const permiteVendaSemEstoque =
+    getConfiguracao("permite-venda-sem-estoque")?.valor === "S";
 
   return {
     configuracoes,
     maximoDispositivos,
     maximoDispositivosMulti,
-    configuracaoTeste1,
-    configuracaoTeste2,
+    permiteVendaSemEstoque,
     validadeLicenca,
     getConfiguracao,
     loading,
