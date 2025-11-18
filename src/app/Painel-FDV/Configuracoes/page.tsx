@@ -221,11 +221,6 @@ export default function ConfiguracoesPage() {
                       )
                     }
                   />
-                  <span className={styles.statusLabel}>
-                    {configuracaoVendaSemEstoque.ativo
-                      ? "Configuração ativa"
-                      : "Configuração inativa"}
-                  </span>
                 </label>
               </div>
             </div>
