@@ -49,31 +49,23 @@ const IconSort = () => (
   </svg>
 );
 
-// INTERFACE CLIENTE BASEADA NO SWAGGER
 interface Cliente {
-  codIntegracao: number;
-  codEmpresa: number;
-  codCliente: number;
-  codClienteErp: string;
+  codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string;
+  cnpjcpf: string | null;
   fone1: string;
-  fone2: string;
   email: string;
-  municipio: any; // Simplificado para a tabela
-  bairro: string;
   endereco: string;
-  complemento: string;
+  complemento?: string;
   cep: string;
-  limiteCredito: number;
   status: string;
-  rota: any;
-  tipo: string;
-  classificacao: any;
-  segmento: any;
-  vendedorResponsavel: any;
   ativo: boolean;
+  municipio?: { codMunicipio: string };
+  territorio?: { descricao: string };
+  rota?: { descricao: string };
+  segmento?: { descricao: string };
+  classificacao?: { descricao: string };
 }
 
 interface ColumnDefinition {
@@ -134,6 +126,12 @@ export default function ClientesPage() {
       isHookEnabled
     );
 
+  // FUNÇÃO getCellValue CORRIGIDA
+  const getCellValue = (row: Cliente, colKey: string): any => {
+    const value = row[colKey as keyof Cliente];
+    return value !== undefined && value !== null ? value : "N/A";
+  };
+
   // --- Definição de Colunas ATUALIZADA ---
   const columns: ColumnDefinition[] = [
     { key: "codClienteErp", label: "Código" },
@@ -142,7 +140,7 @@ export default function ClientesPage() {
     {
       key: "cnpjcpf",
       label: "CNPJ/CPF",
-      render: (value: string) => {
+      render: (value: string, row: Cliente) => {
         return value ? formatCnpjCpf(value) : "N/A";
       },
     },
@@ -161,8 +159,16 @@ export default function ClientesPage() {
     },
   ];
 
-  const getCellValue = (row: Cliente, colKey: string): any => {
-    return row[colKey as keyof Cliente] ?? "N/A";
+  // FUNÇÃO PARA GERAR CHAVE ÚNICA
+  const generateRowKey = (row: Cliente, index: number): string => {
+    // Usa codClienteErp se disponível, senão usa índice + timestamp para garantir unicidade
+    if (row.codClienteErp && row.codClienteErp !== null) {
+      return `cliente-${row.codClienteErp}`;
+    }
+    // Se codClienteErp for null ou undefined, cria uma chave única baseada no índice e timestamp
+    return `cliente-${index}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
   };
 
   useEffect(() => {
@@ -279,8 +285,8 @@ export default function ClientesPage() {
 
           <tbody>
             {Array.isArray(clientes) && clientes.length > 0 ? (
-              clientes.map((row) => (
-                <tr key={row.codCliente}>
+              clientes.map((row, index) => (
+                <tr key={generateRowKey(row, index)}>
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render

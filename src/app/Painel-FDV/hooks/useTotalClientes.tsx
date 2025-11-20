@@ -40,20 +40,43 @@ export const useTotalClientes = (
 
         const pedidos = response.data.conteudo || [];
 
+        // FUNÇÃO CORRIGIDA - tratamento seguro dos tipos
         const clientesIds = pedidos
           .map((pedido: Pedido) => {
-            if (pedido.codCliente && pedido.codCliente > 0) {
+            // Verifica se codCliente é um número válido
+            if (
+              pedido.codCliente &&
+              typeof pedido.codCliente === "number" &&
+              pedido.codCliente > 0
+            ) {
               return pedido.codCliente;
             }
-            if (pedido.cliente?.codCliente && pedido.cliente.codCliente > 0) {
+
+            // Verifica se codCliente é um objeto com propriedade codCliente
+            if (
+              pedido.codCliente &&
+              typeof pedido.codCliente === "object" &&
+              (pedido.codCliente as any).codCliente &&
+              typeof (pedido.codCliente as any).codCliente === "number" &&
+              (pedido.codCliente as any).codCliente > 0
+            ) {
+              return (pedido.codCliente as any).codCliente;
+            }
+
+            // Verifica se há um objeto cliente com codCliente válido
+            if (
+              pedido.cliente?.codCliente &&
+              typeof pedido.cliente.codCliente === "number" &&
+              pedido.cliente.codCliente > 0
+            ) {
               return pedido.cliente.codCliente;
             }
+
             return null;
           })
           .filter((id): id is number => id !== null && id > 0);
 
         const clientesUnicos = new Set(clientesIds);
-
         setTotalClientes(clientesUnicos.size);
       } catch (err) {
         console.error("Erro ao buscar clientes:", err);

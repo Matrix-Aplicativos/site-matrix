@@ -49,8 +49,43 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import InputMask from "react-input-mask";
 import { Link as ScrollLink } from "react-scroll";
+
+// Componente de máscara de telefone customizado
+const PhoneInput = ({ value, onChange, ...props }: any) => {
+  const formatPhone = (input: string) => {
+    const numbers = input.replace(/\D/g, "");
+
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{0,4})(\d{0,4})/, "($1) $2-$3");
+    } else {
+      return numbers.replace(/(\d{2})(\d{1})(\d{4})(\d{0,4})/, "($1) $2$3-$4");
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    onChange({
+      ...e,
+      target: {
+        ...e.target,
+        value: formatted,
+        name: props.name,
+      },
+    });
+  };
+
+  return (
+    <input
+      {...props}
+      type="tel"
+      value={value}
+      onChange={handleChange}
+      maxLength={15}
+      placeholder="(00) 00000-0000"
+    />
+  );
+};
 
 interface Feature {
   title: string;
@@ -235,7 +270,7 @@ export default function SiteMatrix() {
       title:
         "Automatize suas Rotinas de Estoque ganhando tempo e evitando Prejuízos",
       description:
-        "Automatize as Rotinas de Separação de mercadoria da sua empresa eliminando prejuízos financeiros ou desgastes com clientes coletando e conferindo produtos com assertividade. Para cada Rotina da sua empresa o Movix tem uma solução.",
+        "Automatize as Rotinas de Separação de mercadoria da sua empresa eliminando prejuízos financieros ou desgastes com clientes coletando e conferindo produtos com assertividade. Para cada Rotina da sua empresa o Movix tem uma solução.",
       features: [
         {
           title: "Inventários",
@@ -964,9 +999,7 @@ export default function SiteMatrix() {
                     required
                     className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
                   />
-                  <InputMask
-                    mask="(99) 99999-9999"
-                    type="tel"
+                  <PhoneInput
                     name="telefone"
                     placeholder="Telefone"
                     value={formData.telefone}
