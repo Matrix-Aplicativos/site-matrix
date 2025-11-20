@@ -31,7 +31,6 @@ export const useTotalClientes = (
     const fetchTotalClientes = async () => {
       setIsLoading(true);
       try {
-        // <-- AJUSTE 1: Tipagem da resposta corrigida
         const response = await axiosInstance.get<PedidoResponse>(
           `/pedido/empresa/${codEmpresa}`,
           {
@@ -39,13 +38,21 @@ export const useTotalClientes = (
           }
         );
 
-        // <-- AJUSTE 2: Usar 'response.data.conteudo.map'
-        const clientesUnicos = new Set(
-          (response.data.conteudo || []).map(
-            // Usar || [] para segurança
-            (pedido: Pedido) => pedido.codCliente
-          )
-        );
+        const pedidos = response.data.conteudo || [];
+
+        const clientesIds = pedidos
+          .map((pedido: Pedido) => {
+            if (pedido.codCliente && pedido.codCliente > 0) {
+              return pedido.codCliente;
+            }
+            if (pedido.cliente?.codCliente && pedido.cliente.codCliente > 0) {
+              return pedido.cliente.codCliente;
+            }
+            return null;
+          })
+          .filter((id): id is number => id !== null && id > 0);
+
+        const clientesUnicos = new Set(clientesIds);
 
         setTotalClientes(clientesUnicos.size);
       } catch (err) {

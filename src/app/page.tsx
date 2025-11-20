@@ -814,11 +814,12 @@ export default function SiteMatrix() {
                 </div>
                 <FaLink className="w-10 h-10 text-[#1769E3] mb-3" />
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Integração
+                  Integração e Configuração
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Configurar as integrações (APIs) com os sistemas que sua
-                  empresa já utiliza, como o ERP.
+                  Configurar a integração (APIs) do Movix com o sistemas (ERP)
+                  que sua empresa utiliza. e validar as regras de negócio e
+                  Rotinas que a empresa irá utilizar.
                 </p>
               </div>
               <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">

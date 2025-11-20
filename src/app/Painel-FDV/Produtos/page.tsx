@@ -311,40 +311,40 @@ export default function ProdutosPage() {
                               </p>
 
                               <p>
-                                <strong>Departamento:</strong>
+                                <strong>Departamento: </strong>
                                 {row.departamento ?? "N/A"}
                               </p>
 
                               <p>
-                                <strong>Família:</strong> {row.familia ?? "N/A"}
+                                <strong>Família: </strong> {row.familia ?? "N/A"}
                               </p>
                             </div>
 
                             <div>
                               <p>
-                                <strong>Preço Revenda:</strong>
+                                <strong>Preço Revenda: </strong>
                                 {formatPreco(row.precoRevenda)}
                               </p>
 
                               <p>
-                                <strong>Preço Promoção:</strong>
+                                <strong>Preço Promoção: </strong>
                                 {formatPreco(row.precoPromocao)}
                               </p>
 
                               <p>
-                                <strong>Desconto Máx (%):</strong>
+                                <strong>Desconto Máx (%): </strong>
                                 {row.porcentagemDescontoMax}%
                               </p>
 
                               <p>
-                                <strong>Saldo Disponível:</strong>
+                                <strong>Saldo Disponível: </strong>
                                 {row.saldoDisponivel}
                               </p>
                             </div>
 
                             <div>
                               <p>
-                                <strong>Início Promoção:</strong>
+                                <strong>Início Promoção: </strong>
                                 {row.dataInicioPromocao
                                   ? new Date(
                                       row.dataInicioPromocao
@@ -353,7 +353,7 @@ export default function ProdutosPage() {
                               </p>
 
                               <p>
-                                <strong>Fim Promoção:</strong>
+                                <strong>Fim Promoção: </strong>
                                 {row.dataFimPromocao
                                   ? new Date(
                                       row.dataFimPromocao

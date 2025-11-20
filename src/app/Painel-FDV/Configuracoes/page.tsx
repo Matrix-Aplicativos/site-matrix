@@ -208,21 +208,6 @@ export default function ConfiguracoesPage() {
                   </span>
                 </div>
               </div>
-
-              <div className={styles.configStatus}>
-                <label className={styles.statusToggle}>
-                  <input
-                    type="checkbox"
-                    checked={configuracaoVendaSemEstoque.ativo}
-                    onChange={(e) =>
-                      handleAtivoChange(
-                        configuracaoVendaSemEstoque.codConfiguracao,
-                        e.target.checked
-                      )
-                    }
-                  />
-                </label>
-              </div>
             </div>
           </div>
         ) : (

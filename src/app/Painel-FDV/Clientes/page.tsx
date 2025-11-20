@@ -48,25 +48,32 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
-// --- Fim Ícones ---
 
+// INTERFACE CLIENTE BASEADA NO SWAGGER
 interface Cliente {
-  codClienteErp: number;
+  codIntegracao: number;
+  codEmpresa: number;
+  codCliente: number;
+  codClienteErp: string;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string | null;
+  cnpjcpf: string;
   fone1: string;
+  fone2: string;
   email: string;
+  municipio: any; // Simplificado para a tabela
+  bairro: string;
   endereco: string;
-  complemento?: string;
+  complemento: string;
   cep: string;
+  limiteCredito: number;
   status: string;
+  rota: any;
+  tipo: string;
+  classificacao: any;
+  segmento: any;
+  vendedorResponsavel: any;
   ativo: boolean;
-  municipio?: { codMunicipio: string };
-  territorio?: { descricao: string };
-  rota?: { descricao: string };
-  segmento?: { descricao: string };
-  classificacao?: { descricao: string };
 }
 
 interface ColumnDefinition {
@@ -127,7 +134,7 @@ export default function ClientesPage() {
       isHookEnabled
     );
 
-  // --- Definição de Colunas com Render Corrigido ---
+  // --- Definição de Colunas ATUALIZADA ---
   const columns: ColumnDefinition[] = [
     { key: "codClienteErp", label: "Código" },
     { key: "razaoSocial", label: "Razão Social" },
@@ -135,19 +142,17 @@ export default function ClientesPage() {
     {
       key: "cnpjcpf",
       label: "CNPJ/CPF",
-      render: (value: string | null) => {
+      render: (value: string) => {
         return value ? formatCnpjCpf(value) : "N/A";
       },
     },
     {
-      key: "ativo", // Mudei de "status" para "ativo"
+      key: "ativo",
       label: "Status",
       render: (value: boolean, row: Cliente) => (
         <span
           className={`${styles.statusBadge} ${
-            value === true // Agora verificamos o valor booleano
-              ? styles.statusCompleted
-              : styles.statusNotStarted
+            value === true ? styles.statusCompleted : styles.statusNotStarted
           }`}
         >
           {value === true ? "Ativo" : "Inativo"}
@@ -178,7 +183,7 @@ export default function ClientesPage() {
   };
 
   const handleSort = (key: string) => {
-    if (key === "ativo") return; // Agora é "ativo" em vez de "status"
+    if (key === "ativo") return;
 
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -192,6 +197,22 @@ export default function ClientesPage() {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
+
+  // MOSTRAR ERRO SE HOUVER
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>CLIENTES</h1>
+        <div className={styles.errorContainer}>
+          <h3>Erro ao carregar clientes</h3>
+          <p>{error}</p>
+          <button onClick={refetch} className={styles.retryButton}>
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -210,6 +231,7 @@ export default function ClientesPage() {
             className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar clientes"
+            disabled={loading}
           >
             <span>Atualizar</span>
             <IconRefresh className={loading ? styles.spinning : ""} />
@@ -243,13 +265,12 @@ export default function ClientesPage() {
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   style={{
-                    cursor: col.key === "ativo" ? "default" : "pointer", // Atualizado para "ativo"
+                    cursor: col.key === "ativo" ? "default" : "pointer",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
-                    {col.key !== "ativo" && <IconSort />}{" "}
-                    {/* Atualizado para "ativo" */}
+                    {col.key !== "ativo" && <IconSort />}
                   </div>
                 </th>
               ))}
@@ -257,9 +278,9 @@ export default function ClientesPage() {
           </thead>
 
           <tbody>
-            {Array.isArray(clientes) &&
+            {Array.isArray(clientes) && clientes.length > 0 ? (
               clientes.map((row) => (
-                <tr key={row.codClienteErp}>
+                <tr key={row.codCliente}>
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render
@@ -268,7 +289,14 @@ export default function ClientesPage() {
                     </td>
                   ))}
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className={styles.noData}>
+                  {loading ? "Carregando..." : "Nenhum cliente encontrado"}
+                </td>
+              </tr>
+            )}
           </tbody>
 
           <tfoot>
