@@ -14,7 +14,7 @@ interface ModalProps {
   onSuccess: () => void;
   codEmpresa: number;
   codUsuario: number;
-  tipoColeta: 1 | 2 | 3 | 4;
+  tipoColeta: 1 | 2 | 3 | 4 | 5 | 6;
   titulo: string;
 }
 
@@ -42,15 +42,22 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
 }) => {
   // --- ESTADOS ---
   const [descricao, setDescricao] = useState("");
+
   const [codAlocEstoqueOrigem, setCodAlocEstoqueOrigem] = useState<string>("");
   const [codAlocEstoqueDestino, setCodAlocEstoqueDestino] =
     useState<string>("");
+
   const [itensNaColeta, setItensNaColeta] = useState<ItemNaColeta[]>([]);
   const [paginaProdutos, setPaginaProdutos] = useState(1);
   const [quantidadeParaAdicionar, setQuantidadeParaAdicionar] =
     useState<number>(1);
+
   const [tipoConferenciaInterno, setTipoConferenciaInterno] = useState<3 | 4>(
     tipoColeta === 4 ? 4 : 3
+  );
+
+  const [tipoAjusteInterno, setTipoAjusteInterno] = useState<5 | 6>(
+    tipoColeta === 6 ? 6 : 5
   );
 
   const [productQuery, setProductQuery] = useState("");
@@ -73,7 +80,9 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     success,
     reset,
   } = usePostColetaSobDemanda();
+
   const { estoques, loading: estoquesLoading } = useGetEstoques(codEmpresa);
+
   const {
     produtos,
     loading: produtosLoading,
@@ -99,6 +108,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       setPaginaProdutos(1);
       setQuantidadeParaAdicionar(1);
       setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3);
+      setTipoAjusteInterno(tipoColeta === 6 ? 6 : 5);
     }
   }, [isOpen, tipoColeta]);
 
@@ -159,25 +169,44 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       alert("Adicione pelo menos um item à coleta.");
       return;
     }
+
     let payloadTipo = tipoColeta;
     let payloadOrigem = parseInt(codAlocEstoqueOrigem, 10) || 0;
     let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
+
+    // --- Lógica para Inventário (1) ---
     if (tipoColeta === 1) {
       if (!codAlocEstoqueDestino) {
         alert("Para inventário, o estoque de origem é obrigatório.");
         return;
       }
       payloadOrigem = payloadDestino;
-    } else if (tipoColeta === 2) {
+    }
+
+    // --- Lógica para Transferência (2) ---
+    else if (tipoColeta === 2) {
       if (!codAlocEstoqueOrigem || !codAlocEstoqueDestino) {
         alert("Para transferência, a origem e o destino são obrigatórios.");
         return;
       }
-    } else if (tipoColeta === 3 || tipoColeta === 4) {
+    }
+
+    else if (tipoColeta === 3 || tipoColeta === 4) {
       payloadTipo = tipoConferenciaInterno;
       payloadOrigem = 0;
       payloadDestino = 0;
     }
+    else if (tipoColeta === 5 || tipoColeta === 6) {
+      payloadTipo = tipoAjusteInterno;
+
+      if (!codAlocEstoqueOrigem) {
+        alert("Selecione o local de estoque.");
+        return;
+      }
+      payloadOrigem = parseInt(codAlocEstoqueOrigem, 10);
+      payloadDestino = 0;
+    }
+
     await postColeta({
       codColeta: 0,
       codEmpresa,
@@ -231,7 +260,9 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 placeholder="Digite o nome da coleta"
                 required
               />
-              {tipoColeta === 3 || tipoColeta === 4 ? (
+
+              {/* 1. Conferências (3 ou 4) */}
+              {(tipoColeta === 3 || tipoColeta === 4) && (
                 <div className={styles.radioGroup}>
                   <label>Tipo de Conferência:</label>
                   <div className={styles.radioOptionsContainer}>
@@ -255,7 +286,63 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     </label>
                   </div>
                 </div>
-              ) : tipoColeta === 2 ? (
+              )}
+
+              {/* 2. Ajustes (5 ou 6) */}
+              {(tipoColeta === 5 || tipoColeta === 6) && (
+                <>
+                  <div className={styles.radioGroup}>
+                    <label>Tipo de Ajuste:</label>
+                    <div className={styles.radioOptionsContainer}>
+                      <label className={styles.radioLabel}>
+                        Entrada
+                        <input
+                          type="radio"
+                          value="5"
+                          checked={tipoAjusteInterno === 5}
+                          onChange={() => setTipoAjusteInterno(5)}
+                        />
+                      </label>
+                      <label className={styles.radioLabel}>
+                        Saída
+                        <input
+                          type="radio"
+                          value="6"
+                          checked={tipoAjusteInterno === 6}
+                          onChange={() => setTipoAjusteInterno(6)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Ambos usam codAlocEstoqueOrigem */}
+                  <label>
+                    Local de Estoque
+                    <select
+                      value={codAlocEstoqueOrigem}
+                      onChange={(e) => setCodAlocEstoqueOrigem(e.target.value)}
+                      required
+                    >
+                      <option value="">
+                        {estoquesLoading
+                          ? "Carregando..."
+                          : "Selecione o Estoque"}
+                      </option>
+                      {estoques.map((e) => (
+                        <option
+                          key={e.codAlocEstoqueApi}
+                          value={e.codAlocEstoqueApi}
+                        >
+                          {e.descricao}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              )}
+
+              {/* 3. Transferência (2) */}
+              {tipoColeta === 2 && (
                 <div className={styles.stockSelectRow}>
                   <label>
                     Origem
@@ -302,8 +389,10 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     </select>
                   </label>
                 </div>
-              ) : (
-                // tipoColeta === 1 (Inventário)
+              )}
+
+              {/* 4. Inventário (1) */}
+              {tipoColeta === 1 && (
                 <label>
                   Origem
                   <select
@@ -312,9 +401,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     required
                   >
                     <option value="">
-                      {estoquesLoading
-                        ? "Carregando..."
-                        : "Selecione a Origem"}
+                      {estoquesLoading ? "Carregando..." : "Selecione a Origem"}
                     </option>
                     {estoques.map((e) => (
                       <option
@@ -328,6 +415,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 </label>
               )}
             </div>
+
             <div className={styles.coletaItensSection}>
               <h4>Itens na Coleta ({itensNaColeta.length})</h4>
               <div className={styles.coletaItensList}>
@@ -367,6 +455,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
               </div>
             </div>
           </div>
+
           <div className={styles.rightPanel}>
             <SearchBar
               placeholder="Qual produto deseja buscar?"

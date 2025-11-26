@@ -1,5 +1,3 @@
-/* Sidebar.css */
-
 .sidebar {
   width: 220px;
   height: 100vh;
@@ -48,12 +46,9 @@
   margin: 0;
   width: 100%;
   flex-grow: 1;
-  /* --- CORREÇÃO APLICADA AQUI --- */
-  /* Adiciona uma barra de rolagem vertical apenas se o conteúdo ultrapassar a altura */
   overflow-y: auto;
 }
 
-/* --- ESTILOS OPCIONAIS PARA DEIXAR A BARRA DE ROLAGEM MAIS BONITA --- */
 .menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -94,7 +89,6 @@
   transition: all 0.3s;
   overflow: hidden;
   white-space: nowrap;
-  /* Adicionado para que o botão se comporte como os links */
   background: none;
   border: none;
   cursor: pointer;

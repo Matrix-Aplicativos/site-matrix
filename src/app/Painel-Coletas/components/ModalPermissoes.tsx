@@ -5,9 +5,9 @@ import useGetUsuarioById from "../hooks/useGetUsuarioById";
 import useGetCargos from "../hooks/useGetCargos";
 import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargos";
 
-// Constantes para facilitar a leitura e manutenção
 const GESTOR_ROLE = "ROLE_MOVIX_GESTOR";
 const FUNCIONARIO_ROLE = "ROLE_MOVIX_FUNCIONARIO";
+
 const MOVIX_ROLES = [
   "ROLE_MOVIX_INVENTARIO",
   "ROLE_MOVIX_TRANSFERENCIA",
@@ -15,6 +15,9 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_CONF_VENDA",
   "ROLE_MOVIX_CADASTRAR_AVULSA",
   "ROLE_MOVIX_CADASTRAR_DEMANDA",
+  "ROLE_MOVIX_AJUSTE_ENTRADA",
+  "ROLE_MOVIX_AJUSTE_SAIDA",
+  "ROLE_MOVIX_FINALIZAR_COLETA",
 ];
 
 interface ModalProps {
@@ -22,7 +25,7 @@ interface ModalProps {
   onClose: () => void;
   usuarioInfo: UsuarioGet;
   onSave: () => void;
-  codUsuarioLogado: number; // ID do usuário logado
+  codUsuarioLogado: number; 
 }
 
 const PERMISSION_DISPLAY_MAP = [
@@ -46,8 +49,11 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_CONF_VENDA: "Visualizar Conferências de Venda",
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
+        ROLE_MOVIX_AJUSTE_ENTRADA: "Realizar Ajuste de Entrada",
+        ROLE_MOVIX_AJUSTE_SAIDA: "Realizar Ajuste de Saída",
+        ROLE_MOVIX_FINALIZAR_COLETA: "Finalizar Coletas no App",
       };
-      return { key: role, description: descriptions[role] };
+      return { key: role, description: descriptions[role] || role };
     }),
   },
 ];
