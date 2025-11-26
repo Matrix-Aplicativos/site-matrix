@@ -108,6 +108,11 @@ const OPCOES_STATUS = {
 
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
+const OPCOES_TIPO_MOVIMENTO = {
+  "Conf. Venda": "3",
+  "Conf. Compra": "4",
+};
+
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
@@ -124,6 +129,7 @@ const columns: ColumnConfig[] = [
 
 const getOrigemText = (origem: string) =>
   origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
+
 const getTipoMovimentoText = (tipo: string) => {
   switch (tipo) {
     case "3":
@@ -134,6 +140,7 @@ const getTipoMovimentoText = (tipo: string) => {
       return tipo;
   }
 };
+
 const getStatusText = (status: string) => {
   switch (status) {
     case "1":
@@ -148,6 +155,7 @@ const getStatusText = (status: string) => {
       return status;
   }
 };
+
 const getStatusClass = (status: string) => {
   switch (status) {
     case "1":
@@ -176,12 +184,20 @@ const ConferenciasPage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
+  const [tipoMovimentoFiltro, setTipoMovimentoFiltro] = useState<string>("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
 
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
+
+  const shouldFetchVenda =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "3");
+
+  const shouldFetchCompra =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "4");
 
   const tipoColetaVenda = React.useMemo(() => ["3"], []);
   const tipoColetaCompra = React.useMemo(() => ["4"], []);
@@ -194,7 +210,7 @@ const ConferenciasPage: React.FC = () => {
     totalPaginas: totalPaginasVenda,
     totalElementos: totalElementosVenda,
   } = useGetColetas(
-    codEmpresa || 0,
+    shouldFetchVenda ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -206,7 +222,7 @@ const ConferenciasPage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    !!codEmpresa
+    shouldFetchVenda
   );
 
   const {
@@ -217,7 +233,7 @@ const ConferenciasPage: React.FC = () => {
     totalPaginas: totalPaginasCompra,
     totalElementos: totalElementosCompra,
   } = useGetColetas(
-    codEmpresa || 0,
+    shouldFetchCompra ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -229,13 +245,14 @@ const ConferenciasPage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    !!codEmpresa
+    shouldFetchCompra
   );
 
   const coletasCombinadas = useMemo(() => {
-    if (!coletasVenda && !coletasCompra) return [];
-    return [...(coletasVenda || []), ...(coletasCompra || [])];
-  }, [coletasVenda, coletasCompra]);
+    const venda = shouldFetchVenda ? coletasVenda || [] : [];
+    const compra = shouldFetchCompra ? coletasCompra || [] : [];
+    return [...venda, ...compra];
+  }, [coletasVenda, coletasCompra, shouldFetchVenda, shouldFetchCompra]);
 
   const filteredData = useMemo(() => {
     if (!coletasCombinadas) return [];
@@ -256,20 +273,27 @@ const ConferenciasPage: React.FC = () => {
     }));
   }, [coletasCombinadas]);
 
-  const isLoading = companyLoading || loadingVenda || loadingCompra;
-  const coletasError = errorVenda || errorCompra;
+  const isLoading =
+    companyLoading ||
+    (shouldFetchVenda && loadingVenda) ||
+    (shouldFetchCompra && loadingCompra);
+
+  const coletasError =
+    (shouldFetchVenda && errorVenda) || (shouldFetchCompra && errorCompra);
 
   const totalElementos =
-    (totalElementosVenda || 0) + (totalElementosCompra || 0);
+    (shouldFetchVenda ? totalElementosVenda || 0 : 0) +
+    (shouldFetchCompra ? totalElementosCompra || 0 : 0);
+
   const totalPaginas = Math.max(
-    totalPaginasVenda || 1,
-    totalPaginasCompra || 1
+    shouldFetchVenda ? totalPaginasVenda || 1 : 1,
+    shouldFetchCompra ? totalPaginasCompra || 1 : 1
   );
 
   const refetchAll = React.useCallback(() => {
-    refetchVenda();
-    refetchCompra();
-  }, [refetchVenda, refetchCompra]);
+    if (shouldFetchVenda) refetchVenda();
+    if (shouldFetchCompra) refetchCompra();
+  }, [refetchVenda, refetchCompra, shouldFetchVenda, shouldFetchCompra]);
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -288,6 +312,11 @@ const ConferenciasPage: React.FC = () => {
 
   const handleOrigemChange = (origemValue: string) => {
     setOrigemFiltro(origemValue);
+    setPaginaAtual(1);
+  };
+
+  const handleTipoMovimentoChange = (tipoValue: string) => {
+    setTipoMovimentoFiltro(tipoValue);
     setPaginaAtual(1);
   };
 
@@ -367,6 +396,32 @@ const ConferenciasPage: React.FC = () => {
 
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
+          <div className={styles.filterSection}>
+            <label>Tipo Movimento:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="tipo-movimento-filter"
+                  checked={tipoMovimentoFiltro === ""}
+                  onChange={() => handleTipoMovimentoChange("")}
+                />
+                Todos
+              </label>
+              {Object.entries(OPCOES_TIPO_MOVIMENTO).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="tipo-movimento-filter"
+                    checked={tipoMovimentoFiltro === value}
+                    onChange={() => handleTipoMovimentoChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.filterSection}>
             <label>Status:</label>
             <div className={styles.radioGroup}>
@@ -524,13 +579,13 @@ const ConferenciasPage: React.FC = () => {
 
       {codEmpresa && (
         <ModalCadastrarColeta
-          isOpen={isModalOpen} // <-- obrigatório
+          isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={3} // <-- passar o tipo padrão (3) ou conforme desejar
-          titulo="Cadastrar Nova Conferência" // <-- passar título
+          tipoColeta={3}
+          titulo="Cadastrar Nova Conferência"
         />
       )}
     </div>

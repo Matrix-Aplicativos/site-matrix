@@ -108,6 +108,11 @@ const OPCOES_STATUS = {
 
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
+const OPCOES_TIPO_MOVIMENTO = {
+  "Ajuste Entrada": "5",
+  "Ajuste Saída": "6",
+};
+
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
@@ -179,6 +184,8 @@ const AjustesEstoquePage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
+  const [tipoMovimentoFiltro, setTipoMovimentoFiltro] = useState<string>("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -186,7 +193,12 @@ const AjustesEstoquePage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
 
-  // Tipos específicos para Ajustes de Estoque
+  const shouldFetchEntrada =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "5");
+
+  const shouldFetchSaida =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "6");
+
   const tipoColetaEntrada = React.useMemo(() => ["5"], []);
   const tipoColetaSaida = React.useMemo(() => ["6"], []);
 
@@ -198,7 +210,7 @@ const AjustesEstoquePage: React.FC = () => {
     totalPaginas: totalPaginasEntrada,
     totalElementos: totalElementosEntrada,
   } = useGetColetas(
-    codEmpresa || 0,
+    shouldFetchEntrada ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -210,7 +222,7 @@ const AjustesEstoquePage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    !!codEmpresa
+    shouldFetchEntrada
   );
 
   const {
@@ -221,7 +233,7 @@ const AjustesEstoquePage: React.FC = () => {
     totalPaginas: totalPaginasSaida,
     totalElementos: totalElementosSaida,
   } = useGetColetas(
-    codEmpresa || 0,
+    shouldFetchSaida ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
@@ -233,13 +245,14 @@ const AjustesEstoquePage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    !!codEmpresa
+    shouldFetchSaida
   );
 
   const coletasCombinadas = useMemo(() => {
-    if (!coletasEntrada && !coletasSaida) return [];
-    return [...(coletasEntrada || []), ...(coletasSaida || [])];
-  }, [coletasEntrada, coletasSaida]);
+    const entrada = shouldFetchEntrada ? coletasEntrada || [] : [];
+    const saida = shouldFetchSaida ? coletasSaida || [] : [];
+    return [...entrada, ...saida];
+  }, [coletasEntrada, coletasSaida, shouldFetchEntrada, shouldFetchSaida]);
 
   const filteredData = useMemo(() => {
     if (!coletasCombinadas) return [];
@@ -260,20 +273,27 @@ const AjustesEstoquePage: React.FC = () => {
     }));
   }, [coletasCombinadas]);
 
-  const isLoading = companyLoading || loadingEntrada || loadingSaida;
-  const coletasError = errorEntrada || errorSaida;
+  const isLoading =
+    companyLoading ||
+    (shouldFetchEntrada && loadingEntrada) ||
+    (shouldFetchSaida && loadingSaida);
+
+  const coletasError =
+    (shouldFetchEntrada && errorEntrada) || (shouldFetchSaida && errorSaida);
 
   const totalElementos =
-    (totalElementosEntrada || 0) + (totalElementosSaida || 0);
+    (shouldFetchEntrada ? totalElementosEntrada || 0 : 0) +
+    (shouldFetchSaida ? totalElementosSaida || 0 : 0);
+
   const totalPaginas = Math.max(
-    totalPaginasEntrada || 1,
-    totalPaginasSaida || 1
+    shouldFetchEntrada ? totalPaginasEntrada || 1 : 1,
+    shouldFetchSaida ? totalPaginasSaida || 1 : 1
   );
 
   const refetchAll = React.useCallback(() => {
-    refetchEntrada();
-    refetchSaida();
-  }, [refetchEntrada, refetchSaida]);
+    if (shouldFetchEntrada) refetchEntrada();
+    if (shouldFetchSaida) refetchSaida();
+  }, [refetchEntrada, refetchSaida, shouldFetchEntrada, shouldFetchSaida]);
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -292,6 +312,12 @@ const AjustesEstoquePage: React.FC = () => {
 
   const handleOrigemChange = (origemValue: string) => {
     setOrigemFiltro(origemValue);
+    setPaginaAtual(1);
+  };
+
+  // Novo handler para mudança de tipo
+  const handleTipoMovimentoChange = (tipoValue: string) => {
+    setTipoMovimentoFiltro(tipoValue);
     setPaginaAtual(1);
   };
 
@@ -371,6 +397,32 @@ const AjustesEstoquePage: React.FC = () => {
 
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
+          <div className={styles.filterSection}>
+            <label>Tipo Movimento:</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="tipo-movimento-filter"
+                  checked={tipoMovimentoFiltro === ""}
+                  onChange={() => handleTipoMovimentoChange("")}
+                />
+                Todos
+              </label>
+              {Object.entries(OPCOES_TIPO_MOVIMENTO).map(([label, value]) => (
+                <label key={value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="tipo-movimento-filter"
+                    checked={tipoMovimentoFiltro === value}
+                    onChange={() => handleTipoMovimentoChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.filterSection}>
             <label>Status:</label>
             <div className={styles.radioGroup}>

@@ -22,8 +22,12 @@ const OPCOES_TIPO = {
   Transferencia: 2,
   "Conf. Venda": 3,
   "Conf. Compra": 4,
+  "Ajuste Entrada": 5, // ADICIONADO
+  "Ajuste Saída": 6, // ADICIONADO
 };
+
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
+
 type TipoMetrica =
   | "coletasRealizadas"
   | "itensDistintosBipados"
@@ -36,7 +40,7 @@ export default function HomePage() {
   const codEmpresa = empresa?.codEmpresa;
   const hoje = new Date();
 
-  // --- LÓGICA DO RELATÓRIO DE COLETAS (sem alterações) ---
+  // --- LÓGICA DO RELATÓRIO DE COLETAS ---
   const mesAnteriorDate = subMonths(hoje, 1);
   const dataInicioMesAtual = format(startOfMonth(hoje), "yyyy-MM-dd");
   const dataFimMesAtual = format(endOfMonth(hoje), "yyyy-MM-dd");
@@ -66,57 +70,84 @@ export default function HomePage() {
     inventarios,
     transferencias,
     conferencias,
+    ajustes, // NOVO CAMPO
     variacaoColetas,
   } = useMemo(() => {
-    // (código de processamento de dados de coletas omitido para brevidade)
+    // Inicializa estrutura com o novo tipo 'ajustes'
     const processarDadosAgregados = (dados: any[] | null | undefined) => {
       if (!dados || dados.length === 0)
-        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 };
+        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0 };
+
       return dados.reduce(
         (acc, itemDiario) => {
           acc.total += itemDiario.totalColetas;
           if (itemDiario.contagemPorTipo) {
             itemDiario.contagemPorTipo.forEach((tipoInfo: any) => {
-              switch (tipoInfo.tipo.toUpperCase()) {
+              // Verifica o texto que o backend retorna.
+              // Assumindo que retorna strings baseadas no enum ou IDs convertidos.
+              const tipoUpper = tipoInfo.tipo
+                ? tipoInfo.tipo.toUpperCase()
+                : "";
+
+              switch (tipoUpper) {
                 case "INVENTARIO":
+                case "1":
                   acc.tipo1 += tipoInfo.quantidade;
                   break;
                 case "TRANSFERENCIA":
+                case "2":
                   acc.tipo2 += tipoInfo.quantidade;
                   break;
                 case "CONFERENCIA_VENDA":
                 case "CONFERENCIA_COMPRA":
                 case "CONFERENCIA":
+                case "3":
+                case "4":
                   acc.tipo3e4 += tipoInfo.quantidade;
+                  break;
+                // NOVOS CASOS PARA AJUSTES
+                case "AJUSTE_ENTRADA":
+                case "AJUSTE_SAIDA":
+                case "AJUSTE":
+                case "5":
+                case "6":
+                  acc.tipo5e6 += tipoInfo.quantidade;
+                  break;
+                default:
                   break;
               }
             });
           }
           return acc;
         },
-        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0 }
+        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0 }
       );
     };
+
     const statsMesAtual = processarDadosAgregados(dadosMesAtual);
     const statsMesAnterior = processarDadosAgregados(dadosMesAnterior);
+
     const totalAtual = statsMesAtual.total;
     const totalAnterior = statsMesAnterior.total;
+
     const variacao =
       totalAnterior > 0
         ? ((totalAtual - totalAnterior) / totalAnterior) * 100
         : totalAtual > 0
         ? 100
         : null;
+
     return {
       totalColetas: totalAtual,
       inventarios: statsMesAtual.tipo1,
       transferencias: statsMesAtual.tipo2,
       conferencias: statsMesAtual.tipo3e4,
+      ajustes: statsMesAtual.tipo5e6, // NOVO RETORNO
       variacaoColetas: variacao,
     };
   }, [dadosMesAtual, dadosMesAnterior]);
 
-  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS (ATUALIZADO) ---
+  // --- ESTADO E LÓGICA DO RELATÓRIO DE FUNCIONÁRIOS ---
   const inicioDoMesCorrente = format(startOfMonth(hoje), "yyyy-MM-dd");
   const fimDoMesCorrente = format(endOfMonth(hoje), "yyyy-MM-dd");
 
@@ -127,17 +158,13 @@ export default function HomePage() {
   const [metricaSelecionada, setMetricaSelecionada] =
     useState<TipoMetrica>("coletasRealizadas");
 
-  // NOVO: Estado que servirá como "gatilho" para o refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Este estado ainda é útil para garantir que o hook não dispare a cada digitação,
-  // mas agora o refresh será forçado pelo `refreshTrigger`.
   const [dateRangeAtivo, setDateRangeAtivo] = useState({
     inicio: inicioDoMesCorrente,
     fim: fimDoMesCorrente,
   });
 
-  // ALTERADO: O hook agora recebe o `refreshTrigger` como uma de suas dependências
   const {
     dados: dadosFuncionarios,
     loading: funcionariosLoading,
@@ -147,17 +174,15 @@ export default function HomePage() {
     dateRangeAtivo.inicio,
     dateRangeAtivo.fim,
     tiposSelecionados,
-    refreshTrigger // Passa o gatilho para o hook
+    refreshTrigger
   );
 
-  // ALTERADO: A função agora atualiza as datas E dispara o gatilho
   const handlePesquisarFuncionarios = () => {
     setDateRangeAtivo({ inicio: dataInicioInput, fim: dataFimInput });
-    setRefreshTrigger((prev) => prev + 1); // Força a re-execução do hook de dados
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const { totalColetasFunc, totalItensFunc, totalVolumeFunc } = useMemo(() => {
-    // (código de processamento dos totais de funcionários omitido para brevidade)
     if (!dadosFuncionarios || dadosFuncionarios.length === 0)
       return { totalColetasFunc: 0, totalItensFunc: 0, totalVolumeFunc: 0 };
     return dadosFuncionarios.reduce(
@@ -200,7 +225,6 @@ export default function HomePage() {
       </div>
       <div className={styles.border}>
         <div className={styles.tablesWithStats}>
-          {/* Cards de estatísticas de coletas... */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{totalColetas}</span>
@@ -223,6 +247,8 @@ export default function HomePage() {
               )}
             </div>
           </div>
+
+          {/* Card Inventários */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{inventarios}</span>
@@ -236,6 +262,8 @@ export default function HomePage() {
               </span>
             </div>
           </div>
+
+          {/* Card Transferências */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{transferencias}</span>
@@ -249,6 +277,8 @@ export default function HomePage() {
               </span>
             </div>
           </div>
+
+          {/* Card Conferências */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{conferencias}</span>
@@ -258,6 +288,19 @@ export default function HomePage() {
                   ? `${((conferencias / totalColetas) * 100).toFixed(
                       1
                     )}% do total`
+                  : "0% do total"}
+              </span>
+            </div>
+          </div>
+
+          {/* NOVO: Card Ajustes */}
+          <div className={styles.statWithTable}>
+            <div className={styles.stat}>
+              <span className={styles.number}>{ajustes}</span>
+              <span>Ajustes de Estoque</span>
+              <span className={styles.comparison}>
+                {totalColetas > 0
+                  ? `${((ajustes / totalColetas) * 100).toFixed(1)}% do total`
                   : "0% do total"}
               </span>
             </div>

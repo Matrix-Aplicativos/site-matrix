@@ -128,7 +128,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           <li>
             <Link href="/Painel-Coletas/AjustesEstoque" className="menu-item">
               <FiBox size={24} />
-              {isOpen && <span className="menu-text">Ajustes Estoque</span>}
+              {isOpen && <span className="menu-text">Ajustes de Estoque</span>}
             </Link>
           </li>
 

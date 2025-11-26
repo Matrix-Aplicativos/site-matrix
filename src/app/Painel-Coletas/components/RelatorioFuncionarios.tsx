@@ -11,9 +11,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-import styles from "./RelatorioFuncionarios.module.css";
-// Assumindo que o tipo dos dados do gráfico seja exportado do hook
 import { DadosFuncionario } from "../hooks/useGetGraficoFuncionarios";
 
 ChartJS.register(
@@ -22,8 +19,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend,
-  ChartDataLabels
+  Legend
 );
 
 // --- Tipos e Constantes ---
@@ -49,6 +45,8 @@ const OPCOES_TIPO = {
   Transferencia: 2,
   "Conf. Venda": 3,
   "Conf. Compra": 4,
+  "Ajuste Entrada": 5,
+  "Ajuste Saída": 6,
 };
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
 
@@ -97,11 +95,12 @@ export default function RelatorioFuncionarios({
   };
 
   const chartData = useMemo(() => {
-    // (Lógica do gráfico omitida para brevidade, sem alterações)
     if (!dados || dados.length === 0) return { labels: [], datasets: [] };
+
     const dadosOrdenados = [...dados].sort((a, b) =>
       a.nomeFuncionario.localeCompare(b.nomeFuncionario)
     );
+
     const todosOsDatasets = [
       {
         id: "coletasRealizadas",
@@ -122,6 +121,7 @@ export default function RelatorioFuncionarios({
         backgroundColor: coresMetricas.volumeTotalBipado,
       },
     ];
+
     return {
       labels: dadosOrdenados.map((d) => d.nomeFuncionario),
       datasets: todosOsDatasets.filter(
@@ -131,7 +131,6 @@ export default function RelatorioFuncionarios({
   }, [dados, metricaSelecionada]);
 
   const options = useMemo(() => {
-    // (Opções do gráfico omitidas para brevidade, sem alterações)
     const yAxisTitle = titulosMetricas[metricaSelecionada];
     return {
       responsive: true,
@@ -139,13 +138,6 @@ export default function RelatorioFuncionarios({
       plugins: {
         legend: { display: false },
         title: { display: false },
-        datalabels: {
-          anchor: "center" as const,
-          align: "center" as const,
-          color: "black",
-          font: { weight: "bold" as const, size: 14 },
-          formatter: (value: number) => (value > 0 ? value : ""),
-        },
       },
       scales: {
         x: {
@@ -169,16 +161,47 @@ export default function RelatorioFuncionarios({
 
   const renderContent = (): ReactNode => {
     if (loading)
-      return <div className={styles.placeholder}>Carregando dados...</div>;
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            color: "var(--text-placeholder-color)",
+            textAlign: "center",
+          }}
+        >
+          Carregando dados...
+        </div>
+      );
     if (error)
       return (
-        <div className={styles.placeholder}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            color: "var(--text-placeholder-color)",
+            textAlign: "center",
+          }}
+        >
           Erro ao buscar dados: {error.toString()}
         </div>
       );
     if (!chartData?.datasets.length || !chartData?.labels?.length)
       return (
-        <div className={styles.placeholder}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            color: "var(--text-placeholder-color)",
+            textAlign: "center",
+          }}
+        >
           Nenhum dado encontrado para os filtros selecionados.
         </div>
       );
@@ -186,26 +209,96 @@ export default function RelatorioFuncionarios({
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Relatório por Funcionários</h2>
+    <div style={{ padding: "20px", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "16px",
+          marginBottom: "20px",
+        }}
+      >
+        <h2
+          style={{
+            color: "var(--header-text-color)",
+            fontSize: "1.5rem",
+            margin: 0,
+          }}
+        >
+          Relatório por Funcionários
+        </h2>
       </div>
-      <div className={styles.filterSection}>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: "20px",
+          marginBottom: "20px",
+        }}
+      >
         {/* Filtros de Métrica e Tipo */}
-        <div className={styles.metricAndTypeFilters}>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterGroupLabel}>Exibir Métrica:</span>
-            <div className={styles.controlsContainer}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
+            <span
+              style={{
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: "var(--text-secondary-color)",
+                marginRight: "16px",
+                minWidth: "130px",
+              }}
+            >
+              Exibir Métrica:
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
+                flexWrap: "wrap",
+              }}
+            >
               {(Object.keys(titulosMetricas) as TipoMetrica[]).map(
                 (metrica) => (
-                  <label key={metrica} className={styles.radioLabel}>
+                  <label
+                    key={metrica}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      color: "var(--text-secondary-color)",
+                    }}
+                  >
                     <input
                       type="radio"
                       name="metrica"
                       value={metrica}
                       checked={metricaSelecionada === metrica}
                       onChange={() => setMetricaSelecionada(metrica)}
-                      className={styles.radioInput}
+                      style={{
+                        marginRight: "5px",
+                        transform: "scale(1.2)",
+                        cursor: "pointer",
+                      }}
                       disabled={loading}
                     />
                     {titulosMetricas[metrica]}
@@ -214,26 +307,76 @@ export default function RelatorioFuncionarios({
               )}
             </div>
           </div>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterGroupLabel}>Tipos de Coleta:</span>
-            <div className={styles.controlsContainer}>
-              <label className={styles.checkboxLabel}>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
+            <span
+              style={{
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: "var(--text-secondary-color)",
+                marginRight: "16px",
+                minWidth: "130px",
+              }}
+            >
+              Tipos de Coleta:
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
+                flexWrap: "wrap",
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  color: "var(--text-secondary-color)",
+                }}
+              >
                 <input
                   type="checkbox"
                   onChange={handleToggleTodosTipos}
                   checked={tiposSelecionados.length === TODOS_OS_TIPOS.length}
-                  className={styles.checkboxInput}
+                  style={{
+                    marginRight: "8px",
+                    transform: "scale(1.2)",
+                    cursor: "pointer",
+                  }}
                   disabled={loading}
-                />{" "}
+                />
                 Todos
               </label>
               {Object.entries(OPCOES_TIPO).map(([nome, valor]) => (
-                <label key={valor} className={styles.checkboxLabel}>
+                <label
+                  key={valor}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    color: "var(--text-secondary-color)",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={tiposSelecionados.includes(valor)}
                     onChange={() => handleTipoChange(valor)}
-                    className={styles.checkboxInput}
+                    style={{
+                      marginRight: "8px",
+                      transform: "scale(1.2)",
+                      cursor: "pointer",
+                    }}
                     disabled={loading}
                   />
                   {nome}
@@ -242,10 +385,24 @@ export default function RelatorioFuncionarios({
             </div>
           </div>
         </div>
+
         {/* Filtros de Data */}
-        <div className={styles.dateFilters}>
-          <div className={styles.dateInputGroup}>
-            <label htmlFor="dataInicioFunc" className={styles.dateLabel}>
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            alignItems: "flex-end",
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label
+              htmlFor="dataInicioFunc"
+              style={{
+                fontSize: "14px",
+                marginBottom: "4px",
+                color: "var(--text-secondary-color)",
+              }}
+            >
               Início
             </label>
             <input
@@ -253,12 +410,28 @@ export default function RelatorioFuncionarios({
               type="date"
               value={dataInicioInput}
               onChange={(e) => setDataInicioInput(e.target.value)}
-              className={styles.dateInput}
+              style={{
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid var(--input-border-color)",
+                fontSize: "15px",
+                backgroundColor: "var(--button-bg-color)",
+                color: "var(--text-secondary-color)",
+                height: "40px",
+              }}
               disabled={loading}
             />
           </div>
-          <div className={styles.dateInputGroup}>
-            <label htmlFor="dataFimFunc" className={styles.dateLabel}>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label
+              htmlFor="dataFimFunc"
+              style={{
+                fontSize: "14px",
+                marginBottom: "4px",
+                color: "var(--text-secondary-color)",
+              }}
+            >
               Fim
             </label>
             <input
@@ -266,29 +439,84 @@ export default function RelatorioFuncionarios({
               type="date"
               value={dataFimInput}
               onChange={(e) => setDataFimInput(e.target.value)}
-              className={styles.dateInput}
+              style={{
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid var(--input-border-color)",
+                fontSize: "15px",
+                backgroundColor: "var(--button-bg-color)",
+                color: "var(--text-secondary-color)",
+                height: "40px",
+              }}
               disabled={loading}
             />
           </div>
+
           <button
             onClick={handlePesquisar}
             disabled={loading}
-            className={styles.searchButton}
+            style={{
+              padding: "10px 18px",
+              background: loading
+                ? "var(--button-primary-disabled-bg)"
+                : "var(--button-primary-bg)",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "15px",
+              fontWeight: "bold",
+              height: "40px",
+              transition: "background-color 0.2s",
+            }}
           >
             {loading ? "..." : "Pesquisar"}
           </button>
         </div>
       </div>
-      <div className={styles.legendContainer}>
-        <div className={styles.legendItem}>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "24px",
+          marginBottom: "20px",
+          paddingTop: "10px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            fontSize: "14px",
+            color: "var(--text-secondary-color)",
+          }}
+        >
           <span
-            className={styles.legendColorBox}
-            style={{ backgroundColor: coresMetricas[metricaSelecionada] }}
+            style={{
+              display: "inline-block",
+              width: "14px",
+              height: "14px",
+              marginRight: "8px",
+              borderRadius: "3px",
+              backgroundColor: coresMetricas[metricaSelecionada],
+            }}
           ></span>
-          <span>{titulosMetricas[metricaSelecionada]}</span>
+          {titulosMetricas[metricaSelecionada]}
         </div>
       </div>
-      <div className={styles.chartWrapper}>{renderContent()}</div>
+
+      <div
+        style={{
+          height: "400px",
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {renderContent()}
+      </div>
     </div>
   );
 }
