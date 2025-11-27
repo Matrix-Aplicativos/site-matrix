@@ -74,15 +74,15 @@ export default function PedidosPage() {
 
   const { pedidos, loading, error, qtdPaginas, qtdElementos, refetch } =
     useGetPedidos(
-      codEmpresa, 
+      codEmpresa,
       paginaAtual,
       porPagina,
       sortConfig?.key,
       sortConfig?.direction,
       selectedFilter,
       query,
-      dateRange.startDate,
-      dateRange.endDate
+      dateRange.startDate, // O input "date" já fornece o formato YYYY-MM-DD
+      dateRange.endDate // O input "date" já fornece o formato YYYY-MM-DD
     );
 
   const filteredData = pedidos || [];
@@ -142,15 +142,42 @@ export default function PedidosPage() {
     setPaginaAtual(1);
   };
 
-  const getStatusLabel = (status: string) =>
-    status === "4" ? "Faturado" : status === "5" ? "Cancelado" : "Outro Status";
+  // --- FUNÇÃO DE LABEL MODIFICADA ---
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "1":
+        return "Em aberto";
+      case "2":
+        return "Confirmado";
+      case "3":
+        return "Integrado";
+      case "4":
+        return "Faturado";
+      case "5":
+        return "Cancelado";
+      default:
+        return "Outro Status";
+    }
+  };
 
-  const getStatusColorClass = (status: string) =>
-    status === "4"
-      ? styles["status-invoiced"]
-      : status === "5"
-      ? styles["status-canceled"]
-      : "";
+  // --- FUNÇÃO DE COR MODIFICADA ---
+  // (Lembre-se de criar essas classes no seu CSS: status-open, status-confirmed, status-integrated)
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case "1":
+        return styles["status-open"]; // (Cor Verde)
+      case "2":
+        return styles["status-confirmed"]; // (Cor Amarela)
+      case "3":
+        return styles["status-integrated"]; // (Cor Vermelha)
+      case "4":
+        return styles["status-invoiced"];
+      case "5":
+        return styles["status-canceled"];
+      default:
+        return "";
+    }
+  };
 
   if (error) {
     return (
@@ -176,7 +203,6 @@ export default function PedidosPage() {
             className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar pedidos"
-            // Desabilita o botão se o 'codEmpresa' ainda não chegou
             disabled={loading || !codEmpresa}
           >
             <span>Atualizar</span>
@@ -234,19 +260,23 @@ export default function PedidosPage() {
                   </div>
                 </th>
               ))}
-              <th></th>
+              {/* <th></th> (Removido pois não há coluna de expandir) */}
             </tr>
           </thead>
 
           <tbody>
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.codPedido}>
+                {/* A classe de cor é aplicada na linha <tr> */}
                 <tr className={getStatusColorClass(row.status)}>
                   <td>{row.codPedido}</td>
                   <td>
-                    {new Date(row.dataCadastro).toLocaleDateString("pt-BR")}
+                    {new Date(row.dataCadastro).toLocaleDateString("pt-BR", {
+                      timeZone: "UTC", // Garante que a data não mude por fuso
+                    })}
                   </td>
                   <td>{formatPreco(row.valorTotal)}</td>
+                  {/* O label do status é renderizado na célula <td> */}
                   <td>{getStatusLabel(row.status)}</td>
                 </tr>
               </React.Fragment>
@@ -255,7 +285,9 @@ export default function PedidosPage() {
 
           <tfoot>
             <tr>
-              <td colSpan={columns.length + 1}>
+              <td colSpan={columns.length}>
+                {" "}
+                {/* Ajustado colSpan */}
                 <PaginationControls
                   paginaAtual={paginaAtual}
                   totalPaginas={qtdPaginas || 1}

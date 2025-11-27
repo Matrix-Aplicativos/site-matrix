@@ -1,9 +1,6 @@
-// hooks/useGetClientes.ts
-
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
-// (Interfaces Rota, Segmento, Classificacao, Cliente... sem alteração)
 import { Rota } from "../utils/types/Rota";
 import { Segmento } from "../utils/types/Segmento";
 import { Classificacao } from "../utils/types/Classificacao";
@@ -12,7 +9,7 @@ interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjCpf: string | null;
+  cnpjcpf: string | null;
   fone1: string;
   email: string;
   endereco: string;
@@ -37,17 +34,15 @@ interface UseGetClientesHook {
   refetch: () => void;
 }
 
-// --- [INÍCIO DA ALTERAÇÃO] ---
 const useGetClientes = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
   orderBy?: string,
-  direction?: "asc" | "desc", // 1. Adicionar parâmetros de filtro e 'enabled'
+  direction?: "asc" | "desc",
   filtros?: Record<string, string | boolean>,
   enabled: boolean = true
 ): UseGetClientesHook => {
-  // ... (states 'clientes', 'loading', 'error' sem alteração) ...
   const [clientes, setClientes] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +51,6 @@ const useGetClientes = (
   const [apiQtdElementos, setApiQtdElementos] = useState(0);
 
   const fetchClientes = useCallback(async () => {
-    // 2. Adicionar 'guard clause' para evitar busca desnecessária
     if (!enabled || !codEmpresa) {
       setClientes([]);
       setLoading(false);
@@ -64,14 +58,14 @@ const useGetClientes = (
     }
 
     try {
-      setLoading(true); // 3. Mudar para URLSearchParams para construir a query
+      setLoading(true); 
       const queryParams = new URLSearchParams({
         pagina: pagina.toString(),
         porPagina: porPagina.toString(),
       });
 
       if (orderBy) queryParams.append("orderBy", orderBy);
-      if (direction) queryParams.append("direction", direction); // 4. Adicionar a lógica de filtros
+      if (direction) queryParams.append("direction", direction); 
       if (filtros) {
         Object.entries(filtros).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== "") {
@@ -82,7 +76,7 @@ const useGetClientes = (
 
       const response = await axiosInstance.get(
         `/cliente/empresa/${codEmpresa}?${queryParams}`
-      ); // ... (O resto da sua lógica de 'responseData' está perfeita) ...
+      ); 
 
       const responseData = response.data;
 
@@ -102,7 +96,6 @@ const useGetClientes = (
       setApiQtdElementos(responseData.qtdElementos || 0);
       setError(null);
     } catch (err) {
-      // ... (Sua lógica de erro está perfeita) ...
       const errorMessage =
         err instanceof AxiosError
           ? err.response?.data?.message || err.message
@@ -114,13 +107,12 @@ const useGetClientes = (
       setApiQtdElementos(0);
     } finally {
       setLoading(false);
-    } // 5. Adicionar 'filtros' e 'enabled' ao array de dependências
+    } 
   }, [codEmpresa, pagina, porPagina, orderBy, direction, filtros, enabled]);
 
   useEffect(() => {
-    // 6. Simplificar o useEffect
     fetchClientes();
-  }, [fetchClientes]); // Dispara sempre que 'fetchClientes' (e suas dependências) mudar
+  }, [fetchClientes]); 
 
   return {
     clientes,
@@ -132,6 +124,5 @@ const useGetClientes = (
     refetch: fetchClientes,
   };
 };
-// --- [FIM DA ALTERAÇÃO] ---
 
 export default useGetClientes;

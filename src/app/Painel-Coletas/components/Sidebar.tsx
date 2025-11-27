@@ -30,6 +30,7 @@ import {
   FiRepeat,
   FiLayers,
   FiFileText,
+  FiBox, // <-- Ícone importado para Estoque
 } from "react-icons/fi";
 import { HiOfficeBuilding } from "react-icons/hi";
 
@@ -121,6 +122,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             <Link href="/Painel-Coletas/Conferencias" className="menu-item">
               <FiClipboard size={24} />
               {isOpen && <span className="menu-text">Conferências</span>}
+            </Link>
+          </li>
+
+          <li>
+            <Link href="/Painel-Coletas/AjustesEstoque" className="menu-item">
+              <FiBox size={24} />
+              {isOpen && <span className="menu-text">Ajustes de Estoque</span>}
             </Link>
           </li>
 

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import styles from "./Clientes.module.css";
-import useGetClientes from "../hooks/useGetClientes"; // Hook atualizado
+import useGetClientes from "../hooks/useGetClientes";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
@@ -48,13 +48,12 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
-// --- Fim Ícones ---
 
 interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjCpf: string | null;
+  cnpjcpf: string | null;
   fone1: string;
   email: string;
   endereco: string;
@@ -69,18 +68,16 @@ interface Cliente {
   classificacao?: { descricao: string };
 }
 
-// Interface para definição de colunas (baseado no seu exemplo)
 interface ColumnDefinition {
   key: string;
   label: string;
   render?: (value: any, row: Cliente) => React.ReactNode;
 }
 
-// Mapeamento de Filtros
 const FILTER_TO_API_PARAM: Record<string, string> = {
   RazaoSocial: "razaoSocial",
   NomeFantasia: "nomeFantasia",
-  cnpjCpf: "cnpjCpf",
+  cnpjcpf: "cnpjcpf",
   Codigo: "codClienteErp",
 };
 
@@ -127,44 +124,52 @@ export default function ClientesPage() {
       sortConfig?.direction,
       filtrosParaApi,
       isHookEnabled
-    ); // --- Definição de Colunas com Render ---
+    );
 
+  // FUNÇÃO getCellValue CORRIGIDA
+  const getCellValue = (row: Cliente, colKey: string): any => {
+    const value = row[colKey as keyof Cliente];
+    return value !== undefined && value !== null ? value : "N/A";
+  };
+
+  // --- Definição de Colunas ATUALIZADA ---
   const columns: ColumnDefinition[] = [
-    { key: "codClienteErp", label: "Código" }, // <-- AJUSTE: Renomeado de codClienteErpApi
+    { key: "codClienteErp", label: "Código" },
     { key: "razaoSocial", label: "Razão Social" },
     { key: "nomeFantasia", label: "Nome Fantasia" },
     {
-      key: "cnpjCpf",
-      label: "CNPJ/CPF", // <-- AJUSTE: Adicionada verificação de valor nulo
-      render: (value: string | null) => {
-        // Se o valor for 'null', 'undefined' ou uma string vazia, mostra "N/A"
-        // Caso contrário, formata o valor.
+      key: "cnpjcpf",
+      label: "CNPJ/CPF",
+      render: (value: string, row: Cliente) => {
         return value ? formatCnpjCpf(value) : "N/A";
       },
     },
     {
-      key: "status",
+      key: "ativo",
       label: "Status",
-      render: (value: string) => (
+      render: (value: boolean, row: Cliente) => (
         <span
           className={`${styles.statusBadge} ${
-            // Ajuste esta lógica se "0" for Ativo ou Inativo
-            // Pela sua imagem, "0" está sendo renderizado como Inativo.
-            value === "A" // ou talvez value === "1" ?
-              ? styles.statusCompleted
-              : styles.statusNotStarted
+            value === true ? styles.statusCompleted : styles.statusNotStarted
           }`}
         >
-          {value === "A" ? "Ativo" : "Inativo"}
+          {value === true ? "Ativo" : "Inativo"}
         </span>
       ),
     },
-  ]; // --- Helper para obter valor da célula ---
+  ];
 
-  const getCellValue = (row: Cliente, colKey: string): any => {
-    // Agora 'codClienteErp' será encontrado corretamente
-    return row[colKey as keyof Cliente] ?? "N/A";
-  }; // Effect para o loading global
+  // FUNÇÃO PARA GERAR CHAVE ÚNICA
+  const generateRowKey = (row: Cliente, index: number): string => {
+    // Usa codClienteErp se disponível, senão usa índice + timestamp para garantir unicidade
+    if (row.codClienteErp && row.codClienteErp !== null) {
+      return `cliente-${row.codClienteErp}`;
+    }
+    // Se codClienteErp for null ou undefined, cria uma chave única baseada no índice e timestamp
+    return `cliente-${index}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+  };
 
   useEffect(() => {
     if (loading) {
@@ -172,7 +177,7 @@ export default function ClientesPage() {
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]); // --- Handlers ---
+  }, [loading, showLoading, hideLoading]);
 
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
@@ -184,7 +189,7 @@ export default function ClientesPage() {
   };
 
   const handleSort = (key: string) => {
-    if (key === "status") return;
+    if (key === "ativo") return;
 
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -199,9 +204,27 @@ export default function ClientesPage() {
     setPaginaAtual(1);
   };
 
+  // MOSTRAR ERRO SE HOUVER
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>CLIENTES</h1>
+        <div className={styles.errorContainer}>
+          <h3>Erro ao carregar clientes</h3>
+          <p>{error}</p>
+          <button onClick={refetch} className={styles.retryButton}>
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
-      <LoadingOverlay /> <h1 className={styles.title}>CLIENTES</h1>
+      <LoadingOverlay />
+      <h1 className={styles.title}>CLIENTES</h1>
+
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual cliente deseja buscar?"
@@ -214,13 +237,14 @@ export default function ClientesPage() {
             className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar clientes"
+            disabled={loading}
           >
             <span>Atualizar</span>
-
             <IconRefresh className={loading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
+
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
@@ -231,12 +255,13 @@ export default function ClientesPage() {
             >
               <option value="RazaoSocial">Razão Social</option>
               <option value="NomeFantasia">Nome Fantasia</option>
-              <option value="CnpjCpf">CNPJ/CPF</option>
+              <option value="cnpjcpf">CNPJ/CPF</option>
               <option value="Codigo">Código</option>
             </select>
           </div>
         </div>
       )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -246,12 +271,12 @@ export default function ClientesPage() {
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   style={{
-                    cursor: col.key === "status" ? "default" : "pointer",
+                    cursor: col.key === "ativo" ? "default" : "pointer",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span>{col.label}</span>
-                    {col.key !== "status" && <IconSort />}
+                    {col.key !== "ativo" && <IconSort />}
                   </div>
                 </th>
               ))}
@@ -259,9 +284,9 @@ export default function ClientesPage() {
           </thead>
 
           <tbody>
-            {Array.isArray(clientes) &&
-              clientes.map((row, rowIndex) => (
-                <tr key={row.codClienteErp}>
+            {Array.isArray(clientes) && clientes.length > 0 ? (
+              clientes.map((row, index) => (
+                <tr key={generateRowKey(row, index)}>
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render
@@ -270,7 +295,14 @@ export default function ClientesPage() {
                     </td>
                   ))}
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className={styles.noData}>
+                  {loading ? "Carregando..." : "Nenhum cliente encontrado"}
+                </td>
+              </tr>
+            )}
           </tbody>
 
           <tfoot>

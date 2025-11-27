@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import styles from "./Conferencias.module.css";
+import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import useGetColetas from "../hooks/useGetColetas";
 import useCurrentCompany from "../hooks/useCurrentCompany";
@@ -109,8 +109,8 @@ const OPCOES_STATUS = {
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
 const OPCOES_TIPO_MOVIMENTO = {
-  "Conf. Venda": "3",
-  "Conf. Compra": "4",
+  "Ajuste Entrada": "5",
+  "Ajuste Saída": "6",
 };
 
 const columns: ColumnConfig[] = [
@@ -132,10 +132,10 @@ const getOrigemText = (origem: string) =>
 
 const getTipoMovimentoText = (tipo: string) => {
   switch (tipo) {
-    case "3":
-      return "Conf. Venda";
-    case "4":
-      return "Conf. Compra";
+    case "5":
+      return "Ajuste Entrada";
+    case "6":
+      return "Ajuste Saída";
     default:
       return tipo;
   }
@@ -171,7 +171,7 @@ const getStatusClass = (status: string) => {
   }
 };
 
-const ConferenciasPage: React.FC = () => {
+const AjustesEstoquePage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -193,66 +193,66 @@ const ConferenciasPage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
 
-  const shouldFetchVenda =
-    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "3");
+  const shouldFetchEntrada =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "5");
 
-  const shouldFetchCompra =
-    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "4");
+  const shouldFetchSaida =
+    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "6");
 
-  const tipoColetaVenda = React.useMemo(() => ["3"], []);
-  const tipoColetaCompra = React.useMemo(() => ["4"], []);
+  const tipoColetaEntrada = React.useMemo(() => ["5"], []);
+  const tipoColetaSaida = React.useMemo(() => ["6"], []);
 
   const {
-    coletas: coletasVenda,
-    loading: loadingVenda,
-    error: errorVenda,
-    refetch: refetchVenda,
-    totalPaginas: totalPaginasVenda,
-    totalElementos: totalElementosVenda,
+    coletas: coletasEntrada,
+    loading: loadingEntrada,
+    error: errorEntrada,
+    refetch: refetchEntrada,
+    totalPaginas: totalPaginasEntrada,
+    totalElementos: totalElementosEntrada,
   } = useGetColetas(
-    shouldFetchVenda ? codEmpresa : 0,
+    shouldFetchEntrada ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    tipoColetaVenda,
+    tipoColetaEntrada,
     statusFiltro || undefined,
     origemFiltro || undefined,
     "descricao",
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchVenda
+    shouldFetchEntrada
   );
 
   const {
-    coletas: coletasCompra,
-    loading: loadingCompra,
-    error: errorCompra,
-    refetch: refetchCompra,
-    totalPaginas: totalPaginasCompra,
-    totalElementos: totalElementosCompra,
+    coletas: coletasSaida,
+    loading: loadingSaida,
+    error: errorSaida,
+    refetch: refetchSaida,
+    totalPaginas: totalPaginasSaida,
+    totalElementos: totalElementosSaida,
   } = useGetColetas(
-    shouldFetchCompra ? codEmpresa : 0,
+    shouldFetchSaida ? codEmpresa : 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    tipoColetaCompra,
+    tipoColetaSaida,
     statusFiltro || undefined,
     origemFiltro || undefined,
     "descricao",
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchCompra
+    shouldFetchSaida
   );
 
   const coletasCombinadas = useMemo(() => {
-    const venda = shouldFetchVenda ? coletasVenda || [] : [];
-    const compra = shouldFetchCompra ? coletasCompra || [] : [];
-    return [...venda, ...compra];
-  }, [coletasVenda, coletasCompra, shouldFetchVenda, shouldFetchCompra]);
+    const entrada = shouldFetchEntrada ? coletasEntrada || [] : [];
+    const saida = shouldFetchSaida ? coletasSaida || [] : [];
+    return [...entrada, ...saida];
+  }, [coletasEntrada, coletasSaida, shouldFetchEntrada, shouldFetchSaida]);
 
   const filteredData = useMemo(() => {
     if (!coletasCombinadas) return [];
@@ -275,25 +275,25 @@ const ConferenciasPage: React.FC = () => {
 
   const isLoading =
     companyLoading ||
-    (shouldFetchVenda && loadingVenda) ||
-    (shouldFetchCompra && loadingCompra);
+    (shouldFetchEntrada && loadingEntrada) ||
+    (shouldFetchSaida && loadingSaida);
 
   const coletasError =
-    (shouldFetchVenda && errorVenda) || (shouldFetchCompra && errorCompra);
+    (shouldFetchEntrada && errorEntrada) || (shouldFetchSaida && errorSaida);
 
   const totalElementos =
-    (shouldFetchVenda ? totalElementosVenda || 0 : 0) +
-    (shouldFetchCompra ? totalElementosCompra || 0 : 0);
+    (shouldFetchEntrada ? totalElementosEntrada || 0 : 0) +
+    (shouldFetchSaida ? totalElementosSaida || 0 : 0);
 
   const totalPaginas = Math.max(
-    shouldFetchVenda ? totalPaginasVenda || 1 : 1,
-    shouldFetchCompra ? totalPaginasCompra || 1 : 1
+    shouldFetchEntrada ? totalPaginasEntrada || 1 : 1,
+    shouldFetchSaida ? totalPaginasSaida || 1 : 1
   );
 
   const refetchAll = React.useCallback(() => {
-    if (shouldFetchVenda) refetchVenda();
-    if (shouldFetchCompra) refetchCompra();
-  }, [refetchVenda, refetchCompra, shouldFetchVenda, shouldFetchCompra]);
+    if (shouldFetchEntrada) refetchEntrada();
+    if (shouldFetchSaida) refetchSaida();
+  }, [refetchEntrada, refetchSaida, shouldFetchEntrada, shouldFetchSaida]);
 
   useEffect(() => {
     if (isLoading) showLoading();
@@ -315,6 +315,7 @@ const ConferenciasPage: React.FC = () => {
     setPaginaAtual(1);
   };
 
+  // Novo handler para mudança de tipo
   const handleTipoMovimentoChange = (tipoValue: string) => {
     setTipoMovimentoFiltro(tipoValue);
     setPaginaAtual(1);
@@ -355,7 +356,7 @@ const ConferenciasPage: React.FC = () => {
   if (coletasError)
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Conferências</h2>
+        <h2>Erro ao Carregar Ajustes</h2>
         <button onClick={() => refetchAll()}>Tentar novamente</button>
       </div>
     );
@@ -366,11 +367,11 @@ const ConferenciasPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>CONFERÊNCIAS</h1>
+      <h1 className={styles.title}>AJUSTES DE ESTOQUE</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar
-          placeholder="Qual conferência deseja buscar?"
+          placeholder="Qual ajuste deseja buscar?"
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
         />
@@ -378,15 +379,15 @@ const ConferenciasPage: React.FC = () => {
           <button
             className={styles.actionButton}
             onClick={() => setIsModalOpen(true)}
-            title="Cadastrar nova conferência"
+            title="Cadastrar novo ajuste"
           >
-            <span>Cadastrar Conferência</span>
+            <span>Cadastrar Ajuste</span>
             <FiClipboard />
           </button>
           <button
             className={styles.actionButton}
             onClick={() => refetchAll()}
-            title="Atualizar conferências"
+            title="Atualizar ajustes"
           >
             <span>Atualizar</span>
             <IconRefresh className={isLoading ? styles.spinning : ""} />
@@ -584,12 +585,12 @@ const ConferenciasPage: React.FC = () => {
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={3}
-          titulo="Cadastrar Nova Conferência"
+          tipoColeta={5}
+          titulo="Cadastrar Novo Ajuste de Estoque"
         />
       )}
     </div>
   );
 };
 
-export default ConferenciasPage;
+export default AjustesEstoquePage;
