@@ -1,9 +1,6 @@
-// src/app/inventarios/hooks/useGetEstoques.ts
-
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 
-// Interface ATUALIZADA para corresponder ao JSON da sua API
 export interface Estoque {
   codAlocEstoqueApi: number;
   codIntegracao: number;
@@ -31,12 +28,9 @@ const useGetEstoques = (codEmpresa: number): UseGetEstoquesResult => {
     setLoading(true);
     setError(null);
     try {
-      // O caminho do endpoint está correto
       const response = await axiosInstance.get<Estoque[]>(
         `/alocacao-estoque/${codEmpresa}`
       );
-
-      // A resposta da API já é um array, então podemos usá-la diretamente
       setEstoques(response.data || []);
     } catch (err) {
       setError("Não foi possível carregar os locais de estoque.");
