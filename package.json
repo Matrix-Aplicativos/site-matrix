@@ -43,7 +43,7 @@
     "@types/react-dom": "^18",
     "@types/react-input-mask": "^3.0.6",
     "@types/react-scroll": "^1.8.10",
-    "eslint": "^8",
+    "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.3",
     "jest": "^30.0.5",
     "postcss": "^8",
