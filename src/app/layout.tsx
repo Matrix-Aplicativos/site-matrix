@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ClientLayoutWrapper from "./clienteLayoutWrapper"; // 1. IMPORTE o novo componente
+import { Montserrat } from "next/font/google";
+import ClientLayoutWrapper from "./clienteLayoutWrapper";
 
 export const metadata: Metadata = {
   title: {
-    default: "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
+    default:
+      "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
     template: "%s | Matrix Aplicativos",
   },
   description:
     "Aplicativo de força de vendas offline e gestão de coletas para empresas. Aumente produtividade, controle pedidos e otimize logística com tecnologia integrada ao seu ERP.",
-  // ... (o resto do seu objeto metadata continua igual)
   keywords: [
     "força de vendas",
     "aplicativo de vendas",
@@ -49,7 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
+    title:
+      "Matrix Aplicativos - Soluções em Aplicativos para Vendas e Logística",
     description:
       "Aplicativo de força de vendas offline e gestão de coletas para empresas.",
     images: ["https://www.matrixapps.com.br/images/twitter-card.jpg"],
@@ -64,6 +66,12 @@ export const metadata: Metadata = {
     canonical: "https://www.matrixapps.com.br",
   },
 };
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-montserrat", // Cria uma variável CSS para usarmos no globals
+});
 
 export default function RootLayout({
   children,
@@ -117,10 +125,9 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="min-h-screen bg-white text-gray-800 antialiased"
+        className={`${montserrat.variable} min-h-screen bg-white text-gray-800 antialiased`}
         style={{ background: "white" }}
       >
-        {/* 2. USE o wrapper em volta dos children */}
         <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 
         <noscript>

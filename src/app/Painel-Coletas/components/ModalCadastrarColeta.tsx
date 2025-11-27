@@ -3,9 +3,11 @@ import styles from "./ModalCadastrarColeta.module.css";
 import usePostColetaSobDemanda from "../hooks/usePostColetaSobDemanda";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useGetEstoques from "../hooks/useGetEstoques";
+
 import { Produto } from "../utils/types/Produto";
 import { FaTrash } from "react-icons/fa";
 import SearchBar from "./SearchBar";
+import useGetPlanoContas from "../hooks/useGetPlanoConta";
 
 // --- Constantes e Interfaces ---
 interface ModalProps {
@@ -47,6 +49,10 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
   const [codAlocEstoqueDestino, setCodAlocEstoqueDestino] =
     useState<string>("");
 
+  // Novos estados para Plano de Contas
+  const [codPlanoConta, setCodPlanoConta] = useState<string>("");
+  const [buscaPlanoConta, setBuscaPlanoConta] = useState<string>("");
+
   const [itensNaColeta, setItensNaColeta] = useState<ItemNaColeta[]>([]);
   const [paginaProdutos, setPaginaProdutos] = useState(1);
   const [quantidadeParaAdicionar, setQuantidadeParaAdicionar] =
@@ -73,6 +79,11 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     return apiParamKey ? { [apiParamKey]: productQuery } : {};
   }, [productQuery, selectedProductFilter]);
 
+  // Filtro para o hook de planos de conta (memoizado para evitar loops infinitos)
+  const filtrosPlanoConta = useMemo(() => {
+    return { descricao: buscaPlanoConta };
+  }, [buscaPlanoConta]);
+
   const {
     postColeta,
     loading: postLoading,
@@ -82,6 +93,13 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
   } = usePostColetaSobDemanda();
 
   const { estoques, loading: estoquesLoading } = useGetEstoques(codEmpresa);
+
+  const { planosContas, loading: planosLoading } = useGetPlanoContas(
+    codEmpresa,
+    1,
+    20,
+    filtrosPlanoConta
+  );
 
   const {
     produtos,
@@ -105,6 +123,9 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       setSelectedProductFilter("descricao");
       setCodAlocEstoqueDestino("");
       setCodAlocEstoqueOrigem("");
+      setCodPlanoConta("");
+      setBuscaPlanoConta("");
+
       setPaginaProdutos(1);
       setQuantidadeParaAdicionar(1);
       setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3);
@@ -189,20 +210,22 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
         alert("Para transferência, a origem e o destino são obrigatórios.");
         return;
       }
-    }
-
-    else if (tipoColeta === 3 || tipoColeta === 4) {
+    } else if (tipoColeta === 3 || tipoColeta === 4) {
       payloadTipo = tipoConferenciaInterno;
       payloadOrigem = 0;
       payloadDestino = 0;
-    }
-    else if (tipoColeta === 5 || tipoColeta === 6) {
+    } else if (tipoColeta === 5 || tipoColeta === 6) {
       payloadTipo = tipoAjusteInterno;
 
       if (!codAlocEstoqueOrigem) {
         alert("Selecione o local de estoque.");
         return;
       }
+      if (!codPlanoConta) {
+        alert("Selecione um Plano de Contas para o ajuste.");
+        return;
+      }
+
       payloadOrigem = parseInt(codAlocEstoqueOrigem, 10);
       payloadDestino = 0;
     }
@@ -215,6 +238,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       descricao,
       codAlocEstoqueOrigem: payloadOrigem,
       codAlocEstoqueDestino: payloadDestino,
+      codPlanoConta: codPlanoConta ? parseInt(codPlanoConta, 10) : undefined,
       itens: itensNaColeta.map((item) => ({
         codItem: item.codItemApi,
         quantidade: item.quantidade,
@@ -315,33 +339,55 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Ambos usam codAlocEstoqueOrigem */}
-                  <label>
-                    Local de Estoque
-                    <select
-                      value={codAlocEstoqueOrigem}
-                      onChange={(e) => setCodAlocEstoqueOrigem(e.target.value)}
-                      required
-                    >
-                      <option value="">
-                        {estoquesLoading
-                          ? "Carregando..."
-                          : "Selecione o Estoque"}
-                      </option>
-                      {estoques.map((e) => (
-                        <option
-                          key={e.codAlocEstoqueApi}
-                          value={e.codAlocEstoqueApi}
-                        >
-                          {e.descricao}
+                  {/* Campos de Estoque e Plano de Contas alinhados */}
+                  <div className={styles.stockSelectRow}>
+                    <label>
+                      Local de Estoque
+                      <select
+                        value={codAlocEstoqueOrigem}
+                        onChange={(e) =>
+                          setCodAlocEstoqueOrigem(e.target.value)
+                        }
+                        required
+                      >
+                        <option value="">
+                          {estoquesLoading
+                            ? "Carregando..."
+                            : "Selecione o Estoque"}
                         </option>
-                      ))}
-                    </select>
-                  </label>
+                        {estoques.map((e) => (
+                          <option
+                            key={e.codAlocEstoqueApi}
+                            value={e.codAlocEstoqueApi}
+                          >
+                            {e.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Plano de Contas
+                      <select
+                        value={codPlanoConta}
+                        onChange={(e) => setCodPlanoConta(e.target.value)}
+                        required
+                      >
+                        <option value="">
+                          {planosLoading
+                            ? "Carregando..."
+                            : "Selecione a Conta"}
+                        </option>
+                        {planosContas.map((p) => (
+                          <option key={p.codPlanoConta} value={p.codPlanoConta}>
+                            {p.codPlanoContaErp} - {p.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                 </>
               )}
 
-              {/* 3. Transferência (2) */}
               {tipoColeta === 2 && (
                 <div className={styles.stockSelectRow}>
                   <label>

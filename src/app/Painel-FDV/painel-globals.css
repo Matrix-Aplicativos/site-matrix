@@ -27,12 +27,6 @@
   --modal-bg-color: white;
   --button-secondary-bg: #f0f0f0;
   --button-secondary-hover-bg: #e0e0e0;
-
-  /* --- NOVAS VARIÁVEIS ADICIONADAS --- */
-  --background: #ffffff;
-  --text-primary: #000000;
-  --card-background: #ffffff;
-  --border-color: #e0e0e0;
 }
 
 /* --- 🌙 Variáveis para o Modo Escuro --- */
@@ -60,31 +54,22 @@
   --modal-bg-color: #2d2d2d;
   --button-secondary-bg: #444;
   --button-secondary-hover-bg: #555;
-
-  /* --- NOVAS VARIÁVEIS ADICIONADAS --- */
-  --background: #1a1a1a;
-  --text-primary: #ffffff;
-  --card-background: #2d2d2d;
-  --border-color: #3a3a3a;
 }
 
-/* --- APLICAÇÃO DAS VARIÁVEIS (ESSA PARTE FALTAVA) --- */
-body {
-  background-color: var(--background);
-  color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* --- APLICANDO A MONTSERRAT GLOBALMENTE --- */
+@layer base {
+  html {
+    font-family: var(--font-montserrat), sans-serif;
+  }
 }
 
-/* --- Seus outros estilos globais ATUALIZADOS --- */
-
+/* --- Seus outros estilos globais --- */
 .painel-body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-montserrat), sans-serif;
   overflow-y: auto;
-  background-color: var(--background);
-  color: var(--text-primary);
 }
 
 .content-shifted {
@@ -92,8 +77,6 @@ body {
   width: calc(100% - 220px);
   padding: 20px;
   transition: margin-left 0.3s ease;
-  background-color: var(--background);
-  color: var(--text-primary);
 }
 
 .content-full {
@@ -101,8 +84,6 @@ body {
   width: calc(100% - 80px);
   padding: 20px;
   transition: margin-left 0.3s ease;
-  background-color: var(--background);
-  color: var(--text-primary);
 }
 
 .content-no-sidebar {
@@ -110,29 +91,4 @@ body {
   width: 100%;
   padding: 20px;
   transition: margin-left 0.3s ease;
-  background-color: var(--background);
-  color: var(--text-primary);
-}
-
-/* --- CLASSES UTILITÁRIAS PARA USAR NOS COMPONENTES --- */
-.bg-theme {
-  background-color: var(--background);
-}
-
-.text-theme {
-  color: var(--text-primary);
-}
-
-.bg-card {
-  background-color: var(--card-background);
-}
-
-.border-theme {
-  border-color: var(--border-color);
-}
-
-.card {
-  background-color: var(--card-background);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
 }
