@@ -9,7 +9,7 @@ interface ItemPost {
 }
 
 interface PostColetaPayload {
-  codColeta: number;
+  codColeta: null;
   codEmpresa: number;
   tipo: number;
   descricao: string;
