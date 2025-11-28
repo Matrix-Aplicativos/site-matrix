@@ -231,7 +231,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     }
 
     await postColeta({
-      codColeta: 0,
+      codColeta: null,
       codEmpresa,
       codUsuario,
       tipo: payloadTipo,
