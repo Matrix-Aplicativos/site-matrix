@@ -13,10 +13,10 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_TRANSFERENCIA",
   "ROLE_MOVIX_CONF_COMPRA",
   "ROLE_MOVIX_CONF_VENDA",
-  "ROLE_MOVIX_CADASTRAR_AVULSA",
-  "ROLE_MOVIX_CADASTRAR_DEMANDA",
   "ROLE_MOVIX_AJUSTE_ENTRADA",
   "ROLE_MOVIX_AJUSTE_SAIDA",
+  "ROLE_MOVIX_CADASTRAR_AVULSA",
+  "ROLE_MOVIX_CADASTRAR_DEMANDA",
   "ROLE_MOVIX_FINALIZAR_COLETA",
 ];
 
@@ -47,10 +47,10 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_TRANSFERENCIA: "Visualizar Transferências",
         ROLE_MOVIX_CONF_COMPRA: "Visualizar Conferências de Compra",
         ROLE_MOVIX_CONF_VENDA: "Visualizar Conferências de Venda",
+        ROLE_MOVIX_AJUSTE_ENTRADA: "Visualizar Ajuste de Entrada",
+        ROLE_MOVIX_AJUSTE_SAIDA: "Visualizar Ajuste de Saída",
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
-        ROLE_MOVIX_AJUSTE_ENTRADA: "Realizar Ajuste de Entrada",
-        ROLE_MOVIX_AJUSTE_SAIDA: "Realizar Ajuste de Saída",
         ROLE_MOVIX_FINALIZAR_COLETA: "Finalizar Coletas no App",
       };
       return { key: role, description: descriptions[role] || role };
