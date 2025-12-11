@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@materializecss/materialize": "^2.2.2",
     "@mui/material": "^7.2.0",
     "antd": "^5.26.7",
     "axios": "^1.7.9",
@@ -20,7 +21,6 @@
     "cookies-next": "^4.3.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
-    "materialize-css": "^1.0.0",
     "next": "^16.0.3",
     "react": "^18",
     "react-chartjs-2": "^5.2.0",
