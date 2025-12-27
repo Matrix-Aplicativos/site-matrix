@@ -9,12 +9,13 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
-import ModalPermissoes from "../components/ModalPermissoes"; // Comentado (Permissões)
-import { getCookie } from "cookies-next"; // Comentado (Permissões)
-import { getUserFromToken } from "../utils/functions/getUserFromToken"; // Comentado (Permissões)
-import useGetLoggedUser from "../hooks/useGetLoggedUser"; // Comentado (Permissões)
+import ModalPermissoes from "../components/ModalPermissoes";
+import { getCookie } from "cookies-next";
+import { getUserFromToken } from "../utils/functions/getUserFromToken";
+import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import usePatchUsuarioStatus from "../hooks/usePatchUsuarioStatus";
+import { FiPower, FiSettings } from "react-icons/fi";
 
-// --- Ícones (código omitido para brevidade) ---
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -33,6 +34,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +52,6 @@ const IconSort = () => (
   </svg>
 );
 
-// --- Interfaces e Constantes (código omitido para brevidade) ---
 interface FuncionarioExibido {
   codigo: string;
   nome: string;
@@ -59,12 +60,15 @@ interface FuncionarioExibido {
   status: boolean;
   originalUser: UsuarioGet;
 }
+
 type SortableColumn = keyof Omit<FuncionarioExibido, "originalUser">;
+
 interface ColumnConfig {
   key: keyof FuncionarioExibido | "acoes";
   label: string;
   sortable: boolean;
 }
+
 const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
   codigo: "codFuncionarioErp",
   nome: "nome",
@@ -72,25 +76,27 @@ const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
   email: "email",
   status: "ativo",
 };
+
 const FILTER_TO_API_PARAM: Record<string, string> = {
   nome: "nomeUsuario",
   cpf: "cpfusuario",
   email: "emailUsuario",
   codigo: "codUsuarioErp",
 };
+
 const columns: ColumnConfig[] = [
   { key: "codigo", label: "Código", sortable: true },
   { key: "nome", label: "Nome", sortable: true },
   { key: "cpf", label: "CPF", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "status", label: "Status", sortable: true },
-  // { key: "acoes", label: "Ações", sortable: false }, // Comentado (Coluna de Ações)
+  { key: "acoes", label: "Ações", sortable: false },
 ];
+
 const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
   status ? styles.statusCompleted : styles.statusNotStarted;
 
-// --- Componente Principal ---
 const FuncionariosPage: React.FC = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
@@ -105,17 +111,20 @@ const FuncionariosPage: React.FC = () => {
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Comentado (Permissões)
-  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // Comentado (Permissões)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
+  const [localUsuarios, setLocalUsuarios] = useState<UsuarioGet[]>([]);
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
+  const { toggleStatus, loading: patching } = usePatchUsuarioStatus();
+
   const codEmpresa = empresa?.codEmpresa;
-
-
   const token = getCookie("token");
-  const { usuario: usuarioLogado, loading: loggedUserLoading } =
-    useGetLoggedUser(getUserFromToken(String(token)) || 0);
+
+  const { usuario: usuarioLogado } = useGetLoggedUser(
+    getUserFromToken(String(token)) || 0
+  );
 
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
@@ -148,11 +157,17 @@ const FuncionariosPage: React.FC = () => {
     !!codEmpresa
   );
 
-  const isLoading = companyLoading || usuariosLoading; // Removido 'loggedUserLoading' que era das Permissões
+  useEffect(() => {
+    if (usuarios) {
+      setLocalUsuarios(usuarios);
+    }
+  }, [usuarios]);
+
+  const isLoading = companyLoading || usuariosLoading || patching;
 
   const displayedData: FuncionarioExibido[] = useMemo(() => {
-    if (!usuarios) return [];
-    return usuarios.map((u) => ({
+    if (!localUsuarios) return [];
+    return localUsuarios.map((u) => ({
       codigo: u.codUsuarioErp,
       nome: u.nome,
       cpf: u.cpf,
@@ -160,40 +175,68 @@ const FuncionariosPage: React.FC = () => {
       status: u.ativo,
       originalUser: u,
     }));
-  }, [usuarios]);
+  }, [localUsuarios]);
 
   useEffect(() => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
 
-
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
     setIsModalOpen(true);
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
+
   const handleSavePermissions = () => {
     handleCloseModal();
     refetch();
   };
-  
+
+  const handleStatusToggle = async (
+    codUsuario: number,
+    currentStatus: boolean
+  ) => {
+    const novoStatus = !currentStatus;
+    setLocalUsuarios((prevList) =>
+      prevList.map((user) =>
+        user.codUsuario === codUsuario ? { ...user, ativo: novoStatus } : user
+      )
+    );
+
+    const sucesso = await toggleStatus(codUsuario, novoStatus);
+
+    if (!sucesso) {
+      setLocalUsuarios((prevList) =>
+        prevList.map((user) =>
+          user.codUsuario === codUsuario
+            ? { ...user, ativo: currentStatus } 
+            : user
+        )
+      );
+    }
+
+  };
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
+
   const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
     setStatusFilter(newStatus);
     setPaginaAtual(1);
   };
+
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
+
   const sortData = (key: SortableColumn) => {
     const direction: "asc" | "desc" =
       sortConfig?.key === key && sortConfig.direction === "asc"
@@ -201,6 +244,7 @@ const FuncionariosPage: React.FC = () => {
         : "asc";
     setSortConfig({ key, direction });
   };
+
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
 
   if (usuariosError) {
@@ -216,20 +260,19 @@ const FuncionariosPage: React.FC = () => {
     <div className={styles.container}>
       <LoadingOverlay />
 
-
       {selectedUser && usuarioLogado && (
         <ModalPermissoes
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
-          codUsuarioLogado={usuarioLogado.codUsuario} // Prop adicionada
+          codUsuarioLogado={usuarioLogado.codUsuario}
         />
       )}
 
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>
+
       <div className={styles.searchContainer}>
-        {/* SearchBar e botões... */}
         <SearchBar
           placeholder="Qual funcionário deseja buscar?"
           onSearch={handleSearch}
@@ -250,7 +293,6 @@ const FuncionariosPage: React.FC = () => {
 
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          {/* Filtros... */}
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
             <select
@@ -337,17 +379,51 @@ const FuncionariosPage: React.FC = () => {
                   </span>
                 </td>
                 <td>
-                  {row.originalUser.codUsuario &&
-                  row.originalUser.codUsuario > 0 ? (
-                    <button
-                      className={styles.actionButton}
-                      onClick={() => handleOpenModal(row.originalUser)}
-                    >
-                      Permissões
-                    </button>
-                  ) : (
-                    "—"
-                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    {row.originalUser.codUsuario &&
+                    row.originalUser.codUsuario > 0 ? (
+                      <>
+                        <button
+                          className={styles.actionButton}
+                          onClick={() => handleOpenModal(row.originalUser)}
+                          title="Gerenciar Permissões"
+                          style={{ padding: "4px 8px", fontSize: "0.85rem" }}
+                        >
+                          Permissões
+                        </button>
+                        <button
+                          className={styles.actionButton}
+                          onClick={() =>
+                            handleStatusToggle(
+                              row.originalUser.codUsuario as number,
+                              row.status
+                            )
+                          }
+                          disabled={patching}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "0.85rem",
+                            color: row.status ? "#e74c3c" : "#2ecc71",
+                            borderColor: row.status ? "#e74c3c" : "#2ecc71",
+                          }}
+                          title={
+                            row.status ? "Desativar Usuário" : "Ativar Usuário"
+                          }
+                        >
+                          <FiPower style={{ marginRight: 4 }} />
+                          {row.status ? "Desativar" : "Ativar"}
+                        </button>
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

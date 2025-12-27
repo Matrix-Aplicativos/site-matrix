@@ -1,8 +1,6 @@
-// /utils/types/UsuarioGet.ts (RECOMENDAÇÃO FINAL)
-
 export type UsuarioGet = {
   codFuncionario: number; // Chave principal, sempre presente
-  codUsuario?: number; // Opcional, pode ser nulo ou inexistente
+  codUsuario?: number | undefined; // Opcional, pode ser nulo ou inexistente
 
   codUsuarioErp: string;
   nome: string;
@@ -14,5 +12,5 @@ export type UsuarioGet = {
     nome: string;
     ativo: true;
   };
-  ativo: true;
+  ativo: boolean;
 };
