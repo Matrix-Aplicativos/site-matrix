@@ -214,12 +214,11 @@ const FuncionariosPage: React.FC = () => {
       setLocalUsuarios((prevList) =>
         prevList.map((user) =>
           user.codUsuario === codUsuario
-            ? { ...user, ativo: currentStatus } 
+            ? { ...user, ativo: currentStatus }
             : user
         )
       );
     }
-
   };
 
   const handleSearch = (searchQuery: string) => {
@@ -391,14 +390,6 @@ const FuncionariosPage: React.FC = () => {
                       <>
                         <button
                           className={styles.actionButton}
-                          onClick={() => handleOpenModal(row.originalUser)}
-                          title="Gerenciar Permissões"
-                          style={{ padding: "4px 8px", fontSize: "0.85rem" }}
-                        >
-                          Permissões
-                        </button>
-                        <button
-                          className={styles.actionButton}
                           onClick={() =>
                             handleStatusToggle(
                               row.originalUser.codUsuario as number,
@@ -418,6 +409,14 @@ const FuncionariosPage: React.FC = () => {
                         >
                           <FiPower style={{ marginRight: 4 }} />
                           {row.status ? "Desativar" : "Ativar"}
+                        </button>
+                        <button
+                          className={styles.actionButton}
+                          onClick={() => handleOpenModal(row.originalUser)}
+                          title="Gerenciar Permissões"
+                          style={{ padding: "4px 8px", fontSize: "0.85rem" }}
+                        >
+                          Permissões
                         </button>
                       </>
                     ) : (
