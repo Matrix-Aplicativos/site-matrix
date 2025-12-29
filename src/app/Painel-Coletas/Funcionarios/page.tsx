@@ -204,17 +204,20 @@ const FuncionariosPage: React.FC = () => {
     const novoStatus = !currentStatus;
     setLocalUsuarios((prevList) =>
       prevList.map((user) =>
-        user.codUsuario === codUsuario ? { ...user, ativo: novoStatus } : user
+        user.codUsuario === codUsuario
+          ? ({ ...user, ativo: novoStatus } as UsuarioGet) 
+          : user
       )
     );
 
     const sucesso = await toggleStatus(codUsuario, novoStatus);
 
     if (!sucesso) {
+      // Reverte se der erro
       setLocalUsuarios((prevList) =>
         prevList.map((user) =>
           user.codUsuario === codUsuario
-            ? { ...user, ativo: currentStatus }
+            ? ({ ...user, ativo: currentStatus } as UsuarioGet)
             : user
         )
       );
@@ -390,34 +393,35 @@ const FuncionariosPage: React.FC = () => {
                       <>
                         <button
                           className={styles.actionButton}
-                          onClick={() =>
-                            handleStatusToggle(
-                              row.originalUser.codUsuario as number,
-                              row.status
-                            )
-                          }
-                          disabled={patching}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "0.85rem",
-                            color: row.status ? "#e74c3c" : "#2ecc71",
-                            borderColor: row.status ? "#e74c3c" : "#2ecc71",
-                          }}
-                          title={
-                            row.status ? "Desativar Usuário" : "Ativar Usuário"
-                          }
-                        >
-                          <FiPower style={{ marginRight: 4 }} />
-                          {row.status ? "Desativar" : "Ativar"}
-                        </button>
-                        <button
-                          className={styles.actionButton}
                           onClick={() => handleOpenModal(row.originalUser)}
                           title="Gerenciar Permissões"
                           style={{ padding: "4px 8px", fontSize: "0.85rem" }}
                         >
                           Permissões
                         </button>
+
+                        {!row.status && (
+                          <button
+                            className={styles.actionButton}
+                            onClick={() =>
+                              handleStatusToggle(
+                                row.originalUser.codUsuario as number,
+                                row.status
+                              )
+                            }
+                            disabled={patching}
+                            style={{
+                              padding: "4px 8px",
+                              fontSize: "0.85rem",
+                              color: "#2ecc71", // Verde (Ativar)
+                              borderColor: "#2ecc71",
+                            }}
+                            title="Ativar Usuário"
+                          >
+                            <FiPower style={{ marginRight: 4 }} />
+                            Ativar
+                          </button>
+                        )}
                       </>
                     ) : (
                       "—"
