@@ -9,7 +9,6 @@ import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
-import useConfiguracao from "../hooks/useConfiguracao";
 import PaginationControls from "../components/PaginationControls";
 
 const IconSort = () => (
@@ -80,22 +79,14 @@ const DispositivosPage: React.FC = () => {
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
+
   const {
     dados: dadosDispositivo,
     loading: loadingDados,
     refetch: refetchDados,
   } = useGetDadosDispositivo(codEmpresa || 0);
 
-  const {
-    validadeLicenca,
-    loading: loadingLicencaGeral, 
-    error: errorLicencaGeral, 
-    loadingLicenca,
-    errorLicenca, 
-  } = useConfiguracao(codEmpresa || 0);
-
-  const isLoading =
-    companyLoading || dispositivosLoading || loadingDados || loadingLicenca; 
+  const isLoading = companyLoading || dispositivosLoading || loadingDados;
 
   useEffect(() => {
     if (isLoading) {
@@ -165,12 +156,6 @@ const DispositivosPage: React.FC = () => {
           {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
           {dispositivosError && (
             <p>Erro ao carregar dispositivos: {dispositivosError}</p>
-          )}
-          {errorLicenca && (
-            <p>Erro ao carregar validade da licença: {errorLicenca.message}</p>
-          )}
-          {errorLicencaGeral && (
-            <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
           )}
 
           {!isLoading && dispositivos && (
@@ -281,12 +266,10 @@ const DispositivosPage: React.FC = () => {
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>
-              {loadingLicenca
+              {loadingDados
                 ? "..."
-                : errorLicenca
-                ? "Erro"
-                : validadeLicenca
-                ? validadeLicenca.toLocaleDateString("pt-BR") 
+                : dadosDispositivo?.vencimentoLicencas
+                ? dadosDispositivo.vencimentoLicencas
                 : "N/D"}
             </span>
           </div>
