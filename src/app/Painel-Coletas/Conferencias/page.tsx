@@ -222,7 +222,7 @@ const ConferenciasPage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchVenda
+    shouldFetchVenda,
   );
 
   const {
@@ -245,7 +245,7 @@ const ConferenciasPage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchCompra
+    shouldFetchCompra,
   );
 
   const coletasCombinadas = useMemo(() => {
@@ -287,7 +287,7 @@ const ConferenciasPage: React.FC = () => {
 
   const totalPaginas = Math.max(
     shouldFetchVenda ? totalPaginasVenda || 1 : 1,
-    shouldFetchCompra ? totalPaginasCompra || 1 : 1
+    shouldFetchCompra ? totalPaginasCompra || 1 : 1,
   );
 
   const refetchAll = React.useCallback(() => {
@@ -498,6 +498,8 @@ const ConferenciasPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
+              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
+              <th style={{ width: "40px" }}></th>
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -510,17 +512,25 @@ const ConferenciasPage: React.FC = () => {
                 </th>
               ))}
               <th>Ações</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
+                  <td>
+                    <button
+                      className={styles.expandButton}
+                      onClick={() => toggleExpandRow(rowIndex)}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
-                        row.status
+                        row.status,
                       )}`}
                     >
                       {getStatusText(row.status)}
@@ -545,14 +555,6 @@ const ConferenciasPage: React.FC = () => {
                         <IconSync />
                       </span>
                     )}
-                  </td>
-                  <td>
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleExpandRow(rowIndex)}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (

@@ -102,7 +102,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
         >
           {itemsPerPageOptions.map((option) => (
             <option key={option} value={option}>
-              {option}
+              {option === 1000 ? "Todos" : option}
             </option>
           ))}
         </select>

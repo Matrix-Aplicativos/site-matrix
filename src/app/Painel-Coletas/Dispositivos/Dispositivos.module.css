@@ -31,11 +31,13 @@
   position: relative;
   border: 1px solid #ddd;
   border-radius: 4px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
 }
 
@@ -44,6 +46,7 @@
   text-align: left;
   padding: 12px 15px;
   border-bottom: 1px solid #ddd;
+  white-space: nowrap;
 }
 
 .table th {
@@ -112,7 +115,6 @@
   border: none;
   color: #ff4444;
   cursor: pointer;
-
   transition: color 0.2s;
 }
 
@@ -149,8 +151,6 @@
   color: #333;
 }
 
-/* *** MODIFICATION START *** */
-
 .paginationContainer {
   display: flex;
   justify-content: space-between;
@@ -171,7 +171,9 @@
   background-color: #fff;
   color: #333;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
   font-size: 24px;
   display: flex;
   height: 36px;
@@ -216,7 +218,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .refreshButton:disabled {
@@ -229,7 +233,6 @@
   color: #1769e3;
 }
 
-/* ANIMAÇÃO DE ROTAÇÃO */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -244,7 +247,22 @@
   color: #1769e3;
 }
 
-/* Modo Escuro - Textos Pretos */
+@media (max-width: 900px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .tableContainer {
+    flex: auto;
+    width: 100%;
+  }
+
+  .situacaoContainer {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .container {
     background-color: #ffffff;
@@ -259,9 +277,6 @@
   .header,
   .mainContent {
     background-color: #ffffff;
-  }
-
-  .tableContainer {
   }
 
   .table th,
@@ -281,7 +296,6 @@
     background-color: #e0e0e0;
   }
 
-  /* Status Badges */
   .statusBadge.active {
     background-color: #e8f5e9;
     color: #2e7d32;
@@ -292,7 +306,6 @@
     color: #c62828;
   }
 
-  /* Action Buttons */
   .actionButton {
     background-color: #ffffff;
   }
@@ -308,10 +321,9 @@
   }
 
   .deleteButton {
-    color: #ff0000; /* Mantém vermelho para destaque */
+    color: #ff0000;
   }
 
-  /* Situação Container */
   .situacaoContainer {
     background-color: #ffffff;
   }
@@ -320,7 +332,6 @@
     color: #000000;
   }
 
-  /* Paginação */
   .paginationControls button {
     background-color: #ffffff;
     color: #000000;
@@ -333,16 +344,13 @@
 
   .itemsPerPageSelect {
     background-color: #ffffff;
-
     color: #000000;
   }
 
-  /* Refresh Button */
   .refreshButton svg {
-    color: #1769e3; /* Mantém azul para consistência */
+    color: #1769e3;
   }
 
-  /* Manutenção de cores semânticas */
   .positive {
     color: #008000 !important;
   }
