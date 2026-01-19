@@ -206,7 +206,7 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
         onPageChange={setCurrentPage}
         onItemsPerPageChange={handleItemsPerPageChange}
         isLoading={loading}
-        itemsPerPageOptions={[5, 10, 20]}
+        itemsPerPageOptions={[5, 10, 20, 1000]}
       />
     </div>
   );

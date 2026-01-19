@@ -208,7 +208,7 @@ const TransferenciasPage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    !!codEmpresa
+    !!codEmpresa,
   );
   const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
   const isLoading = companyLoading || coletasLoading || deleting;
@@ -403,6 +403,8 @@ const TransferenciasPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
+              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
+              <th style={{ width: "40px" }}></th>
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -415,17 +417,25 @@ const TransferenciasPage: React.FC = () => {
                 </th>
               ))}
               <th>Ações</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
+                  <td>
+                    <button
+                      className={styles.expandButton}
+                      onClick={() => toggleExpandRow(rowIndex)}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
-                        row.status
+                        row.status,
                       )}`}
                     >
                       {getStatusText(row.status)}
@@ -462,14 +472,6 @@ const TransferenciasPage: React.FC = () => {
                         <IconTrash />
                       </button>
                     )}
-                  </td>
-                  <td>
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleExpandRow(rowIndex)}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (

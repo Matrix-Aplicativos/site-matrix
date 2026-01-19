@@ -222,7 +222,7 @@ const AjustesEstoquePage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchEntrada
+    shouldFetchEntrada,
   );
 
   const {
@@ -245,7 +245,7 @@ const AjustesEstoquePage: React.FC = () => {
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchSaida
+    shouldFetchSaida,
   );
 
   const coletasCombinadas = useMemo(() => {
@@ -287,7 +287,7 @@ const AjustesEstoquePage: React.FC = () => {
 
   const totalPaginas = Math.max(
     shouldFetchEntrada ? totalPaginasEntrada || 1 : 1,
-    shouldFetchSaida ? totalPaginasSaida || 1 : 1
+    shouldFetchSaida ? totalPaginasSaida || 1 : 1,
   );
 
   const refetchAll = React.useCallback(() => {
@@ -499,6 +499,9 @@ const AjustesEstoquePage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
+              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
+              <th style={{ width: "40px" }}></th>
+
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -511,17 +514,26 @@ const AjustesEstoquePage: React.FC = () => {
                 </th>
               ))}
               <th>Ações</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
+                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
+                  <td>
+                    <button
+                      className={styles.expandButton}
+                      onClick={() => toggleExpandRow(rowIndex)}
+                    >
+                      {expandedRow === rowIndex ? "▲" : "▼"}
+                    </button>
+                  </td>
+
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
-                        row.status
+                        row.status,
                       )}`}
                     >
                       {getStatusText(row.status)}
@@ -546,14 +558,6 @@ const AjustesEstoquePage: React.FC = () => {
                         <IconSync />
                       </span>
                     )}
-                  </td>
-                  <td>
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleExpandRow(rowIndex)}
-                    >
-                      {expandedRow === rowIndex ? "▲" : "▼"}
-                    </button>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (
