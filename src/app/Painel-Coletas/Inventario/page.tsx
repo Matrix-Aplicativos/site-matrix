@@ -85,6 +85,7 @@ const IconSync = () => (
 interface ColetaExibida {
   id: number;
   descricao: string;
+  estoqueOrigem: string; // ALTERAÇÃO 1: Campo adicionado
   data: string;
   dataFim: string | null;
   origem: string;
@@ -113,6 +114,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
   volumeConferido: "volumeConferido",
+  // Nota: estoqueOrigem não está no mapa de ordenação pois depende do backend
 };
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
@@ -131,6 +133,7 @@ const columns: ColumnConfig[] = [
   { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true },
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
+  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false }, // ALTERAÇÃO 2: Coluna adicionada
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
@@ -218,6 +221,7 @@ const InventariosPage: React.FC = () => {
     return coletas.map((c) => ({
       id: c.codConferencia,
       descricao: c.descricao,
+      estoqueOrigem: c.alocOrigem?.descricao || "", // ALTERAÇÃO 3: Mapeamento do dado
       data: c.dataCadastro,
       dataFim: c.dataFim,
       origem: String(c.origem),
@@ -403,7 +407,6 @@ const InventariosPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
               <th style={{ width: "40px" }}></th>
 
               {columns.map((col) => (
@@ -449,6 +452,8 @@ const InventariosPage: React.FC = () => {
                   <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
+                  {/* ALTERAÇÃO 4: Nova coluna inserida na posição correta */}
+                  <td>{row.estoqueOrigem}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
@@ -477,6 +482,7 @@ const InventariosPage: React.FC = () => {
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
+                    {/* Ajuste do colspan devido à nova coluna (+1) */}
                     <td colSpan={columns.length + 2}>
                       <ExpandedRowContent coletaId={row.id} />
                     </td>

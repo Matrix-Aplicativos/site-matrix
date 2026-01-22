@@ -79,6 +79,9 @@ interface ColetaExibida {
   qtdItensConferidos: number;
   volumeTotal: number;
   volumeConferido: number;
+  // --- NOVOS CAMPOS ---
+  estoqueOrigem: string;
+  planoConta: string;
 }
 
 interface ColumnConfig {
@@ -113,6 +116,7 @@ const OPCOES_TIPO_MOVIMENTO = {
   "Ajuste Saída": "6",
 };
 
+// --- COLUNAS ATUALIZADAS ---
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
@@ -123,7 +127,9 @@ const columns: ColumnConfig[] = [
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
-  { key: "tipoMovimento", label: "Tipo", sortable: true },
+  { key: "estoqueOrigem", label: "Estoque", sortable: false },
+  { key: "planoConta", label: "Plano Contas", sortable: false },
+  { key: "tipoMovimento", label: "Tipo Mov.", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
 
@@ -256,7 +262,7 @@ const AjustesEstoquePage: React.FC = () => {
 
   const filteredData = useMemo(() => {
     if (!coletasCombinadas) return [];
-    return coletasCombinadas.map((c) => ({
+    return coletasCombinadas.map((c: any) => ({
       id: c.codConferencia,
       descricao: c.descricao,
       data: c.dataCadastro,
@@ -270,6 +276,9 @@ const AjustesEstoquePage: React.FC = () => {
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
       volumeConferido: c.volumeConferido,
+      // --- Mapeamento dos novos campos ---
+      estoqueOrigem: c.alocOrigem?.descricao || "-",
+      planoConta: c.planoConta?.descricao || "-",
     }));
   }, [coletasCombinadas]);
 
@@ -315,7 +324,6 @@ const AjustesEstoquePage: React.FC = () => {
     setPaginaAtual(1);
   };
 
-  // Novo handler para mudança de tipo
   const handleTipoMovimentoChange = (tipoValue: string) => {
     setTipoMovimentoFiltro(tipoValue);
     setPaginaAtual(1);
@@ -499,7 +507,6 @@ const AjustesEstoquePage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
               <th style={{ width: "40px" }}></th>
 
               {columns.map((col) => (
@@ -520,7 +527,6 @@ const AjustesEstoquePage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
-                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
                   <td>
                     <button
                       className={styles.expandButton}
@@ -546,7 +552,13 @@ const AjustesEstoquePage: React.FC = () => {
                   <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
+
+                  {/* --- NOVAS COLUNAS NO BODY --- */}
                   <td>{getOrigemText(row.origem)}</td>
+                  <td>{row.estoqueOrigem}</td>
+                  <td>{row.planoConta}</td>
+                  {/* ----------------------------- */}
+
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
                   <td className={styles.actionsCell}>
