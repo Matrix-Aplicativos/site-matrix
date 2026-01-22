@@ -96,7 +96,11 @@ interface ColetaExibida {
   qtdItensConferidos: number;
   volumeTotal: number;
   volumeConferido: number;
+  // --- NOVOS CAMPOS ---
+  estoqueOrigem: string;
+  estoqueDestino: string;
 }
+
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
@@ -114,6 +118,7 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   volumeTotal: "volumeTotal",
   volumeConferido: "volumeConferido",
 };
+
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
   "Em Andamento": "4",
@@ -122,6 +127,7 @@ const OPCOES_STATUS = {
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
+// --- COLUNAS ATUALIZADAS ---
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
@@ -132,7 +138,9 @@ const columns: ColumnConfig[] = [
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
-  { key: "tipoMovimento", label: "Tipo", sortable: true },
+  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false }, // Nova Coluna
+  { key: "estoqueDestino", label: "Estoque Destino", sortable: false }, // Nova Coluna
+  { key: "tipoMovimento", label: "Tipo Mov.", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
 
@@ -215,7 +223,7 @@ const TransferenciasPage: React.FC = () => {
 
   const filteredData = useMemo(() => {
     if (!coletas) return [];
-    return coletas.map((c) => ({
+    return coletas.map((c: any) => ({
       id: c.codConferencia,
       descricao: c.descricao,
       data: c.dataCadastro,
@@ -229,6 +237,9 @@ const TransferenciasPage: React.FC = () => {
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
       volumeConferido: c.volumeConferido,
+      // --- Mapeamento dos novos campos ---
+      estoqueOrigem: c.alocOrigem?.descricao || "-",
+      estoqueDestino: c.alocDestino?.descricao || "-",
     }));
   }, [coletas]);
 
@@ -236,6 +247,7 @@ const TransferenciasPage: React.FC = () => {
     if (isLoading) showLoading();
     else hideLoading();
   }, [isLoading, showLoading, hideLoading]);
+
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
     refetch();
@@ -403,7 +415,6 @@ const TransferenciasPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
               <th style={{ width: "40px" }}></th>
               {columns.map((col) => (
                 <th
@@ -423,7 +434,6 @@ const TransferenciasPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
-                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
                   <td>
                     <button
                       className={styles.expandButton}
@@ -448,7 +458,13 @@ const TransferenciasPage: React.FC = () => {
                   <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
+
+                  {/* --- NOVAS COLUNAS NO BODY --- */}
                   <td>{getOrigemText(row.origem)}</td>
+                  <td>{row.estoqueOrigem}</td>
+                  <td>{row.estoqueDestino}</td>
+                  {/* ----------------------------- */}
+
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
                   <td className={styles.actionsCell}>
