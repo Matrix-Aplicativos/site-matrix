@@ -18,6 +18,8 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_CADASTRAR_AVULSA",
   "ROLE_MOVIX_CADASTRAR_DEMANDA",
   "ROLE_MOVIX_FINALIZAR_COLETA",
+  "ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS", 
+  "ROLE_MOVIX_VISUALIZAR_PRECO", 
 ];
 
 interface ModalProps {
@@ -25,7 +27,7 @@ interface ModalProps {
   onClose: () => void;
   usuarioInfo: UsuarioGet;
   onSave: () => void;
-  codUsuarioLogado: number; 
+  codUsuarioLogado: number;
 }
 
 const PERMISSION_DISPLAY_MAP = [
@@ -52,6 +54,8 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
         ROLE_MOVIX_FINALIZAR_COLETA: "Finalizar Coletas no App",
+        ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS: "Atualizar Cadastro de Itens", 
+        ROLE_MOVIX_VISUALIZAR_PRECO: "Visualizar Preço", 
       };
       return { key: role, description: descriptions[role] || role };
     }),
@@ -69,7 +73,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     usuario: fullUser,
     loading: userLoading,
     error: userError,
-  } = useGetUsuarioById(isOpen ? usuarioInfo.codUsuario ?? null : null);
+  } = useGetUsuarioById(isOpen ? (usuarioInfo.codUsuario ?? null) : null);
 
   const {
     cargos: availableCargos,
@@ -102,7 +106,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     return PERMISSION_DISPLAY_MAP.map((category) => ({
       ...category,
       permissions: category.permissions.filter((p) =>
-        availableRoleNames.has(p.key)
+        availableRoleNames.has(p.key),
       ),
     })).filter((category) => category.permissions.length > 0);
   }, [availableCargos]);
@@ -124,7 +128,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         newPermissions = newPermissions.filter((p) => p !== permissionKey);
         if (permissionKey === FUNCIONARIO_ROLE) {
           newPermissions = newPermissions.filter(
-            (p) => !MOVIX_ROLES.includes(p)
+            (p) => !MOVIX_ROLES.includes(p),
           );
         }
       } else {
@@ -145,7 +149,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
 
     const success = await updateCargos(
       usuarioInfo.codUsuario,
-      codCargosParaEnviar
+      codCargosParaEnviar,
     );
 
     if (success) {
