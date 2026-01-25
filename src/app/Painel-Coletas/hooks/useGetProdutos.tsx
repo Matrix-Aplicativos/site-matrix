@@ -1,5 +1,3 @@
-// hooks/useGetProdutos.ts (ATUALIZADO)
-
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 import { AxiosError } from "axios";
@@ -21,14 +19,12 @@ interface UseGetProdutosHook {
   totalElementos: number;
 }
 
-// --- Hook ATUALIZADO para aceitar um objeto de filtros ---
 const useGetProdutos = (
   codEmpresa: number,
   pagina: number,
   porPagina: number,
   orderBy?: string,
   direction?: "asc" | "desc",
-  // ALTERADO: Em vez de 'descricao', agora aceitamos um objeto genérico de filtros
   filtros?: Record<string, string>,
   enabled: boolean = true
 ): UseGetProdutosHook => {
@@ -56,11 +52,9 @@ const useGetProdutos = (
       if (orderBy) queryParams.append("orderBy", orderBy);
       if (direction) queryParams.append("direction", direction);
 
-      // ADICIONADO: Lógica para adicionar dinamicamente os filtros à URL
       if (filtros) {
         Object.entries(filtros).forEach(([key, value]) => {
           if (value) {
-            // Garante que não enviamos filtros vazios
             queryParams.append(key, value);
           }
         });
@@ -93,7 +87,7 @@ const useGetProdutos = (
     porPagina,
     orderBy,
     direction,
-    filtros, // ALTERADO: A dependência agora é o objeto de filtros
+    filtros, 
     enabled,
   ]);
 

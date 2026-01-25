@@ -4,7 +4,7 @@ import usePostColetaSobDemanda from "../hooks/usePostColetaSobDemanda";
 import useGetProdutos from "../hooks/useGetProdutos";
 import useGetEstoques from "../hooks/useGetEstoques";
 
-import { Produto } from "../utils/types/Produto";
+import { Produto } from "../utils/types/Produto"; // Garanta que a tipagem tenha precoVenda e saldoDisponivel
 import { FaTrash } from "react-icons/fa";
 import SearchBar from "./SearchBar";
 import useGetPlanoContas from "../hooks/useGetPlanoConta";
@@ -33,6 +33,14 @@ const FILTER_TO_API_PARAM: Record<string, string> = {
   codFabricante: "codFabricante",
 };
 
+// Função auxiliar para formatar dinheiro
+const formatarMoeda = (valor: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(valor || 0);
+};
+
 const ModalCadastrarColeta: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -49,7 +57,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
   const [codAlocEstoqueDestino, setCodAlocEstoqueDestino] =
     useState<string>("");
 
-  // Novos estados para Plano de Contas
   const [codPlanoConta, setCodPlanoConta] = useState<string>("");
   const [buscaPlanoConta, setBuscaPlanoConta] = useState<string>("");
 
@@ -59,11 +66,11 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     useState<number>(1);
 
   const [tipoConferenciaInterno, setTipoConferenciaInterno] = useState<3 | 4>(
-    tipoColeta === 4 ? 4 : 3
+    tipoColeta === 4 ? 4 : 3,
   );
 
   const [tipoAjusteInterno, setTipoAjusteInterno] = useState<5 | 6>(
-    tipoColeta === 6 ? 6 : 5
+    tipoColeta === 6 ? 6 : 5,
   );
 
   const [productQuery, setProductQuery] = useState("");
@@ -79,7 +86,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     return apiParamKey ? { [apiParamKey]: productQuery } : {};
   }, [productQuery, selectedProductFilter]);
 
-  // Filtro para o hook de planos de conta (memoizado para evitar loops infinitos)
   const filtrosPlanoConta = useMemo(() => {
     return { descricao: buscaPlanoConta };
   }, [buscaPlanoConta]);
@@ -98,9 +104,10 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     codEmpresa,
     1,
     20,
-    filtrosPlanoConta
+    filtrosPlanoConta,
   );
 
+  // O Hook useGetProdutos agora retorna precoVenda e saldoDisponivel dentro de 'produtos'
   const {
     produtos,
     loading: produtosLoading,
@@ -112,7 +119,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     undefined,
     undefined,
     filtrosApi,
-    isOpen
+    isOpen,
   );
 
   useEffect(() => {
@@ -140,15 +147,15 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
 
   const handleAdicionarItem = (produto: Produto) => {
     const itemExistente = itensNaColeta.find(
-      (item) => item.codItemApi === produto.codItemApi
+      (item) => item.codItemApi === produto.codItemApi,
     );
     if (itemExistente) {
       setItensNaColeta((prev) =>
         prev.map((item) =>
           item.codItemApi === produto.codItemApi
             ? { ...item, quantidade: item.quantidade + quantidadeParaAdicionar }
-            : item
-        )
+            : item,
+        ),
       );
     } else {
       setItensNaColeta((prev) => [
@@ -161,13 +168,13 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
 
   const handleRemoverItem = (codItemToRemove: number) => {
     setItensNaColeta((prev) =>
-      prev.filter((item) => item.codItemApi !== codItemToRemove)
+      prev.filter((item) => item.codItemApi !== codItemToRemove),
     );
   };
 
   const handleQuantidadeChange = (
     codItemToUpdate: number,
-    novaQuantidade: string
+    novaQuantidade: string,
   ) => {
     const qtd = parseInt(novaQuantidade, 10);
     if (isNaN(qtd) || qtd < 0) return;
@@ -175,8 +182,8 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       prev.map((item) =>
         item.codItemApi === codItemToUpdate
           ? { ...item, quantidade: qtd }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -195,17 +202,13 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     let payloadOrigem = parseInt(codAlocEstoqueOrigem, 10) || 0;
     let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
 
-    // --- Lógica para Inventário (1) ---
     if (tipoColeta === 1) {
       if (!codAlocEstoqueDestino) {
         alert("Para inventário, o estoque de origem é obrigatório.");
         return;
       }
       payloadOrigem = payloadDestino;
-    }
-
-    // --- Lógica para Transferência (2) ---
-    else if (tipoColeta === 2) {
+    } else if (tipoColeta === 2) {
       if (!codAlocEstoqueOrigem || !codAlocEstoqueDestino) {
         alert("Para transferência, a origem e o destino são obrigatórios.");
         return;
@@ -285,7 +288,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 required
               />
 
-              {/* 1. Conferências (3 ou 4) */}
               {(tipoColeta === 3 || tipoColeta === 4) && (
                 <div className={styles.radioGroup}>
                   <label>Tipo de Conferência:</label>
@@ -312,7 +314,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 </div>
               )}
 
-              {/* 2. Ajustes (5 ou 6) */}
               {(tipoColeta === 5 || tipoColeta === 6) && (
                 <>
                   <div className={styles.radioGroup}>
@@ -339,7 +340,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Campos de Estoque e Plano de Contas alinhados */}
                   <div className={styles.stockSelectRow}>
                     <label>
                       Local de Estoque
@@ -437,7 +437,6 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 </div>
               )}
 
-              {/* 4. Inventário (1) */}
               {tipoColeta === 1 && (
                 <label>
                   Origem
@@ -476,6 +475,17 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                         <span className={styles.produtoDescricaoSingleLine}>
                           {item.codItemErp} - {item.descricaoItem}
                         </span>
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "0.8rem",
+                            color: "#000",
+                            marginTop: "2px",
+                          }}
+                        >
+                          Preço: {formatarMoeda(item.precoVenda)} | Saldo:{" "}
+                          {item.saldoDisponivel}
+                        </span>
                       </div>
                       <input
                         type="number"
@@ -484,7 +494,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                         onChange={(e) =>
                           handleQuantidadeChange(
                             item.codItemApi,
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         className={styles.quantidadeInput}
@@ -552,9 +562,20 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                       <strong className={styles.produtoDescricao}>
                         {produto.descricaoItem} - {produto.descricaoMarca}
                       </strong>
-                      <span>
+                      <span style={{ display: "block" }}>
                         Cód. ERP: {produto.codItemErp} | Cód. Barra:{" "}
                         {produto.codBarra}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          marginTop: "4px",
+                          color: "#333",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Preço: {formatarMoeda(produto.precoVenda)} | Saldo:{" "}
+                        {produto.saldoDisponivel}
                       </span>
                     </div>
                     <button
