@@ -13,7 +13,6 @@ export interface Lote {
   qtdItens: number;
 }
 
-// Interface principal do Produto, agora correspondendo 100% à sua API
 export interface Produto {
   codItemApi: number;
   codIntegracao: number;
@@ -35,5 +34,6 @@ export interface Produto {
   qtdConferida: number;
   lotes: Lote[];
   numerosSerie: string[];
-  // O campo qtdEstoque não existe no novo JSON, então foi removido.
+  precoVenda: number;
+  saldoDisponivel: number;
 }
