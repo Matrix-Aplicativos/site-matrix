@@ -466,14 +466,14 @@ const InventariosPage: React.FC = () => {
                         <IconSync />
                       </span>
                     )}
-                    {row.origem === "2" && !row.dataFim && (
+                    {!row.dataFim && (
                       <button
                         className={styles.deleteButton}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteColeta(row.id);
                         }}
-                        title="Excluir coleta avulsa"
+                        title="Excluir coleta"
                       >
                         <IconTrash />
                       </button>

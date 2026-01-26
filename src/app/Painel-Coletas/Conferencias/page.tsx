@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import styles from "./Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import useGetColetas from "../hooks/useGetColetas";
+import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
@@ -11,6 +12,25 @@ import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
 import { FiClipboard } from "react-icons/fi";
+
+const IconTrash = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
+  </svg>
+);
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -185,10 +205,11 @@ const ConferenciasPage: React.FC = () => {
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
   const [tipoMovimentoFiltro, setTipoMovimentoFiltro] = useState<string>("");
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
+  const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
 
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
@@ -276,7 +297,8 @@ const ConferenciasPage: React.FC = () => {
   const isLoading =
     companyLoading ||
     (shouldFetchVenda && loadingVenda) ||
-    (shouldFetchCompra && loadingCompra);
+    (shouldFetchCompra && loadingCompra) ||
+    deleting;
 
   const coletasError =
     (shouldFetchVenda && errorVenda) || (shouldFetchCompra && errorCompra);
@@ -304,6 +326,18 @@ const ConferenciasPage: React.FC = () => {
     setIsModalOpen(false);
     refetchAll();
   }, [refetchAll]);
+
+  const handleDeleteColeta = async (codColeta: number) => {
+    if (window.confirm("Tem certeza que deseja excluir essa conferência?")) {
+      try {
+        await deletarColeta(codColeta);
+        alert("Conferência excluída com sucesso!");
+        refetchAll();
+      } catch (error) {
+        alert("Erro ao excluir conferência");
+      }
+    }
+  };
 
   const handleStatusChange = (statusValue: string) => {
     setStatusFiltro(statusValue);
@@ -498,7 +532,6 @@ const ConferenciasPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              {/* --- ALTERAÇÃO: Cabeçalho da seta movido para o início --- */}
               <th style={{ width: "40px" }}></th>
               {columns.map((col) => (
                 <th
@@ -518,7 +551,6 @@ const ConferenciasPage: React.FC = () => {
             {filteredData.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <tr>
-                  {/* --- ALTERAÇÃO: Botão de expandir movido para o início --- */}
                   <td>
                     <button
                       className={styles.expandButton}
@@ -554,6 +586,25 @@ const ConferenciasPage: React.FC = () => {
                       >
                         <IconSync />
                       </span>
+                    )}
+                    {!row.dataFim && (
+                      <button
+                        className={styles.deleteButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteColeta(row.id);
+                        }}
+                        title="Excluir conferência"
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          color: "#d32f2f",
+                          marginLeft: 8,
+                        }}
+                      >
+                        <IconTrash />
+                      </button>
                     )}
                   </td>
                 </tr>
