@@ -476,7 +476,7 @@ const TransferenciasPage: React.FC = () => {
                         <IconSync />
                       </span>
                     )}
-                    {row.origem === "2" && !row.dataFim && (
+                    {!row.dataFim && (
                       <button
                         className={styles.deleteButton}
                         onClick={(e) => {
