@@ -18,8 +18,9 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_CADASTRAR_AVULSA",
   "ROLE_MOVIX_CADASTRAR_DEMANDA",
   "ROLE_MOVIX_FINALIZAR_COLETA",
-  "ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS", 
-  "ROLE_MOVIX_VISUALIZAR_PRECO", 
+  "ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS",
+  "ROLE_MOVIX_VISUALIZAR_PRECO",
+  "ROLE_MOVIX_VISUALIZAR_CUSTO",
   "ROLE_MOVIX_EDITAR_COLETA",
 ];
 
@@ -55,8 +56,9 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
         ROLE_MOVIX_FINALIZAR_COLETA: "Finalizar Coletas no App",
-        ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS: "Atualizar Cadastro de Itens", 
-        ROLE_MOVIX_VISUALIZAR_PRECO: "Visualizar Preço", 
+        ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS: "Atualizar Cadastro de Itens",
+        ROLE_MOVIX_VISUALIZAR_PRECO: "Visualizar Preço",
+        ROLE_MOVIX_VISUALIZAR_CUSTO: "Visualizar Custo",
         ROLE_MOVIX_EDITAR_COLETA: "Editar Coleta",
       };
       return { key: role, description: descriptions[role] || role };
