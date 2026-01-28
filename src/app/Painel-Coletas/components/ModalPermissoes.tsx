@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalPermissoes.module.css";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
-import useGetCargos from "../hooks/useGetCargos";
+
+import useGetCargosDisponiveis from "../hooks/useGetCargos";
+import useGetCargosPorUsuario from "../hooks/useGetCargoPorUsuario";
 import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargos";
 
 const GESTOR_ROLE = "ROLE_MOVIX_GESTOR";
@@ -37,10 +39,7 @@ const PERMISSION_DISPLAY_MAP = [
     title: "Acessos Gerais",
     permissions: [
       { key: GESTOR_ROLE, description: "Acesso ao Painel Web" },
-      {
-        key: FUNCIONARIO_ROLE,
-        description: "Acesso ao App",
-      },
+      { key: FUNCIONARIO_ROLE, description: "Acesso ao App" },
     ],
   },
   {
@@ -75,11 +74,18 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   codEmpresa,
 }) => {
   const {
-    cargos: loadedCargos,
-    loading: cargosLoading,
-    error: cargosError,
-    getCargos,
-  } = useGetCargos();
+    cargos: availableCargos,
+    loading: loadingAvailable,
+    error: errorAvailable,
+    getCargos: getAvailableCargos,
+  } = useGetCargosDisponiveis();
+
+  const {
+    cargos: userCargos,
+    loading: loadingUserCargos,
+    error: errorUserCargos,
+    getCargos: getUserCargos,
+  } = useGetCargosPorUsuario();
 
   const {
     updateCargos,
@@ -87,39 +93,38 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     error: updateError,
   } = useUpdateUsuarioCargos();
 
-  const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
+  const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<
+    string[]
+  >([]);
 
   useEffect(() => {
     if (isOpen && usuarioInfo.codUsuario && codEmpresa) {
-      getCargos(usuarioInfo.codUsuario, codEmpresa);
+      getAvailableCargos(codEmpresa);
+      getUserCargos(usuarioInfo.codUsuario, codEmpresa);
     } else {
-      setCurrentPermissions([]);
+      setSelectedPermissionKeys([]);
     }
-  }, [isOpen, usuarioInfo, codEmpresa, getCargos]);
+  }, [isOpen, usuarioInfo, codEmpresa, getAvailableCargos, getUserCargos]);
 
   useEffect(() => {
-    if (loadedCargos) {
-      const userRoles = loadedCargos.map((cargo) => cargo.nome);
-      setCurrentPermissions(userRoles);
+    if (userCargos) {
+      const userRoles = userCargos.map((cargo) => cargo.nome);
+      setSelectedPermissionKeys(userRoles);
     }
-  }, [loadedCargos]);
+  }, [userCargos]);
 
-  const cargoNameToIdMap = useMemo(() => {
+  const roleNameToIdMap = useMemo(() => {
     const map = new Map<string, number>();
-    loadedCargos.forEach((cargo) => {
-      if (cargo.codCargo) {
-        map.set(cargo.nome, cargo.codCargo);
-      }
+    availableCargos.forEach((c: { nomeCargo: string; codCargo: number }) => {
+      map.set(c.nomeCargo, c.codCargo);
     });
     return map;
-  }, [loadedCargos]);
+  }, [availableCargos]);
 
   const categorizedPermissions = useMemo(() => {
-    if (!loadedCargos || loadedCargos.length === 0) return [];
+    if (!availableCargos || availableCargos.length === 0) return [];
 
-    const availableRoleNames = new Set(
-      loadedCargos.map((c) => c.nome),
-    );
+    const availableRoleNames = new Set(availableCargos.map((c) => c.nomeCargo));
 
     return PERMISSION_DISPLAY_MAP.map((category) => ({
       ...category,
@@ -127,10 +132,10 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         availableRoleNames.has(p.key),
       ),
     })).filter((category) => category.permissions.length > 0);
-  }, [loadedCargos]);
+  }, [availableCargos]);
 
   const handleCheckboxChange = (permissionKey: string) => {
-    setCurrentPermissions((prev) => {
+    setSelectedPermissionKeys((prev) => {
       const isCurrentlyChecked = prev.includes(permissionKey);
       let newPermissions = [...prev];
 
@@ -155,8 +160,8 @@ const ModalPermissoes: React.FC<ModalProps> = ({
       return;
     }
 
-    const codCargosParaEnviar = currentPermissions
-      .map((permissionName) => cargoNameToIdMap.get(permissionName))
+    const codCargosParaEnviar = selectedPermissionKeys
+      .map((roleName) => roleNameToIdMap.get(roleName))
       .filter((id): id is number => id !== undefined);
 
     const success = await updateCargos(
@@ -173,18 +178,21 @@ const ModalPermissoes: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isLoadingData = loadingAvailable || loadingUserCargos;
+  const loadError = errorAvailable || errorUserCargos;
+
   const renderModalBody = () => {
-    if (cargosLoading) {
+    if (isLoadingData) {
       return (
         <div className={styles.loadingState}>Carregando permissões...</div>
       );
     }
-    if (cargosError) {
-      return <div className={styles.errorState}>{cargosError}</div>;
+    if (loadError) {
+      return <div className={styles.errorState}>{loadError}</div>;
     }
 
     if (categorizedPermissions.length > 0) {
-      const hasAppAccess = currentPermissions.includes(FUNCIONARIO_ROLE);
+      const hasAppAccess = selectedPermissionKeys.includes(FUNCIONARIO_ROLE);
 
       return categorizedPermissions.map((category) => (
         <div key={category.title} className={styles.categoryContainer}>
@@ -194,7 +202,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
               const cannotRemoveSelfGestor =
                 permission.key === GESTOR_ROLE &&
                 usuarioInfo.codUsuario === codUsuarioLogado &&
-                currentPermissions.includes(GESTOR_ROLE);
+                selectedPermissionKeys.includes(GESTOR_ROLE);
 
               const isMovixPermission = MOVIX_ROLES.includes(permission.key);
               const movixPermissionDisabled =
@@ -212,7 +220,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
                 >
                   <input
                     type="checkbox"
-                    checked={currentPermissions.includes(permission.key)}
+                    checked={selectedPermissionKeys.includes(permission.key)}
                     onChange={() => handleCheckboxChange(permission.key)}
                     className={styles.checkbox}
                     disabled={isDisabled}
@@ -254,7 +262,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
           <button
             onClick={handleSaveClick}
             className={styles.saveButton}
-            disabled={cargosLoading || updateLoading || !!cargosError}
+            disabled={isLoadingData || updateLoading || !!loadError}
           >
             {updateLoading ? "Salvando..." : "Salvar Alterações"}
           </button>

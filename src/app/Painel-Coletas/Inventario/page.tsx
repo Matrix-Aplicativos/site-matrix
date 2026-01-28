@@ -522,29 +522,33 @@ const InventariosPage: React.FC = () => {
                         </button>
                       )}
 
-                      {row.statusSincronizacao === 1 && (
-                        <span
-                          className={styles.syncIcon}
-                          title="Pendente de Envio"
-                        >
-                          <IconPending />
-                        </span>
-                      )}
-                      {row.statusSincronizacao === 2 && (
-                        <span
-                          className={styles.syncIcon}
-                          title="Sincronizado com ERP"
-                        >
-                          <IconSync />
-                        </span>
-                      )}
-                      {row.statusSincronizacao === 3 && (
-                        <span
-                          className={styles.syncIcon}
-                          title="Erro na Integração"
-                        >
-                          <IconError />
-                        </span>
+                      {(row.status === "2" || row.status === "3") && (
+                        <>
+                          {row.statusSincronizacao === 1 && (
+                            <span
+                              className={styles.syncIcon}
+                              title="Pendente de Envio"
+                            >
+                              <IconPending />
+                            </span>
+                          )}
+                          {row.statusSincronizacao === 2 && (
+                            <span
+                              className={styles.syncIcon}
+                              title="Sincronizado com ERP"
+                            >
+                              <IconSync />
+                            </span>
+                          )}
+                          {row.statusSincronizacao === 3 && (
+                            <span
+                              className={styles.syncIcon}
+                              title="Erro na Integração"
+                            >
+                              <IconError />
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import { Usuario, Empresa } from "../utils/types/Usuario";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
@@ -33,7 +32,11 @@ export default function SelecionarEmpresaPage() {
           return;
         }
         const userId = getUserFromToken(token);
-        const response = await axiosInstance.get(`/usuario/${userId}`);
+
+        const response = await axiosInstance.get(
+          `/usuario/${userId}?searchByRole=GESTOR`,
+        );
+
         setUsuario(response.data);
       } catch (err: any) {
         setError("Não foi possível carregar os dados do usuário.");
