@@ -13,6 +13,8 @@ import PaginationControls from "../components/PaginationControls";
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
 import { FiRepeat } from "react-icons/fi";
 
+// --- ÍCONES ---
+
 const IconTrash = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -31,6 +33,7 @@ const IconTrash = () => (
     <line x1="14" y1="11" x2="14" y2="17"></line>
   </svg>
 );
+
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -49,6 +52,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -65,6 +69,7 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
+
 const IconSync = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -82,6 +87,42 @@ const IconSync = () => (
   </svg>
 );
 
+const IconPending = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#f57c00"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const IconError = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#d32f2f"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+    />
+  </svg>
+);
+
+// --- INTERFACES & CONFIG ---
+
 interface ColetaExibida {
   id: number;
   descricao: string;
@@ -92,11 +133,11 @@ interface ColetaExibida {
   usuario: string;
   status: string;
   integradoErp: boolean;
+  statusSincronizacao: number; // Campo Adicionado
   qtdItens: number;
   qtdItensConferidos: number;
   volumeTotal: number;
   volumeConferido: number;
-  // --- NOVOS CAMPOS ---
   estoqueOrigem: string;
   estoqueDestino: string;
 }
@@ -127,7 +168,6 @@ const OPCOES_STATUS = {
 };
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
 
-// --- COLUNAS ATUALIZADAS ---
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
   { key: "id", label: "Código", sortable: true },
@@ -138,8 +178,8 @@ const columns: ColumnConfig[] = [
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
   { key: "origem", label: "Origem", sortable: true },
-  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false }, // Nova Coluna
-  { key: "estoqueDestino", label: "Estoque Destino", sortable: false }, // Nova Coluna
+  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false },
+  { key: "estoqueDestino", label: "Estoque Destino", sortable: false },
   { key: "tipoMovimento", label: "Tipo Mov.", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
 ];
@@ -233,11 +273,11 @@ const TransferenciasPage: React.FC = () => {
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
+      statusSincronizacao: c.statusSincronizacao, // Mapeado
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
       volumeConferido: c.volumeConferido,
-      // --- Mapeamento dos novos campos ---
       estoqueOrigem: c.alocOrigem?.descricao || "-",
       estoqueDestino: c.alocDestino?.descricao || "-",
     }));
@@ -459,35 +499,62 @@ const TransferenciasPage: React.FC = () => {
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
 
-                  {/* --- NOVAS COLUNAS NO BODY --- */}
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{row.estoqueOrigem}</td>
                   <td>{row.estoqueDestino}</td>
-                  {/* ----------------------------- */}
 
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
-                  <td className={styles.actionsCell}>
-                    {row.integradoErp && (
-                      <span
-                        className={styles.syncIcon}
-                        title="Integrado com ERP"
-                      >
-                        <IconSync />
-                      </span>
-                    )}
-                    {!row.dataFim && (
-                      <button
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteColeta(row.id);
-                        }}
-                        title="Excluir coleta avulsa"
-                      >
-                        <IconTrash />
-                      </button>
-                    )}
+                  <td
+                    className={styles.actionsCell}
+                    style={{ verticalAlign: "middle" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      {!row.dataFim && (
+                        <button
+                          className={styles.deleteButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteColeta(row.id);
+                          }}
+                          title="Excluir coleta avulsa"
+                        >
+                          <IconTrash />
+                        </button>
+                      )}
+
+                      {row.statusSincronizacao === 1 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Pendente de Envio"
+                        >
+                          <IconPending />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 2 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Sincronizado com ERP"
+                        >
+                          <IconSync />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 3 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Erro na Integração"
+                        >
+                          <IconError />
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (

@@ -22,6 +22,7 @@ interface UsuarioNaColeta {
 }
 
 export interface Coleta {
+  statusSincronizacao: number;
   codConferencia: number;
   codColeta: number;
   codIntegracao: number;

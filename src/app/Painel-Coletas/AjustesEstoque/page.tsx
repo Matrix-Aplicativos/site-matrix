@@ -13,6 +13,8 @@ import PaginationControls from "../components/PaginationControls";
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
 import { FiClipboard } from "react-icons/fi";
 
+// --- ÍCONES ---
+
 const IconTrash = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -85,6 +87,42 @@ const IconSync = () => (
   </svg>
 );
 
+const IconPending = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#f57c00"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const IconError = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#d32f2f"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+    />
+  </svg>
+);
+
+// --- INTERFACES & CONFIG ---
+
 interface ColetaExibida {
   id: number;
   descricao: string;
@@ -95,6 +133,7 @@ interface ColetaExibida {
   usuario: string;
   status: string;
   integradoErp: boolean;
+  statusSincronizacao: number; // Campo Adicionado
   qtdItens: number;
   qtdItensConferidos: number;
   volumeTotal: number;
@@ -291,6 +330,7 @@ const AjustesEstoquePage: React.FC = () => {
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
+      statusSincronizacao: c.statusSincronizacao, // Mapeado
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
@@ -588,27 +628,56 @@ const AjustesEstoquePage: React.FC = () => {
                   <td>{row.planoConta}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
-                  <td className={styles.actionsCell}>
-                    {row.integradoErp && (
-                      <span
-                        className={styles.syncIcon}
-                        title="Integrado com ERP"
-                      >
-                        <IconSync />
-                      </span>
-                    )}
-                    {!row.dataFim && (
-                      <button
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteColeta(row.id);
-                        }}
-                        title="Excluir ajuste"
-                      >
-                        <IconTrash />
-                      </button>
-                    )}
+                  <td
+                    className={styles.actionsCell}
+                    style={{ verticalAlign: "middle" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      {!row.dataFim && (
+                        <button
+                          className={styles.deleteButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteColeta(row.id);
+                          }}
+                          title="Excluir ajuste"
+                        >
+                          <IconTrash />
+                        </button>
+                      )}
+
+                      {row.statusSincronizacao === 1 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Pendente de Envio"
+                        >
+                          <IconPending />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 2 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Sincronizado com ERP"
+                        >
+                          <IconSync />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 3 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Erro na Integração"
+                        >
+                          <IconError />
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (

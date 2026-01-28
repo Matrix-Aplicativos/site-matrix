@@ -31,6 +31,7 @@ const IconTrash = () => (
     <line x1="14" y1="11" x2="14" y2="17"></line>
   </svg>
 );
+
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -49,6 +50,7 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
   </svg>
 );
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -65,6 +67,7 @@ const IconSort = () => (
     <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"></path>
   </svg>
 );
+
 const IconSync = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -82,10 +85,44 @@ const IconSync = () => (
   </svg>
 );
 
+const IconPending = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#f57c00"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const IconError = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#d32f2f"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+    />
+  </svg>
+);
+
 interface ColetaExibida {
   id: number;
   descricao: string;
-  estoqueOrigem: string; // ALTERAÇÃO 1: Campo adicionado
+  estoqueOrigem: string;
   data: string;
   dataFim: string | null;
   origem: string;
@@ -93,11 +130,13 @@ interface ColetaExibida {
   usuario: string;
   status: string;
   integradoErp: boolean;
+  statusSincronizacao: number;
   qtdItens: number;
   qtdItensConferidos: number;
   volumeTotal: number;
   volumeConferido: number;
 }
+
 interface ColumnConfig {
   key: keyof ColetaExibida;
   label: string;
@@ -114,8 +153,8 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
   usuario: "funcionario",
   volumeTotal: "volumeTotal",
   volumeConferido: "volumeConferido",
-  // Nota: estoqueOrigem não está no mapa de ordenação pois depende do backend
 };
+
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
   "Em Andamento": "4",
@@ -133,7 +172,7 @@ const columns: ColumnConfig[] = [
   { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true },
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
-  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false }, // ALTERAÇÃO 2: Coluna adicionada
+  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false },
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
@@ -221,7 +260,7 @@ const InventariosPage: React.FC = () => {
     return coletas.map((c) => ({
       id: c.codConferencia,
       descricao: c.descricao,
-      estoqueOrigem: c.alocOrigem?.descricao || "", // ALTERAÇÃO 3: Mapeamento do dado
+      estoqueOrigem: c.alocOrigem?.descricao || "",
       data: c.dataCadastro,
       dataFim: c.dataFim,
       origem: String(c.origem),
@@ -229,6 +268,7 @@ const InventariosPage: React.FC = () => {
       usuario: c.usuario?.nome || "Usuário não informado",
       status: c.status,
       integradoErp: c.integradoErp,
+      statusSincronizacao: c.statusSincronizacao,
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
@@ -240,6 +280,7 @@ const InventariosPage: React.FC = () => {
     if (companyLoading || isLoading) showLoading();
     else hideLoading();
   }, [companyLoading, isLoading, showLoading, hideLoading]);
+
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
     refetch();
@@ -452,37 +493,64 @@ const InventariosPage: React.FC = () => {
                   <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
-                  {/* ALTERAÇÃO 4: Nova coluna inserida na posição correta */}
                   <td>{row.estoqueOrigem}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
-                  <td className={styles.actionsCell}>
-                    {row.integradoErp && (
-                      <span
-                        className={styles.syncIcon}
-                        title="Integrado com ERP"
-                      >
-                        <IconSync />
-                      </span>
-                    )}
-                    {!row.dataFim && (
-                      <button
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteColeta(row.id);
-                        }}
-                        title="Excluir coleta"
-                      >
-                        <IconTrash />
-                      </button>
-                    )}
+                  <td
+                    className={styles.actionsCell}
+                    style={{ verticalAlign: "middle" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      {!row.dataFim && (
+                        <button
+                          className={styles.deleteButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteColeta(row.id);
+                          }}
+                          title="Excluir coleta"
+                        >
+                          <IconTrash />
+                        </button>
+                      )}
+
+                      {row.statusSincronizacao === 1 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Pendente de Envio"
+                        >
+                          <IconPending />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 2 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Sincronizado com ERP"
+                        >
+                          <IconSync />
+                        </span>
+                      )}
+                      {row.statusSincronizacao === 3 && (
+                        <span
+                          className={styles.syncIcon}
+                          title="Erro na Integração"
+                        >
+                          <IconError />
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
                 {expandedRow === rowIndex && (
                   <tr className={styles.expandedRow}>
-                    {/* Ajuste do colspan devido à nova coluna (+1) */}
                     <td colSpan={columns.length + 2}>
                       <ExpandedRowContent coletaId={row.id} />
                     </td>
