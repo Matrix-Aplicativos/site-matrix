@@ -1,40 +1,43 @@
 import { useState, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
 
-export interface Cargo {
-  codCargo?: number; 
-  nome: string; 
-  permissoes: string[];
+export interface CargoUsuario {
+  nome: string;
+  authority?: string;
 }
 
-interface UseGetCargosResult {
-  cargos: Cargo[];
+interface UseGetCargosPorUsuarioResult {
+  cargos: CargoUsuario[];
   loading: boolean;
   error: string | null;
-  getCargos: (codUsuario: number, codEmpresa: number) => Promise<Cargo[]>;
+  getCargos: (
+    codUsuario: number | string,
+    codEmpresa: number | string,
+  ) => Promise<CargoUsuario[]>;
 }
 
-const useGetCargos = (): UseGetCargosResult => {
-  const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [loading, setLoading] = useState(false); 
+const useGetCargosPorUsuario = (): UseGetCargosPorUsuarioResult => {
+  const [cargos, setCargos] = useState<CargoUsuario[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const getCargos = useCallback(
-    async (codUsuario: number, codEmpresa: number) => {
+    async (codUsuario: number | string, codEmpresa: number | string) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get<Cargo[]>(
+        const response = await axiosInstance.get<CargoUsuario[]>(
           `/usuario/cargos/${codUsuario}/${codEmpresa}`,
         );
+
         const data = response.data || [];
         setCargos(data);
         return data;
       } catch (err: any) {
-        const msg =
+        const errorMsg =
           err.response?.data?.message ||
-          "Não foi possível carregar a lista de cargos.";
-        setError(msg);
+          "Não foi possível carregar os cargos do usuário.";
+        setError(errorMsg);
         console.error("Erro ao buscar cargos:", err);
         return [];
       } finally {
@@ -47,4 +50,4 @@ const useGetCargos = (): UseGetCargosResult => {
   return { cargos, loading, error, getCargos };
 };
 
-export default useGetCargos;
+export default useGetCargosPorUsuario;

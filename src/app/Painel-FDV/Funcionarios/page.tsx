@@ -110,7 +110,7 @@ export default function UsuariosPage() {
       sortConfig?.key,
       sortConfig?.direction,
       filtrosParaApi,
-      isHookEnabled
+      isHookEnabled,
     ); // --- [FIM DA LÓGICA CORRIGIDA] --- // --- Handlers do Modal ---
   const handleOpenModal = (usuario: UsuarioGet) => {
     setSelectedUser(usuario);
@@ -222,6 +222,7 @@ export default function UsuariosPage() {
           usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
           codUsuarioLogado={usuario.codUsuario}
+          codEmpresa={0}
         />
       )}
       <h1 className={styles.title}>FUNCIONÁRIOS</h1>

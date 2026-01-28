@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalPermissoes.module.css";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
-import useGetUsuarioById from "../hooks/useGetUsuarioById";
 import useGetCargos from "../hooks/useGetCargos";
 import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargos";
 
@@ -30,6 +29,7 @@ interface ModalProps {
   usuarioInfo: UsuarioGet;
   onSave: () => void;
   codUsuarioLogado: number;
+  codEmpresa: number;
 }
 
 const PERMISSION_DISPLAY_MAP = [
@@ -72,17 +72,13 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   usuarioInfo,
   onSave,
   codUsuarioLogado,
+  codEmpresa,
 }) => {
   const {
-    usuario: fullUser,
-    loading: userLoading,
-    error: userError,
-  } = useGetUsuarioById(isOpen ? (usuarioInfo.codUsuario ?? null) : null);
-
-  const {
-    cargos: availableCargos,
+    cargos: loadedCargos,
     loading: cargosLoading,
     error: cargosError,
+    getCargos,
   } = useGetCargos();
 
   const {
@@ -92,36 +88,46 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   } = useUpdateUsuarioCargos();
 
   const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
-  const isFetchingData = userLoading || cargosLoading;
-  const fetchError = userError || cargosError;
 
   useEffect(() => {
-    if (fullUser && fullUser.cargos) {
-      const userRoles = fullUser.cargos.map((cargo) => cargo.nome);
-      setCurrentPermissions(userRoles);
+    if (isOpen && usuarioInfo.codUsuario && codEmpresa) {
+      getCargos(usuarioInfo.codUsuario, codEmpresa);
     } else {
       setCurrentPermissions([]);
     }
-  }, [fullUser]);
+  }, [isOpen, usuarioInfo, codEmpresa, getCargos]);
+
+  useEffect(() => {
+    if (loadedCargos) {
+      const userRoles = loadedCargos.map((cargo) => cargo.nome);
+      setCurrentPermissions(userRoles);
+    }
+  }, [loadedCargos]);
+
+  const cargoNameToIdMap = useMemo(() => {
+    const map = new Map<string, number>();
+    loadedCargos.forEach((cargo) => {
+      if (cargo.codCargo) {
+        map.set(cargo.nome, cargo.codCargo);
+      }
+    });
+    return map;
+  }, [loadedCargos]);
 
   const categorizedPermissions = useMemo(() => {
-    if (!availableCargos || availableCargos.length === 0) return [];
-    const availableRoleNames = new Set(availableCargos.map((c) => c.nomeCargo));
+    if (!loadedCargos || loadedCargos.length === 0) return [];
+
+    const availableRoleNames = new Set(
+      loadedCargos.map((c) => c.nome),
+    );
+
     return PERMISSION_DISPLAY_MAP.map((category) => ({
       ...category,
       permissions: category.permissions.filter((p) =>
         availableRoleNames.has(p.key),
       ),
     })).filter((category) => category.permissions.length > 0);
-  }, [availableCargos]);
-
-  const cargoNameToIdMap = useMemo(() => {
-    const map = new Map<string, number>();
-    availableCargos.forEach((cargo) => {
-      map.set(cargo.nomeCargo, cargo.codCargo);
-    });
-    return map;
-  }, [availableCargos]);
+  }, [loadedCargos]);
 
   const handleCheckboxChange = (permissionKey: string) => {
     setCurrentPermissions((prev) => {
@@ -130,6 +136,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
 
       if (isCurrentlyChecked) {
         newPermissions = newPermissions.filter((p) => p !== permissionKey);
+
         if (permissionKey === FUNCIONARIO_ROLE) {
           newPermissions = newPermissions.filter(
             (p) => !MOVIX_ROLES.includes(p),
@@ -147,31 +154,35 @@ const ModalPermissoes: React.FC<ModalProps> = ({
       console.error("ID do usuário é inválido.");
       return;
     }
+
     const codCargosParaEnviar = currentPermissions
       .map((permissionName) => cargoNameToIdMap.get(permissionName))
       .filter((id): id is number => id !== undefined);
 
     const success = await updateCargos(
       usuarioInfo.codUsuario,
+      codEmpresa,
       codCargosParaEnviar,
     );
 
     if (success) {
       onSave();
+      onClose();
     }
   };
 
   if (!isOpen) return null;
 
   const renderModalBody = () => {
-    if (isFetchingData) {
+    if (cargosLoading) {
       return (
         <div className={styles.loadingState}>Carregando permissões...</div>
       );
     }
-    if (fetchError) {
-      return <div className={styles.errorState}>{fetchError}</div>;
+    if (cargosError) {
+      return <div className={styles.errorState}>{cargosError}</div>;
     }
+
     if (categorizedPermissions.length > 0) {
       const hasAppAccess = currentPermissions.includes(FUNCIONARIO_ROLE);
 
@@ -214,9 +225,10 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         </div>
       ));
     }
+
     return (
       <div className={styles.loadingState}>
-        Nenhum cargo disponível para seleção.
+        Nenhum cargo disponível encontrado para esta empresa.
       </div>
     );
   };
@@ -242,7 +254,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
           <button
             onClick={handleSaveClick}
             className={styles.saveButton}
-            disabled={isFetchingData || updateLoading || !!fetchError}
+            disabled={cargosLoading || updateLoading || !!cargosError}
           >
             {updateLoading ? "Salvando..." : "Salvar Alterações"}
           </button>

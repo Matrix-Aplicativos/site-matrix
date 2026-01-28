@@ -5,7 +5,7 @@ import useGetUsuarioById from "@/app/Painel-Coletas/hooks/useGetUsuarioById";
 import useGetCargos from "@/app/Painel-Coletas/hooks/useGetCargos";
 import useUpdateUsuarioCargos from "@/app/Painel-Coletas/hooks/useUpdateUsuarioCargos";
 
-// Constantes para facilitar a leitura e manutenção
+// Constantes
 const GESTOR_ROLE = "ROLE_FDV_GESTOR";
 const FUNCIONARIO_ROLE = "ROLE_FDV_FUNCIONARIO";
 const MOVIX_ROLES = [
@@ -22,7 +22,8 @@ interface ModalProps {
   onClose: () => void;
   usuarioInfo: UsuarioGet;
   onSave: () => void;
-  codUsuarioLogado: number; // ID do usuário logado
+  codUsuarioLogado: number;
+  codEmpresa: number; // 👈 Adicionado de volta, essencial para o update
 }
 
 const PERMISSION_DISPLAY_MAP = [
@@ -30,10 +31,7 @@ const PERMISSION_DISPLAY_MAP = [
     title: "Acessos Gerais",
     permissions: [
       { key: GESTOR_ROLE, description: "Acesso ao Painel Web" },
-      {
-        key: FUNCIONARIO_ROLE,
-        description: "Acesso ao App",
-      },
+      { key: FUNCIONARIO_ROLE, description: "Acesso ao App" },
     ],
   },
   {
@@ -47,7 +45,7 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
       };
-      return { key: role, description: descriptions[role] };
+      return { key: role, description: descriptions[role] || role };
     }),
   },
 ];
@@ -58,13 +56,16 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   usuarioInfo,
   onSave,
   codUsuarioLogado,
+  codEmpresa, // 👈 Recebendo via props
 }) => {
+  // Hooks
   const {
     usuario: fullUser,
     loading: userLoading,
     error: userError,
-  } = useGetUsuarioById(isOpen ? usuarioInfo.codUsuario ?? null : null);
+  } = useGetUsuarioById(isOpen ? (usuarioInfo.codUsuario ?? null) : null);
 
+  // Assumindo que o hook useGetCargos pode receber parâmetros ou filtrar internamente
   const {
     cargos: availableCargos,
     loading: cargosLoading,
@@ -78,40 +79,47 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   } = useUpdateUsuarioCargos();
 
   const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
+
   const isFetchingData = userLoading || cargosLoading;
   const fetchError = userError || cargosError;
 
+  // Atualiza permissões quando o usuário completo for carregado
   useEffect(() => {
     if (fullUser && fullUser.cargos) {
-      const userRoles = fullUser.cargos.map(
-        (cargo: { nome: any }) => cargo.nome
-      );
+      // 🔧 CORREÇÃO: Usando 'nome' em vez de tipagem manual incorreta
+      const userRoles = fullUser.cargos.map((cargo) => cargo.nome);
       setCurrentPermissions(userRoles);
     } else {
       setCurrentPermissions([]);
     }
   }, [fullUser]);
 
+  // Filtra as permissões para exibir apenas o que existe no banco (availableCargos)
   const categorizedPermissions = useMemo(() => {
     if (!availableCargos || availableCargos.length === 0) return [];
-    const availableRoleNames = new Set(
-      availableCargos.map((c: { nomeCargo: any }) => c.nomeCargo)
-    );
+
+    // 🔧 CORREÇÃO: De 'nomeCargo' para 'nome'
+    const availableRoleNames = new Set(availableCargos.map((c) => c.nome));
+
     return PERMISSION_DISPLAY_MAP.map((category) => ({
       ...category,
       permissions: category.permissions.filter((p) =>
-        availableRoleNames.has(p.key)
+        availableRoleNames.has(p.key),
       ),
     })).filter((category) => category.permissions.length > 0);
   }, [availableCargos]);
 
+  // Mapa para converter Nomes de volta para IDs na hora de salvar
   const cargoNameToIdMap = useMemo(() => {
     const map = new Map<string, number>();
-    availableCargos.forEach(
-      (cargo: { nomeCargo: string; codCargo: number }) => {
-        map.set(cargo.nomeCargo, cargo.codCargo);
-      }
-    );
+    if (availableCargos) {
+      availableCargos.forEach((cargo) => {
+        // 🔧 CORREÇÃO: De 'nomeCargo' para 'nome' e verificação de codCargo
+        if (cargo.codCargo) {
+          map.set(cargo.nome, cargo.codCargo);
+        }
+      });
+    }
     return map;
   }, [availableCargos]);
 
@@ -123,8 +131,9 @@ const ModalPermissoes: React.FC<ModalProps> = ({
       if (isCurrentlyChecked) {
         newPermissions = newPermissions.filter((p) => p !== permissionKey);
         if (permissionKey === FUNCIONARIO_ROLE) {
+          // Se tirar acesso ao App, remove permissões do App
           newPermissions = newPermissions.filter(
-            (p) => !MOVIX_ROLES.includes(p)
+            (p) => !MOVIX_ROLES.includes(p),
           );
         }
       } else {
@@ -139,17 +148,22 @@ const ModalPermissoes: React.FC<ModalProps> = ({
       console.error("ID do usuário é inválido.");
       return;
     }
+
+    // Converte os nomes selecionados para IDs numéricos
     const codCargosParaEnviar = currentPermissions
       .map((permissionName) => cargoNameToIdMap.get(permissionName))
       .filter((id): id is number => id !== undefined);
 
+    // Chama o hook de update passando codEmpresa
     const success = await updateCargos(
       usuarioInfo.codUsuario,
-      codCargosParaEnviar
+      codEmpresa, // 👈 Passando a empresa corretamente
+      codCargosParaEnviar,
     );
 
     if (success) {
       onSave();
+      onClose(); // Fecha o modal ao salvar com sucesso
     }
   };
 
@@ -208,7 +222,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     }
     return (
       <div className={styles.loadingState}>
-        Nenhum cargo disponível para seleção.
+        Nenhum cargo disponível para seleção nesta empresa.
       </div>
     );
   };
