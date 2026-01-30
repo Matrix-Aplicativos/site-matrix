@@ -8,9 +8,12 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import Logo from "@/app/img/Logo.png";
 import "./Login.css";
+
 import useLogin from "../hooks/useLogin";
+import useGetCargosPorUsuario from "../hooks/useGetCargosPorUsuario";
+
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import axiosInstance from "../../shared/axios/axiosInstanceFDV";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV"; 
 import { Usuario } from "../utils/types/Usuario";
 
 export default function LoginPage() {
@@ -26,13 +29,22 @@ export default function LoginPage() {
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
 
   const router = useRouter();
+
+  // Hook de Login
   const {
     loginUsuario,
-    loading,
-    error,
+    loading: loadingLogin,
+    error: errorLogin,
     definirPrimeiraSenhaUsuario,
     solicitarRedefinicaoSenha,
   } = useLogin();
+
+  // Hook de Cargos (Igual ao exemplo)
+  const {
+    getCargos,
+    loading: loadingCargos,
+    error: errorCargos,
+  } = useGetCargosPorUsuario();
 
   useEffect(() => {
     if (!textoIdentificacao) return;
@@ -64,7 +76,6 @@ export default function LoginPage() {
 
   const handleDefinirSenha = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (senha.length > 50) {
       setTextoIdentificacao("A senha não pode ter mais de 50 caracteres.");
       setTipoMensagem("erro");
@@ -82,7 +93,7 @@ export default function LoginPage() {
       data.message?.toLowerCase().includes("sucesso")
     ) {
       setTextoIdentificacao(
-        "Senha definida com sucesso! Faça login novamente."
+        "Senha definida com sucesso! Faça login novamente.",
       );
       setTipoMensagem("sucesso");
       setDefinirPrimeiraSenha(false);
@@ -108,13 +119,13 @@ export default function LoginPage() {
       if (resp?.success) {
         setTextoIdentificacao(
           resp.message ||
-            "Solicitação enviada com sucesso! Verifique seu email."
+            "Solicitação enviada com sucesso! Verifique seu email.",
         );
         setTipoMensagem("sucesso");
         setModoEsqueciSenha(false);
         setLogin("");
       } else if (!resp) {
-        setTextoIdentificacao(error || "Erro ao enviar solicitação");
+        setTextoIdentificacao(errorLogin || "Erro ao enviar solicitação");
         setTipoMensagem("erro");
       }
       return;
@@ -130,28 +141,16 @@ export default function LoginPage() {
         setSenha("");
         setConfirmacaoSenha("");
         setTextoIdentificacao(
-          "Este é o seu primeiro acesso, defina sua nova senha:"
+          "Este é o seu primeiro acesso, defina sua nova senha:",
         );
         setTipoMensagem("");
       } else {
         localStorage.setItem("authToken", token);
         try {
-          const response = await axiosInstance.get(
-            "/usuario/" + getUserFromToken(token)
-          );
+          const userId = getUserFromToken(token);
+          // Rota do usuário no endpoint FDV (garantindo que pega as empresas vinculadas)
+          const response = await axiosInstance.get("/usuario/" + userId);
           const usuario: Usuario = response.data;
-
-          const temPermissao = usuario.cargos?.some(
-            (cargo: any) => cargo.nome === "ROLE_FDV_GESTOR"
-          );
-
-          if (!temPermissao) {
-            setTextoIdentificacao(
-              "Acesso negado. Seu perfil de usuário não tem permissão para acessar o painel."
-            );
-            setTipoMensagem("erro");
-            return;
-          }
 
           if (!usuario.empresas || usuario.empresas.length === 0) {
             setTextoIdentificacao("Usuário não vinculado a nenhuma empresa.");
@@ -159,14 +158,51 @@ export default function LoginPage() {
             return;
           }
 
+          // Lógica IDÊNTICA ao exemplo fornecido
           if (usuario.empresas.length === 1) {
-            const empresa = usuario.empresas[0];
-            localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
-            router.push("/Painel-FDV");
+            const empresaUnica = usuario.empresas[0];
+
+            // Busca os cargos especificamente dessa empresa para validar permissão
+            const listaCargos = await getCargos(
+              userId ? Number(userId) : 0,
+              empresaUnica.codEmpresa,
+            );
+
+            // Verifica se é Gestor FDV
+            const isGestor = listaCargos.some(
+              (cargo) => cargo.nome === "ROLE_FDV_GESTOR",
+            );
+
+            // Verifica se é Funcionário FDV (para mensagem de erro específica)
+            const isFuncionario = listaCargos.some(
+              (cargo) => cargo.nome === "ROLE_FDV_FUNCIONARIO",
+            );
+
+            if (isGestor) {
+              localStorage.setItem(
+                "empresaSelecionada",
+                JSON.stringify(empresaUnica),
+              );
+              router.push("/Painel-FDV");
+            } else {
+              // Feedback específico caso seja apenas funcionário
+              if (isFuncionario) {
+                setTextoIdentificacao(
+                  "Acesso restrito. Utilize o Aplicativo Móvel para acessar.",
+                );
+              } else {
+                setTextoIdentificacao(
+                  "Acesso negado. Perfil sem permissão de Gestor nesta empresa.",
+                );
+              }
+              setTipoMensagem("erro");
+            }
           } else {
+            // Mais de uma empresa: manda para seleção (lá terá validação novamente)
             router.push("/Painel-FDV/SelecionarEmpresa");
           }
-        } catch {
+        } catch (err) {
+          console.error(err);
           setTextoIdentificacao("Erro ao validar os dados do usuário.");
           setTipoMensagem("erro");
         }
@@ -181,6 +217,9 @@ export default function LoginPage() {
     setConfirmacaoSenha("");
     setLogin("");
   };
+
+  // Loading unificado
+  const isLoading = loadingLogin || loadingCargos;
 
   return (
     <div className="container">
@@ -237,6 +276,7 @@ export default function LoginPage() {
               </span>
             </div>
           )}
+
           {definirPrimeiraSenha && senha && (
             <>
               <div
@@ -256,8 +296,8 @@ export default function LoginPage() {
                       forcaSenha >= 3
                         ? "green"
                         : forcaSenha >= 2
-                        ? "orange"
-                        : "red",
+                          ? "orange"
+                          : "red",
                     width: `${forcaSenha * 33.3333}%`,
                   }}
                 ></div>
@@ -270,16 +310,16 @@ export default function LoginPage() {
                     forcaSenha >= 3
                       ? "green"
                       : forcaSenha >= 2
-                      ? "orange"
-                      : "red",
+                        ? "orange"
+                        : "red",
                   marginBottom: "40px",
                 }}
               >
                 {forcaSenha >= 3
                   ? "Forte"
                   : forcaSenha >= 2
-                  ? "Moderado"
-                  : "Fraca"}
+                    ? "Moderado"
+                    : "Fraca"}
               </p>
             </>
           )}
@@ -317,19 +357,20 @@ export default function LoginPage() {
             </p>
           )}
 
-          {(textoIdentificacao || error) && (
+          {(textoIdentificacao || errorLogin || errorCargos) && (
             <p
               style={{
                 textAlign: "center",
                 margin: "10px 0",
                 color:
-                  tipoMensagem === "sucesso" || (!tipoMensagem && !error)
+                  tipoMensagem === "sucesso" ||
+                  (!tipoMensagem && !errorLogin && !errorCargos)
                     ? "green"
                     : "red",
                 fontWeight: "bold",
               }}
             >
-              {textoIdentificacao || error}
+              {textoIdentificacao || errorLogin || errorCargos}
             </p>
           )}
 
@@ -337,15 +378,15 @@ export default function LoginPage() {
             <button
               type="submit"
               className="action-button enviar"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading
+              {isLoading
                 ? "Processando..."
                 : modoEsqueciSenha
-                ? "Enviar"
-                : definirPrimeiraSenha
-                ? "Definir Senha"
-                : "Entrar"}
+                  ? "Enviar"
+                  : definirPrimeiraSenha
+                    ? "Definir Senha"
+                    : "Entrar"}
             </button>
             {(modoEsqueciSenha || definirPrimeiraSenha) && (
               <button

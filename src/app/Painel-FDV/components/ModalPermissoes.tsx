@@ -1,20 +1,27 @@
 import React, { useState, useEffect, useMemo } from "react";
 import styles from "./ModalPermissoes.module.css";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
-import useGetUsuarioById from "@/app/Painel-Coletas/hooks/useGetUsuarioById";
-import useGetCargos from "@/app/Painel-Coletas/hooks/useGetCargos";
-import useUpdateUsuarioCargos from "@/app/Painel-Coletas/hooks/useUpdateUsuarioCargos";
 
-// Constantes
+import useGetCargosDisponiveis from "../hooks/useGetCargos";
+import useGetCargosPorUsuario from "../hooks/useGetCargosPorUsuario";
+import useUpdateUsuarioCargos from "../hooks/useUpdateUsuarioCargo";
+
 const GESTOR_ROLE = "ROLE_FDV_GESTOR";
 const FUNCIONARIO_ROLE = "ROLE_FDV_FUNCIONARIO";
-const MOVIX_ROLES = [
-  "ROLE_MOVIX_INVENTARIO",
-  "ROLE_MOVIX_TRANSFERENCIA",
-  "ROLE_MOVIX_CONF_COMPRA",
-  "ROLE_MOVIX_CONF_VENDA",
-  "ROLE_MOVIX_CADASTRAR_AVULSA",
-  "ROLE_MOVIX_CADASTRAR_DEMANDA",
+
+const FDV_PERMISSIONS_KEYS = [
+  "PERM_FDV_REALIZAR_PEDIDO",
+  "PERM_FDV_VISUALIZAR_PEDIDOS",
+  "PERM_FDV_CADASTRAR_CLIENTES",
+  "PERM_FDV_VISUALIZAR_CLIENTES",
+  "PERM_FDV_GERENCIAR_USUARIOS",
+  "PERM_FDV_GERENCIAR_CONFIGURACOES",
+  "PERM_FDV_GERENCIAR_DISPOSITIVOS",
+  "PERM_FDV_VISUALIZAR_FORNECEDORES",
+  "PERM_FDV_VISUALIZAR_ITENS",
+  "PERM_FDV_VISUALIZAR_COND_PAGAMENTO",
+  "PERM_FDV_VISUALIZAR_CONFIGURACOES",
+  "PERM_FDV_SINCRONIZAR_DADOS_OFFLINE",
 ];
 
 interface ModalProps {
@@ -23,7 +30,7 @@ interface ModalProps {
   usuarioInfo: UsuarioGet;
   onSave: () => void;
   codUsuarioLogado: number;
-  codEmpresa: number; // 👈 Adicionado de volta, essencial para o update
+  codEmpresa: number;
 }
 
 const PERMISSION_DISPLAY_MAP = [
@@ -35,15 +42,27 @@ const PERMISSION_DISPLAY_MAP = [
     ],
   },
   {
-    title: "Acessos MOVIX",
-    permissions: MOVIX_ROLES.map((role) => {
+    title: "Permissões FDV",
+    permissions: FDV_PERMISSIONS_KEYS.map((role) => {
       const descriptions: { [key: string]: string } = {
-        ROLE_MOVIX_INVENTARIO: "Visualizar Inventários",
-        ROLE_MOVIX_TRANSFERENCIA: "Visualizar Transferências",
-        ROLE_MOVIX_CONF_COMPRA: "Visualizar Conferências de Compra",
-        ROLE_MOVIX_CONF_VENDA: "Visualizar Conferências de Venda",
-        ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
-        ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
+        PERM_FDV_REALIZAR_PEDIDO: "Permite Realizar Pedidos pelo Aplicativo",
+        PERM_FDV_VISUALIZAR_PEDIDOS:
+          "Permite Visualizar Pedidos no Painel e Aplicativo",
+        PERM_FDV_CADASTRAR_CLIENTES: "Permite Cadastrar Clientes",
+        PERM_FDV_VISUALIZAR_CLIENTES: "Permite Visualizar Clientes",
+        PERM_FDV_GERENCIAR_USUARIOS: "Permite Gerenciar Usuarios do FDV",
+        PERM_FDV_GERENCIAR_CONFIGURACOES:
+          "Permite Gerenciar Configurações do FDV",
+        PERM_FDV_GERENCIAR_DISPOSITIVOS:
+          "Permite Gerenciar Dispositivos do FDV",
+        PERM_FDV_VISUALIZAR_FORNECEDORES: "Permite Visualizar Fornecedores",
+        PERM_FDV_VISUALIZAR_ITENS: "Permite Visualizar Itens",
+        PERM_FDV_VISUALIZAR_COND_PAGAMENTO:
+          "Permite Visualizar Condições de Pagamento",
+        PERM_FDV_VISUALIZAR_CONFIGURACOES:
+          "Permite Visualizar Configurações do Aplicativo FDV",
+        PERM_FDV_SINCRONIZAR_DADOS_OFFLINE:
+          "Permite Sincronizar Dados Offline do Aplicativo FDV",
       };
       return { key: role, description: descriptions[role] || role };
     }),
@@ -56,21 +75,21 @@ const ModalPermissoes: React.FC<ModalProps> = ({
   usuarioInfo,
   onSave,
   codUsuarioLogado,
-  codEmpresa, // 👈 Recebendo via props
+  codEmpresa,
 }) => {
-  // Hooks
-  const {
-    usuario: fullUser,
-    loading: userLoading,
-    error: userError,
-  } = useGetUsuarioById(isOpen ? (usuarioInfo.codUsuario ?? null) : null);
-
-  // Assumindo que o hook useGetCargos pode receber parâmetros ou filtrar internamente
   const {
     cargos: availableCargos,
-    loading: cargosLoading,
-    error: cargosError,
-  } = useGetCargos();
+    loading: loadingAvailable,
+    error: errorAvailable,
+    getCargos: getAvailableCargos,
+  } = useGetCargosDisponiveis();
+
+  const {
+    cargos: userCargos,
+    loading: loadingUserCargos,
+    error: errorUserCargos,
+    getCargos: getUserCargos,
+  } = useGetCargosPorUsuario();
 
   const {
     updateCargos,
@@ -78,27 +97,37 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     error: updateError,
   } = useUpdateUsuarioCargos();
 
-  const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
+  const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<
+    string[]
+  >([]);
 
-  const isFetchingData = userLoading || cargosLoading;
-  const fetchError = userError || cargosError;
-
-  // Atualiza permissões quando o usuário completo for carregado
   useEffect(() => {
-    if (fullUser && fullUser.cargos) {
-      // 🔧 CORREÇÃO: Usando 'nome' em vez de tipagem manual incorreta
-      const userRoles = fullUser.cargos.map((cargo) => cargo.nome);
-      setCurrentPermissions(userRoles);
+    if (isOpen && usuarioInfo.codUsuario && codEmpresa) {
+      getAvailableCargos(codEmpresa);
+      getUserCargos(usuarioInfo.codUsuario, codEmpresa);
     } else {
-      setCurrentPermissions([]);
+      setSelectedPermissionKeys([]);
     }
-  }, [fullUser]);
+  }, [isOpen, usuarioInfo, codEmpresa, getAvailableCargos, getUserCargos]);
 
-  // Filtra as permissões para exibir apenas o que existe no banco (availableCargos)
+  useEffect(() => {
+    if (userCargos) {
+      const userRoles = userCargos.map((cargo) => cargo.nome);
+      setSelectedPermissionKeys(userRoles);
+    }
+  }, [userCargos]);
+
+  const roleNameToIdMap = useMemo(() => {
+    const map = new Map<string, number>();
+    availableCargos.forEach((c) => {
+      map.set(c.nome, c.codCargo);
+    });
+    return map;
+  }, [availableCargos]);
+
   const categorizedPermissions = useMemo(() => {
     if (!availableCargos || availableCargos.length === 0) return [];
 
-    // 🔧 CORREÇÃO: De 'nomeCargo' para 'nome'
     const availableRoleNames = new Set(availableCargos.map((c) => c.nome));
 
     return PERMISSION_DISPLAY_MAP.map((category) => ({
@@ -109,31 +138,16 @@ const ModalPermissoes: React.FC<ModalProps> = ({
     })).filter((category) => category.permissions.length > 0);
   }, [availableCargos]);
 
-  // Mapa para converter Nomes de volta para IDs na hora de salvar
-  const cargoNameToIdMap = useMemo(() => {
-    const map = new Map<string, number>();
-    if (availableCargos) {
-      availableCargos.forEach((cargo) => {
-        // 🔧 CORREÇÃO: De 'nomeCargo' para 'nome' e verificação de codCargo
-        if (cargo.codCargo) {
-          map.set(cargo.nome, cargo.codCargo);
-        }
-      });
-    }
-    return map;
-  }, [availableCargos]);
-
   const handleCheckboxChange = (permissionKey: string) => {
-    setCurrentPermissions((prev) => {
+    setSelectedPermissionKeys((prev) => {
       const isCurrentlyChecked = prev.includes(permissionKey);
       let newPermissions = [...prev];
 
       if (isCurrentlyChecked) {
         newPermissions = newPermissions.filter((p) => p !== permissionKey);
         if (permissionKey === FUNCIONARIO_ROLE) {
-          // Se tirar acesso ao App, remove permissões do App
           newPermissions = newPermissions.filter(
-            (p) => !MOVIX_ROLES.includes(p),
+            (p) => !FDV_PERMISSIONS_KEYS.includes(p),
           );
         }
       } else {
@@ -149,37 +163,50 @@ const ModalPermissoes: React.FC<ModalProps> = ({
       return;
     }
 
-    // Converte os nomes selecionados para IDs numéricos
-    const codCargosParaEnviar = currentPermissions
-      .map((permissionName) => cargoNameToIdMap.get(permissionName))
+    const chavesVisiveis = new Set<string>();
+    categorizedPermissions.forEach((cat) => {
+      cat.permissions.forEach((p) => chavesVisiveis.add(p.key));
+    });
+
+    const chavesParaEnviar = selectedPermissionKeys.filter((key) =>
+      chavesVisiveis.has(key),
+    );
+
+    const codCargosParaEnviar = chavesParaEnviar
+      .map((roleName) => roleNameToIdMap.get(roleName))
       .filter((id): id is number => id !== undefined);
 
-    // Chama o hook de update passando codEmpresa
+    console.log("Enviando IDs limpos:", codCargosParaEnviar);
+
     const success = await updateCargos(
       usuarioInfo.codUsuario,
-      codEmpresa, // 👈 Passando a empresa corretamente
+      codEmpresa,
       codCargosParaEnviar,
     );
 
     if (success) {
       onSave();
-      onClose(); // Fecha o modal ao salvar com sucesso
+      onClose();
     }
   };
 
   if (!isOpen) return null;
 
+  const isLoadingData = loadingAvailable || loadingUserCargos;
+  const loadError = errorAvailable || errorUserCargos;
+
   const renderModalBody = () => {
-    if (isFetchingData) {
+    if (isLoadingData) {
       return (
         <div className={styles.loadingState}>Carregando permissões...</div>
       );
     }
-    if (fetchError) {
-      return <div className={styles.errorState}>{fetchError}</div>;
+    if (loadError) {
+      return <div className={styles.errorState}>{loadError}</div>;
     }
+
     if (categorizedPermissions.length > 0) {
-      const hasAppAccess = currentPermissions.includes(FUNCIONARIO_ROLE);
+      const hasAppAccess = selectedPermissionKeys.includes(FUNCIONARIO_ROLE);
 
       return categorizedPermissions.map((category) => (
         <div key={category.title} className={styles.categoryContainer}>
@@ -189,14 +216,15 @@ const ModalPermissoes: React.FC<ModalProps> = ({
               const cannotRemoveSelfGestor =
                 permission.key === GESTOR_ROLE &&
                 usuarioInfo.codUsuario === codUsuarioLogado &&
-                currentPermissions.includes(GESTOR_ROLE);
+                selectedPermissionKeys.includes(GESTOR_ROLE);
 
-              const isMovixPermission = MOVIX_ROLES.includes(permission.key);
-              const movixPermissionDisabled =
-                isMovixPermission && !hasAppAccess;
+              const isFdvPermission = FDV_PERMISSIONS_KEYS.includes(
+                permission.key,
+              );
+              const fdvPermissionDisabled = isFdvPermission && !hasAppAccess;
 
               const isDisabled =
-                cannotRemoveSelfGestor || movixPermissionDisabled;
+                cannotRemoveSelfGestor || fdvPermissionDisabled;
 
               return (
                 <label
@@ -207,7 +235,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
                 >
                   <input
                     type="checkbox"
-                    checked={currentPermissions.includes(permission.key)}
+                    checked={selectedPermissionKeys.includes(permission.key)}
                     onChange={() => handleCheckboxChange(permission.key)}
                     className={styles.checkbox}
                     disabled={isDisabled}
@@ -220,9 +248,10 @@ const ModalPermissoes: React.FC<ModalProps> = ({
         </div>
       ));
     }
+
     return (
       <div className={styles.loadingState}>
-        Nenhum cargo disponível para seleção nesta empresa.
+        Nenhum cargo disponível encontrado para esta empresa.
       </div>
     );
   };
@@ -248,7 +277,7 @@ const ModalPermissoes: React.FC<ModalProps> = ({
           <button
             onClick={handleSaveClick}
             className={styles.saveButton}
-            disabled={isFetchingData || updateLoading || !!fetchError}
+            disabled={isLoadingData || updateLoading || !!loadError}
           >
             {updateLoading ? "Salvando..." : "Salvar Alterações"}
           </button>

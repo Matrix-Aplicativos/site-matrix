@@ -2,16 +2,17 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import styles from "./Usuarios.module.css";
-import useGetUsuarios from "../hooks/useGetUsuarios"; // Seu hook com axiosInstanceFDV
+import useGetUsuarios from "../hooks/useGetUsuarios";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 import { toast } from "react-toastify";
-import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+
+import ModalPermissoes from "../components/ModalPermissoes";
 import SearchBar from "@/app/Painel-Coletas/components/SearchBar";
-import ModalPermissoes from "@/app/Painel-Coletas/components/ModalPermissoes";
+import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
 // --- Ícones ---
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -76,14 +77,38 @@ export default function UsuariosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("Nome");
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null); // --- Hooks de Contexto e Autenticação ---
 
+  // Estado para Modal e Seleção
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UsuarioGet | null>(null);
+  const [codEmpresaSelecionada, setCodEmpresaSelecionada] = useState<
+    number | null
+  >(null);
+
+  // --- Hooks de Contexto e Autenticação ---
   const { showLoading, hideLoading } = useLoading();
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
-  const { usuario } = useGetLoggedUser(codUsuario || 0); // --- Filtros ---
 
+  // Dados do usuário logado (para saber quem está editando)
+  const { usuario } = useGetLoggedUser(codUsuario || 0);
+
+  // --- Recuperar Empresa Selecionada ---
+  useEffect(() => {
+    const storedEmpresa = localStorage.getItem("empresaSelecionada");
+    if (storedEmpresa) {
+      try {
+        const empresaObj = JSON.parse(storedEmpresa);
+        if (empresaObj && empresaObj.codEmpresa) {
+          setCodEmpresaSelecionada(empresaObj.codEmpresa);
+        }
+      } catch (e) {
+        console.error("Erro ao ler empresa selecionada", e);
+      }
+    }
+  }, []);
+
+  // --- Filtros ---
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
     if (searchQuery) {
@@ -93,39 +118,42 @@ export default function UsuariosPage() {
       }
     }
     return filtros;
-  }, [searchQuery, selectedFilter]); // --- [LÓGICA CORRIGIDA DE CARREGAMENTO] --- // 1. Determine o 'codEmpresa' a ser usado.
+  }, [searchQuery, selectedFilter]);
 
-  const codEmpresaParaBusca =
-    usuario && usuario.empresas[0]?.codEmpresa
-      ? usuario.empresas[0].codEmpresa
-      : 1; // Padrão Empresa 1 se o usuário não tiver uma // 2. O hook SÓ deve ser habilitado se o 'usuario' já foi carregado.
-
-  const isHookEnabled = !!usuario; // 3. Chame o hook com a lógica correta
+  // --- Hook de Busca de Usuários ---
+  // O hook só deve ser habilitado se tivermos o ID da empresa
+  const isHookEnabled = !!codEmpresaSelecionada;
 
   const { usuarios, loading, error, totalPaginas, totalElementos, refetch } =
     useGetUsuarios(
-      codEmpresaParaBusca,
+      codEmpresaSelecionada || 0, // Passa 0 se nulo para não quebrar, mas isHookEnabled segura a chamada
       paginaAtual,
       itemsPerPage,
       sortConfig?.key,
       sortConfig?.direction,
       filtrosParaApi,
       isHookEnabled,
-    ); // --- [FIM DA LÓGICA CORRIGIDA] --- // --- Handlers do Modal ---
-  const handleOpenModal = (usuario: UsuarioGet) => {
-    setSelectedUser(usuario);
+    );
+
+  // --- Handlers do Modal ---
+  const handleOpenModal = (usuarioAlvo: UsuarioGet) => {
+    setSelectedUser(usuarioAlvo);
     setIsModalOpen(true);
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
+
   const handleSavePermissions = () => {
     handleCloseModal();
-    refetch();
+    // Opcional: refetch() se quiser atualizar a lista,
+    // mas permissões geralmente não mudam a listagem principal
     toast.success("Permissões salvas com sucesso!");
-  }; // --- Definição das Colunas ---
+  };
 
+  // --- Definição das Colunas ---
   const columns: ColumnDefinition[] = [
     { key: "codFuncionario", label: "Código" },
     { key: "nome", label: "Nome" },
@@ -159,18 +187,18 @@ export default function UsuariosPage() {
           "—"
         ),
     },
-  ]; // --- Effects ---
+  ];
 
-  useEffect(() => {}, [usuarios]);
-
+  // --- Effects ---
   useEffect(() => {
     if (loading) {
       showLoading();
     } else {
       hideLoading();
     }
-  }, [loading, showLoading, hideLoading]); // --- Handlers da Tabela ---
+  }, [loading, showLoading, hideLoading]);
 
+  // --- Handlers da Tabela ---
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
   };
@@ -199,12 +227,20 @@ export default function UsuariosPage() {
       return colKey.split(".").reduce((o: any, i) => o?.[i], row) || "N/A";
     }
     return row[colKey as keyof UsuarioGet] ?? "N/A";
-  }; // --- Renderização ---
+  };
+
+  // --- Renderização ---
+  if (!codEmpresaSelecionada && !loading) {
+    // Caso de borda: usuário chegou aqui sem selecionar empresa
+    return (
+      <div className={styles.container}>Selecione uma empresa primeiro.</div>
+    );
+  }
 
   if (error) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>FUNCIONÁRIOS</h1>
+        <h1 className={styles.title}>FUNCIONÁRIOS FDV</h1>
         <div className={styles.errorMessage}>
           <p>Erro ao carregar usuários: {error}</p>
         </div>
@@ -215,17 +251,19 @@ export default function UsuariosPage() {
   return (
     <div className={styles.container}>
       {/* Renderização do Modal */}
-      {selectedUser && usuario && (
+      {selectedUser && usuario && codEmpresaSelecionada && (
         <ModalPermissoes
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
           codUsuarioLogado={usuario.codUsuario}
-          codEmpresa={0}
+          codEmpresa={codEmpresaSelecionada} // Passando a empresa do localStorage
         />
       )}
-      <h1 className={styles.title}>FUNCIONÁRIOS</h1>
+
+      <h1 className={styles.title}>FUNCIONÁRIOS FDV</h1>
+
       {/* Barra de Busca e Ações */}
       <div className={styles.searchContainer}>
         <SearchBar
@@ -241,11 +279,11 @@ export default function UsuariosPage() {
             title="Atualizar usuários"
           >
             <span>Atualizar</span>
-
             <IconRefresh className={loading ? styles.spinning : ""} />
           </button>
         </div>
       </div>
+
       {/* Filtros Expansíveis */}
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
@@ -263,6 +301,7 @@ export default function UsuariosPage() {
           </div>
         </div>
       )}
+
       {/* Tabela de Dados */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
@@ -280,7 +319,6 @@ export default function UsuariosPage() {
           </thead>
 
           <tbody>
-            {/* --- CORPO DA TABELA LIMPO --- */}
             {usuarios &&
               usuarios.map((row, rowIndex) => (
                 <tr key={row.codFuncionario}>
@@ -296,7 +334,6 @@ export default function UsuariosPage() {
           </tbody>
 
           <tfoot>
-            {/* --- RODAPÉ DA TABELA LIMPO --- */}
             <tr>
               <td colSpan={columns.length}>
                 <PaginationControls
