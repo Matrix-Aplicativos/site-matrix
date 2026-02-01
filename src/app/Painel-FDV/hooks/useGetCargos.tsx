@@ -1,10 +1,9 @@
 import { useState, useCallback } from "react";
-import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 
-// Interface baseada no JSON fornecido: { "codCargo": 0, "nomeCargo": "string" }
 export interface CargoDisponivel {
   codCargo: number;
-  nomeCargo: string;
+  nome: string;
 }
 
 interface UseGetCargosDisponiveisResult {

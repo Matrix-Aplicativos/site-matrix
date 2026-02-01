@@ -123,7 +123,7 @@ const FuncionariosPage: React.FC = () => {
   const token = getCookie("token");
 
   const { usuario: usuarioLogado } = useGetLoggedUser(
-    getUserFromToken(String(token)) || 0
+    getUserFromToken(String(token)) || 0,
   );
 
   const filtrosParaApi = useMemo(() => {
@@ -154,7 +154,7 @@ const FuncionariosPage: React.FC = () => {
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
     filtrosParaApi,
-    !!codEmpresa
+    !!codEmpresa,
   );
 
   useEffect(() => {
@@ -199,15 +199,15 @@ const FuncionariosPage: React.FC = () => {
 
   const handleStatusToggle = async (
     codUsuario: number,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     const novoStatus = !currentStatus;
     setLocalUsuarios((prevList) =>
       prevList.map((user) =>
         user.codUsuario === codUsuario
-          ? ({ ...user, ativo: novoStatus } as UsuarioGet) 
-          : user
-      )
+          ? ({ ...user, ativo: novoStatus } as UsuarioGet)
+          : user,
+      ),
     );
 
     const sucesso = await toggleStatus(codUsuario, novoStatus);
@@ -218,8 +218,8 @@ const FuncionariosPage: React.FC = () => {
         prevList.map((user) =>
           user.codUsuario === codUsuario
             ? ({ ...user, ativo: currentStatus } as UsuarioGet)
-            : user
-        )
+            : user,
+        ),
       );
     }
   };
@@ -269,6 +269,7 @@ const FuncionariosPage: React.FC = () => {
           usuarioInfo={selectedUser}
           onSave={handleSavePermissions}
           codUsuarioLogado={usuarioLogado.codUsuario}
+          codEmpresa={codEmpresa || 0}
         />
       )}
 
@@ -374,7 +375,7 @@ const FuncionariosPage: React.FC = () => {
                 <td>
                   <span
                     className={`${styles.statusBadge} ${getStatusClass(
-                      row.status
+                      row.status,
                     )}`}
                   >
                     {getStatusText(row.status)}
@@ -406,7 +407,7 @@ const FuncionariosPage: React.FC = () => {
                             onClick={() =>
                               handleStatusToggle(
                                 row.originalUser.codUsuario as number,
-                                row.status
+                                row.status,
                               )
                             }
                             disabled={patching}

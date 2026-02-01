@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 
 interface UpdateCargosResult {
   updateCargos: (

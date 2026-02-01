@@ -4,10 +4,10 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import { Usuario, Empresa } from "../utils/types/Usuario";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+import useGetCargosPorUsuario from "../hooks/useGetCargoPorUsuario";
 
 import Logo from "@/app/img/Logo.png";
 import "./SelecionarEmpresa.css";
@@ -15,12 +15,14 @@ import SearchBar from "../components/SearchBar";
 
 export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUserData, setLoadingUserData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { getCargos, loading: loadingCargos } = useGetCargosPorUsuario();
+
   const router = useRouter();
 
-  // Declaração de Funções e Lógica
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -30,12 +32,16 @@ export default function SelecionarEmpresaPage() {
           return;
         }
         const userId = getUserFromToken(token);
-        const response = await axiosInstance.get(`/usuario/${userId}`);
+
+        const response = await axiosInstance.get(
+          `/usuario/${userId}?searchByRole=GESTOR`,
+        );
+
         setUsuario(response.data);
       } catch (err: any) {
         setError("Não foi possível carregar os dados do usuário.");
       } finally {
-        setLoading(false);
+        setLoadingUserData(false);
       }
     };
     fetchUserData();
@@ -49,31 +55,55 @@ export default function SelecionarEmpresaPage() {
     return usuario.empresas.filter(
       (empresa) =>
         empresa.nomeFantasia.toLowerCase().includes(lowercasedQuery) ||
-        empresa.cnpj.replace(/[^\d]/g, "").includes(lowercasedQuery)
+        empresa.cnpj.replace(/[^\d]/g, "").includes(lowercasedQuery),
     );
   }, [usuario, searchQuery]);
 
-  const handleSelectEmpresa = (empresa: Empresa) => {
-    localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
-    router.push("/Painel-Coletas");
+  const handleSelectEmpresa = async (empresa: Empresa) => {
+    if (!usuario) return;
+
+    try {
+      const listaCargos = await getCargos(
+        usuario.codUsuario ||
+          Number(
+            getUserFromToken(localStorage.getItem("authToken") || "") || 0,
+          ),
+        empresa.codEmpresa,
+      );
+
+      const temPermissao = listaCargos.some(
+        (cargo: { nome: string }) => cargo.nome === "ROLE_MOVIX_GESTOR",
+      );
+
+      if (temPermissao) {
+        localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
+        router.push("/Painel-Coletas");
+      } else {
+        alert(
+          "Acesso negado. Você não possui permissão de GESTOR nesta empresa.",
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao verificar permissões. Tente novamente.");
+    }
   };
 
   const formatCpfCnpj = (cnpj: string) => {
     if (!cnpj) return "";
     return cnpj.replace(
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-      "$1.$2.$3/$4-$5"
+      "$1.$2.$3/$4-$5",
     );
   };
 
-  if (loading) {
+  if (loadingUserData) {
     return <div className="loading-container">Carregando...</div>;
   }
   if (error) {
     return <div className="error-container">{error}</div>;
   }
 
-  // Return
   return (
     <div className="selecao-container-grid">
       <div className="back-arrow" onClick={() => router.back()}>
@@ -104,6 +134,11 @@ export default function SelecionarEmpresaPage() {
               key={empresa.codEmpresa}
               className="empresa-box"
               onClick={() => handleSelectEmpresa(empresa)}
+              disabled={loadingCargos}
+              style={{
+                opacity: loadingCargos ? 0.7 : 1,
+                cursor: loadingCargos ? "wait" : "pointer",
+              }}
             >
               <h3 className="empresa-box-nome">{empresa.nomeFantasia}</h3>
               <p className="empresa-box-cnpj">{formatCpfCnpj(empresa.cnpj)}</p>
