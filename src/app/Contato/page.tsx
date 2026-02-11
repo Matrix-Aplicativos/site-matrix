@@ -5,7 +5,7 @@ import { FaWhatsapp, FaInstagram, FaLinkedin } from "react-icons/fa";
 import Image from "next/image";
 import Logo from "../img/Logo.svg";
 import { useState } from "react";
-import InputMask from "react-input-mask";
+import { IMaskInput } from "react-imask";
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -18,11 +18,11 @@ export default function ContatoPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
-    null
+    null,
   );
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -34,7 +34,10 @@ export default function ContatoPage() {
     setSubmitStatus(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL!.replace("/v1","");
+      const API_URL = (process.env.NEXT_PUBLIC_API_COLETA_URL || "").replace(
+        "/v1",
+        "",
+      );
 
       const response = await fetch(`${API_URL}/contato`, {
         method: "POST",
@@ -58,7 +61,7 @@ export default function ContatoPage() {
         console.error(
           "Erro na resposta:",
           response.status,
-          response.statusText
+          response.statusText,
         );
         setSubmitStatus("error");
       }
@@ -211,13 +214,14 @@ export default function ContatoPage() {
                       >
                         Telefone *
                       </label>
-                      <InputMask
-                        mask="(99) 99999-9999"
-                        type="tel"
+                      <IMaskInput
+                        mask="(00) 00000-0000"
                         id="telefone"
                         name="telefone"
                         value={formData.telefone}
-                        onChange={handleChange}
+                        onAccept={(value: any) =>
+                          setFormData((prev) => ({ ...prev, telefone: value }))
+                        }
                         required
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                         placeholder="(00) 00000-0000"
