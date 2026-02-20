@@ -1,33 +1,46 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link as ScrollLink } from "react-scroll";
 import {
-  FaWhatsapp,
-  FaInstagram,
-  FaLinkedin,
-  FaWifi,
-  FaChartBar,
-  FaMobileAlt,
-  FaLink,
-  FaTimes,
-  FaBars,
   FaBarcode,
-  FaShoppingCart,
-  FaShippingFast,
-  FaPiggyBank,
+  FaBars,
+  FaChartBar,
   FaChartLine,
-  FaUsb,
-  FaHeadset,
-  FaUsers,
-  FaPlayCircle,
   FaChevronRight,
+  FaHeadset,
+  FaInstagram,
+  FaLink,
+  FaLinkedin,
+  FaMobileAlt,
+  FaPiggyBank,
+  FaPlayCircle,
   FaRocket,
   FaSearch,
+  FaShoppingCart,
+  FaTimes,
+  FaUsb,
+  FaUsers,
+  FaWhatsapp,
+  FaWifi,
+  FaBoxOpen,
+  FaExchangeAlt,
+  FaClipboardList,
 } from "react-icons/fa";
-import Image from "next/image";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+
 import Logo from "./img/Logo.svg";
+
 import Vendas from "./img/aprove.png";
 import Futuro from "./img/CapaVendas.png";
+
 import Coleta from "./img/CapaColeta.png";
 import HomeColeta from "./img/HomeColetas.png";
 import CapaColeta from "./img/capacoleta (2).png";
@@ -37,300 +50,286 @@ import TransferenciaColeta from "./img/Transferencias.png";
 import InventariosColeta from "./img/Inventarios.png";
 import ColetaScreen from "./img/itenscoleta.png";
 import BuscarProdutos from "./img/buscarProdutos.png";
+
 import HomeFDV from "./img/home-fdv.png";
 import CapaFDV from "./img/capa-fdv.png";
 import ProdutosFDV from "./img/produtos-fdv.png";
 import ClientesFDV from "./img/clientes-fdv.png";
 import PedidosFDV from "./img/pedidos-fdv.png";
+
 import Scanner from "./img/scaneamento.jpg";
-import { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-import { Link as ScrollLink } from "react-scroll";
 
-// Componente de máscara de telefone customizado
-const PhoneInput = ({ value, onChange, ...props }: any) => {
-  const formatPhone = (input: string) => {
-    const numbers = input.replace(/\D/g, "");
+type ActiveTab = "vendas" | "coletas";
 
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{0,4})(\d{0,4})/, "($1) $2-$3");
-    } else {
-      return numbers.replace(/(\d{2})(\d{1})(\d{4})(\d{0,4})/, "($1) $2$3-$4");
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    onChange({
-      ...e,
-      target: {
-        ...e.target,
-        value: formatted,
-        name: props.name,
-      },
-    });
-  };
-
-  return (
-    <input
-      {...props}
-      type="tel"
-      value={value}
-      onChange={handleChange}
-      maxLength={15}
-      placeholder="(00) 00000-0000"
-    />
-  );
-};
-
-interface Feature {
+type Feature = {
   title: string;
   text: string;
-}
+  icon?: JSX.Element;
+};
 
-interface TabContent {
-  title: string;
-  description: string;
+type WhyPoint = {
+  icon: JSX.Element;
+  text: string;
+};
+
+type TabConfig = {
+  heroTitle: string;
+  heroText: string;
+  coverImage: any;
+
+  productTitle: string;
+  productDescription: string;
+  productImage: any;
   features: Feature[];
-}
 
-export default function SiteMatrix() {
-  const [showHeader, setShowHeader] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    empresa: "",
-    assunto: "",
-    mensagem: "",
-    telefone: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
-    null
-  );
+  whyTitle: string;
+  whyPoints: WhyPoint[];
+
+  carousel: any[];
+};
+
+const HEADER_OFFSET = -90;
+
+const CAROUSEL_VENDAS = [
+  CapaFDV,
+  HomeFDV,
+  ProdutosFDV,
+  ClientesFDV,
+  PedidosFDV,
+];
+const CAROUSEL_COLETAS = [
+  CapaColeta,
+  HomeColeta,
+  InventariosColeta,
+  TransferenciaColeta,
+  ConferenciasColetaCompras,
+  ConferenciasColetaVendas,
+  ColetaScreen,
+  BuscarProdutos,
+];
+
+const TAB_CONTENT: Record<ActiveTab, TabConfig> = {
+  vendas: {
+    heroTitle: "TRANSFORMANDO SUAS VENDAS",
+    heroText:
+      "Na Matrix, desenvolvemos soluções inovadoras para potencializar sua força de vendas. Nosso aplicativo foi projetado para simplificar processos, aumentar a produtividade e impulsionar seus resultados comerciais.",
+    coverImage: Futuro,
+
+    productTitle: "Força de Vendas Matrix",
+    productDescription:
+      "Está em busca de uma solução que impulsione os resultados da sua equipe de vendas e eleve a produtividade a outro nível? Nosso aplicativo de força de vendas foi desenvolvido especialmente para representantes comerciais e lojas que desejam otimizar seus processos e alcançar resultados extraordinários.",
+    productImage: Vendas,
+
+    features: [
+      {
+        title: "Gestão de Pedidos",
+        text: "Controle completo de pedidos em tempo real, garantindo mais agilidade e organização.",
+        icon: <FaClipboardList className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Catálogo Digital",
+        text: "Apresente seus produtos de forma profissional e visualmente atraente, diretamente pelo aplicativo.",
+        icon: <FaBoxOpen className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Relatórios Personalizados",
+        text: "Acompanhe o desempenho da equipe e tome decisões estratégicas com base em dados precisos.",
+        icon: <FaChartBar className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Controle de Estoque",
+        text: "Evite surpresas desagradáveis com um sistema integrado de gerenciamento de estoque.",
+        icon: <FaBarcode className="w-6 h-6 text-[#1769E3]" />,
+      },
+    ],
+
+    whyTitle: "Por que o Força de Vendas Matrix?",
+    whyPoints: [
+      {
+        icon: <FaWifi className="w-8 h-8 text-[#1769E3]" />,
+        text: "Faça pedidos de qualquer lugar, mesmo sem conexão com a internet.",
+      },
+      {
+        icon: <FaChartBar className="w-8 h-8 text-[#1769E3]" />,
+        text: "Relatórios inteligentes com dados precisos e análises em tempo real.",
+      },
+      {
+        icon: <FaMobileAlt className="w-8 h-8 text-[#1769E3]" />,
+        text: "Interface intuitiva e de fácil utilização para todos os usuários.",
+      },
+      {
+        icon: <FaLink className="w-8 h-8 text-[#1769E3]" />,
+        text: "Integração perfeita com seu sistema ERP para sincronização automática.",
+      },
+      {
+        icon: <FaUsers className="w-8 h-8 text-[#1769E3]" />,
+        text: "Mais produtividade no time com rotinas claras e acompanhamento do funil.",
+      },
+      {
+        icon: <FaChartLine className="w-8 h-8 text-[#1769E3]" />,
+        text: "Aumente a taxa de conversão com visibilidade do desempenho por vendedor e por cliente.",
+      },
+    ],
+
+    carousel: CAROUSEL_VENDAS,
+  },
+
+  coletas: {
+    heroTitle: "MOVIX, SEU ESTOQUE NA PALMA DA MÃO",
+    heroText:
+      "O Movix é um aplicativo prático e intuitivo para realizar inventários e transferências de estoque, além de conferências de compras e vendas, facilitando a conferência da movimentação dos produtos e certificando o item coletado via código de barras ou QR Code.",
+    coverImage: Coleta,
+
+    productTitle:
+      "Automatize suas Rotinas de Estoque ganhando tempo e evitando Prejuízos",
+    productDescription:
+      "Automatize as rotinas de separação de mercadoria da sua empresa eliminando prejuízos financeiros e desgastes com clientes, coletando e conferindo produtos com assertividade. Para cada rotina da sua empresa, o Movix tem uma solução.",
+    productImage: Scanner,
+
+    features: [
+      {
+        title: "Inventários",
+        text: "Elimine o uso de papel e erros de digitação. Conte com coleta via código de barras ou buscas inteligentes diretamente no ato do inventário.",
+        icon: <FaBarcode className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Transferência de Estoque",
+        text: "Crie demandas ou faça transferências avulsas com conferência automática no momento da separação.",
+        icon: <FaExchangeAlt className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Compras",
+        text: "Receba mercadorias com assertividade conferindo os itens pelo XML da nota ou pedido integrado ao ERP.",
+        icon: <FaClipboardList className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Pedido de Vendas / Nota de Saída",
+        text: "Garanta que o cliente receba exatamente o produto vendido, com agilidade e conferência no ato da separação.",
+        icon: <FaShoppingCart className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Ajustes de Entrada e Saída",
+        text: "Realize ajustes controlados de estoque para corrigir divergências do dia a dia, com rastreabilidade, motivo do ajuste e validação do responsável.",
+        icon: <FaChartLine className="w-6 h-6 text-[#1769E3]" />,
+      },
+      {
+        title: "Integração Total",
+        text: "API de integração com seu ERP, sem retrabalho de lançamentos ou processos manuais.",
+        icon: <FaLink className="w-6 h-6 text-[#1769E3]" />,
+      },
+    ],
+
+    whyTitle: "Por que o MOVIX?",
+    whyPoints: [
+      {
+        icon: <FaBarcode className="w-8 h-8 text-[#1769E3]" />,
+        text: "Faça bipagens tanto por código do produto quanto código de barras.",
+      },
+      {
+        icon: <FaUsb className="w-8 h-8 text-[#1769E3]" />,
+        text: "Suporte a leitores externos para maior agilidade na bipagem.",
+      },
+      {
+        icon: <FaChartBar className="w-8 h-8 text-[#1769E3]" />,
+        text: "Tenha acesso aos balanços e inventários em tempo real com nosso painel administrativo.",
+      },
+      {
+        icon: <FaMobileAlt className="w-8 h-8 text-[#1769E3]" />,
+        text: "Interface intuitiva e de fácil utilização para todos os usuários.",
+      },
+      {
+        icon: <FaLink className="w-8 h-8 text-[#1769E3]" />,
+        text: "Sincronização automática com seus sistemas de gestão quando online.",
+      },
+      {
+        icon: <FaBoxOpen className="w-8 h-8 text-[#1769E3]" />,
+        text: "Atualize cadastro de produtos: edite código de barras, faça conversões de unidade e adicione localização para facilitar a operação no estoque.",
+      },
+    ],
+
+    carousel: CAROUSEL_COLETAS,
+  },
+};
+
+const STEPS: Array<{
+  n: number;
+  title: string;
+  desc: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    n: 1,
+    title: "Diagnóstico",
+    desc: "Análise e diagnóstico do seu cenário atual para entender processos, dores e objetivos.",
+    Icon: FaSearch,
+  },
+  {
+    n: 2,
+    title: "Demonstração",
+    desc: "Mostrar de forma prática as funcionalidades do sistema resolvendo seus problemas do dia a dia.",
+    Icon: FaPlayCircle,
+  },
+  {
+    n: 3,
+    title: "Integração e Configuração",
+    desc: "Configurar a integração (APIs) do Movix com o sistema (ERP) que sua empresa utiliza e validar as regras de negócio e rotinas que a empresa irá utilizar.",
+    Icon: FaLink,
+  },
+  {
+    n: 4,
+    title: "Treinamento",
+    desc: "Treinamento da equipe separado de acordo com a rotina individual de cada perfil.",
+    Icon: FaUsers,
+  },
+  {
+    n: 5,
+    title: "Início das Operações",
+    desc: "Início dos processos da empresa com o Movix, com treinamento e acompanhamento na prática.",
+    Icon: FaRocket,
+  },
+  {
+    n: 6,
+    title: "Suporte",
+    desc: "Nossa equipe disponível para solucionar incidentes técnicos, esclarecer dúvidas e gerenciar atualizações futuras.",
+    Icon: FaHeadset,
+  },
+];
+
+export default function Page() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("coletas");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"vendas" | "coletas">("coletas");
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
 
-  const [carouselImages] = useState([
-    CapaFDV,
-    HomeFDV,
-    ProdutosFDV,
-    ClientesFDV,
-    PedidosFDV,
-  ]);
-  const [carouselImagesColetas] = useState([
-    CapaColeta,
-    HomeColeta,
-    InventariosColeta,
-    TransferenciaColeta,
-    ConferenciasColetaCompras,
-    ConferenciasColetaVendas,
-    ColetaScreen,
-    BuscarProdutos,
-  ]);
+  const [mounted, setMounted] = useState(false);
+
+  const content = useMemo(() => TAB_CONTENT[activeTab], [activeTab]);
 
   useEffect(() => {
-    // Verificar se estamos no cliente (não no servidor)
-    if (typeof window === "undefined") return;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasReloaded = urlParams.get("reloaded") === "true";
-
-    if (!hasReloaded && sessionStorage.getItem("hasReloaded") !== "true") {
-      sessionStorage.setItem("hasReloaded", "true");
-      urlParams.set("reloaded", "true");
-      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-      window.location.replace(newUrl);
-    } else if (hasReloaded) {
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setShowHeader(false);
-        setMobileMenuOpen(false);
-      } else {
-        setShowHeader(true);
-      }
-      setLastScrollY(currentScrollY);
+      const y = window.scrollY;
+      const goingDown = y > lastScrollY.current;
+      setShowHeader(!(goingDown && y > 120));
+      if (goingDown) setMobileMenuOpen(false);
+      lastScrollY.current = y;
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_COLETA_URL ?? "";
-      const api = API_URL.replace("/v1", "");
-
-      const response = await fetch(`${api}/contato`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setSubmitStatus("success");
-        setFormData({
-          nome: "",
-          email: "",
-          empresa: "",
-          assunto: "",
-          mensagem: "",
-          telefone: "",
-        });
-      } else {
-        console.error(
-          "Erro na resposta:",
-          response.status,
-          response.statusText
-        );
-        setSubmitStatus("error");
-      }
-    } catch (error) {
-      console.error("Erro na requisição:", error);
-      setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const tabContent = {
-    vendas: {
-      title: "Força de Vendas Matrix",
-      description:
-        "Está em busca de uma solução que impulsione os resultados da sua equipe de vendas e eleve a produtividade a outro nível? Nosso aplicativo de força de vendas foi desenvolvido especialmente para representantes comerciais e lojas que desejam otimizar seus processos e alcançar resultados extraordinários.",
-      features: [
-        {
-          title: "Gestão de Pedidos",
-          text: "Controle completo de pedidos em tempo real, garantindo mais agilidade e organização.",
-        },
-        {
-          title: "Catálogo Digital",
-          text: "Apresente seus produtos de forma profissional e visualmente atraente, diretamente pelo aplicativo.",
-        },
-        {
-          title: "Relatórios Personalizados",
-          text: "Acompanhe o desempenho da equipe e tome decisões estratégicas com base em sistemas precisos.",
-        },
-        {
-          title: "Controle de Estoque",
-          text: "Evite surpresas desagradáveis com um sistema integrado de gerenciamento de estoque.",
-        },
-      ],
-      whyTitle: "Por que o Força de Vendas Matrix?",
-      whyPoints: [
-        {
-          icon: <FaWifi className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Faça pedidos de qualquer lugar, mesmo sem conexão com a internet.",
-        },
-        {
-          icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Relatórios inteligentes com dados precisos e análises em tempo real.",
-        },
-        {
-          icon: (
-            <FaMobileAlt className="w-10 h-10 text-[#1769E3] self-center" />
-          ),
-          text: "Interface intuitiva e de fácil utilização para todos os usuários.",
-        },
-        {
-          icon: <FaLink className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Integração perfeita com seu sistema ERP para sincronização automática.",
-        },
-      ],
-      coverImage: Futuro,
-      productImage: Vendas,
-    },
-
-    coletas: {
-      title:
-        "Automatize suas Rotinas de Estoque ganhando tempo e evitando Prejuízos",
-      description:
-        "Automatize as Rotinas de Separação de mercadoria da sua empresa eliminando prejuízos financieros ou desgastes com clientes coletando e conferindo produtos com assertividade. Para cada Rotina da sua empresa o Movix tem uma solução.",
-      features: [
-        {
-          title: "Inventários",
-          text: "Elimine o uso de papel e erros de digitação. Conte com coleta via código de barras ou buscas inteligentes diretamente no ato do inventário.",
-        },
-        {
-          title: "Transferência de Estoque",
-          text: "Crie demandas ou faça transferências avulsas com conferência automática no momento da separação.",
-        },
-        {
-          title: "Compras",
-          text: "Receba mercadorias com assertividade conferindo os itens pelo XML da nota ou pedido integrado ao ERP.",
-        },
-        {
-          title: "Pedido de Vendas / Nota de Saída",
-          text: "Garanta que o cliente receba exatamente o produto vendido, com agilidade e conferência no ato da separação.",
-        },
-        {
-          title: "Integração Total",
-          text: "API de integração com seu ERP, sem retrabalho de lançamentos ou processos manuais.",
-        },
-      ],
-      whyTitle: "Por que o MOVIX?",
-      whyPoints: [
-        {
-          icon: <FaBarcode className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Faça bipagens tanto por código do produto quanto código de barras.",
-        },
-        {
-          icon: <FaUsb className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Suporte a leitores externos para maior agilidade na bipagem.",
-        },
-        {
-          icon: <FaChartBar className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Tenha acesso aos balanços e aos inventários em tempo real com nosso painel administrativo.",
-        },
-        {
-          icon: (
-            <FaMobileAlt className="w-10 h-10 text-[#1769E3] self-center" />
-          ),
-          text: "Interface intuitiva e de fácil utilização para todos os usuários.",
-        },
-        {
-          icon: <FaLink className="w-10 h-10 text-[#1769E3] self-center" />,
-          text: "Sincronização automática com seus sistemas de gestão quando online.",
-        },
-      ],
-      coverImage: Coleta,
-      productImage: Scanner,
-    },
-  };
+  }, []);
 
   return (
     <div className="font-roboto">
       <header
-        className={`bg-[#1769E3] text-white py-4 fixed w-full top-0 z-50 transition-transform duration-300 ${
+        className={`bg-[#1769E3] text-white fixed w-full top-0 z-50 transition-transform duration-300 ${
           showHeader ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        <div className="container mx-auto flex justify-between items-center px-4">
+        <div className="container mx-auto flex justify-between items-center px-4 py-4">
           <div className="flex items-center">
             <Image
               src={Logo}
@@ -342,13 +341,13 @@ export default function SiteMatrix() {
             />
           </div>
 
-          <nav className="hidden md:flex space-x-6 items-center">
+          <nav className="hidden md:flex items-center gap-6">
             <ScrollLink
               to="sobre-nos"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
+              spy
+              smooth
+              offset={HEADER_OFFSET}
+              duration={700}
               className="hover:underline whitespace-nowrap text-base cursor-pointer"
             >
               Sobre nós
@@ -356,22 +355,22 @@ export default function SiteMatrix() {
 
             <ScrollLink
               to="metodologia"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
+              spy
+              smooth
+              offset={HEADER_OFFSET}
+              duration={700}
               className="hover:underline whitespace-nowrap text-base cursor-pointer"
             >
               Nossa Metodologia
             </ScrollLink>
 
-            <div className="flex space-x-2 bg-blue-600 p-1 rounded-lg">
+            <div className="flex items-center gap-2 bg-blue-600/70 p-1 rounded-xl">
               <button
                 onClick={() => setActiveTab("vendas")}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                className={`flex items-center px-4 py-2 rounded-lg transition text-sm font-semibold ${
                   activeTab === "vendas"
                     ? "bg-white text-blue-600"
-                    : "text-white hover:bg-blue-400"
+                    : "text-white hover:bg-blue-400/70"
                 }`}
               >
                 <FaShoppingCart className="mr-2" />
@@ -379,10 +378,10 @@ export default function SiteMatrix() {
               </button>
               <button
                 onClick={() => setActiveTab("coletas")}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                className={`flex items-center px-4 py-2 rounded-lg transition text-sm font-semibold ${
                   activeTab === "coletas"
                     ? "bg-white text-blue-600"
-                    : "text-white hover:bg-blue-400"
+                    : "text-white hover:bg-blue-400/70"
                 }`}
               >
                 <FaBarcode className="mr-2" />
@@ -390,16 +389,12 @@ export default function SiteMatrix() {
               </button>
             </div>
 
-            <ScrollLink
-              to="contato"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
+            <Link
+              href="/Contato"
               className="hover:underline whitespace-nowrap text-base cursor-pointer"
             >
               Contato
-            </ScrollLink>
+            </Link>
 
             <Link
               href={
@@ -407,7 +402,7 @@ export default function SiteMatrix() {
                   ? "/Painel-FDV/Login"
                   : "/Painel-Coletas/Login"
               }
-              className="hover:underline whitespace-nowrap text-base text-white"
+              className="whitespace-nowrap text-base text-white/95 hover:text-white hover:underline"
             >
               Painel Administrativo
             </Link>
@@ -415,7 +410,7 @@ export default function SiteMatrix() {
 
           <button
             className="md:hidden text-white focus:outline-none"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => setMobileMenuOpen((p) => !p)}
             aria-label="Menu"
           >
             {mobileMenuOpen ? (
@@ -426,7 +421,6 @@ export default function SiteMatrix() {
           </button>
         </div>
 
-        {/* Menu mobile */}
         <div
           className={`md:hidden bg-blue-600 transition-all duration-300 overflow-hidden ${
             mobileMenuOpen ? "max-h-96 py-4" : "max-h-0 py-0"
@@ -435,33 +429,35 @@ export default function SiteMatrix() {
           <div className="container mx-auto px-4 flex flex-col space-y-4">
             <ScrollLink
               to="sobre-nos"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
+              spy
+              smooth
+              offset={HEADER_OFFSET}
+              duration={700}
               className="hover:underline text-lg cursor-pointer"
               onClick={() => setMobileMenuOpen(false)}
             >
               Sobre nós
             </ScrollLink>
+
             <ScrollLink
               to="metodologia"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
+              spy
+              smooth
+              offset={HEADER_OFFSET}
+              duration={700}
               className="hover:underline text-lg cursor-pointer"
               onClick={() => setMobileMenuOpen(false)}
             >
               Nossa Metodologia
             </ScrollLink>
-            <div className="flex space-x-2">
+
+            <div className="flex gap-2">
               <button
                 onClick={() => {
                   setActiveTab("vendas");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg font-semibold ${
                   activeTab === "vendas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
@@ -473,7 +469,7 @@ export default function SiteMatrix() {
                   setActiveTab("coletas");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg font-semibold ${
                   activeTab === "coletas" ? "bg-[#1769E3]" : "bg-blue-500"
                 }`}
               >
@@ -481,17 +477,15 @@ export default function SiteMatrix() {
                 MOVIX
               </button>
             </div>
-            <ScrollLink
-              to="contato"
-              spy={true}
-              smooth={true}
-              offset={0}
-              duration={800}
-              className="hover:underline text-lg cursor-pointer"
+
+            <Link
+              href="/Contato"
+              className="hover:underline text-lg"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contato
-            </ScrollLink>
+            </Link>
+
             <Link
               href="https://wa.me/5565992233566"
               target="_blank"
@@ -508,7 +502,7 @@ export default function SiteMatrix() {
                   ? "/Painel-FDV/Login"
                   : "/Painel-Coletas/Login"
               }
-              className="hover:underline whitespace-nowrap text-lg text-white"
+              className="hover:underline text-lg text-white"
               onClick={() => setMobileMenuOpen(false)}
             >
               Painel Administrativo
@@ -517,229 +511,252 @@ export default function SiteMatrix() {
         </div>
       </header>
 
-      {/* Seção Sobre Nós (comum a ambos) */}
       <section
         id="sobre-nos"
-        className="bg-gradient-to-t from-[#0C48ED] to-[#1769E3] text-white pt-24 pb-8"
+        className="bg-gradient-to-t from-[#0C48ED] to-[#1769E3] text-white pt-28 pb-14"
       >
-        <div className="container mx-auto flex flex-col lg:flex-row items-center px-4">
-          <div className="lg:w-1/2">
-            <h1 className="text-4xl font-bold mb-4">
-              {activeTab === "vendas"
-                ? "TRANSFORMANDO SUAS VENDAS"
-                : "MOVIX, SEU ESTOQUE NA PALMA DA MÃO"}
+        <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold mb-5">
+              {activeTab === "vendas" ? (
+                <>
+                  <FaShoppingCart className="w-4 h-4" />
+                  Força de Vendas
+                </>
+              ) : (
+                <>
+                  <FaBarcode className="w-4 h-4" />
+                  Movimentação de Estoque
+                </>
+              )}
+            </div>
+
+            <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-4">
+              {content.heroTitle}
             </h1>
-            <p className="mb-6 text-lg">
-              {activeTab === "vendas"
-                ? "Na Matrix, desenvolvemos soluções inovadoras para potencializar sua força de vendas. Nosso aplicativo foi projetado para simplificar processos, aumentar a produtividade e impulsionar seus resultados comerciais."
-                : "O Movix é um Aplicativo Prático e Intuitivo para realizar Inventários e Transferências de Estoque, além de Conferências de Compras e Vendas, facilitando a conferencia da movimentação dos Produtos e certificando o produto Coletado através de código de barras ou QrCode."}
+
+            <p className="text-lg text-white/90 mb-7 max-w-xl">
+              {content.heroText}
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="https://wa.me/5565992233566"
+                target="_blank"
+                className="bg-white text-[#1769E3] px-6 py-3 rounded-lg font-semibold text-center hover:bg-white/90 transition"
+              >
+                Falar no WhatsApp
+              </Link>
+
+              <ScrollLink
+                to="produto"
+                smooth
+                offset={HEADER_OFFSET}
+                duration={700}
+                className="border border-white/60 px-6 py-3 rounded-lg font-semibold text-center cursor-pointer hover:bg-white/10 transition"
+              >
+                Ver detalhes
+              </ScrollLink>
+
+              <ScrollLink
+                to="por-que"
+                smooth
+                offset={HEADER_OFFSET}
+                duration={700}
+                className="border border-white/25 px-6 py-3 rounded-lg font-semibold text-center cursor-pointer hover:bg-white/10 transition"
+              >
+                Ver demonstração
+              </ScrollLink>
+            </div>
           </div>
-          <div className="lg:w-1/2 mt-8 lg:mt-0 flex justify-center items-center w-full h-full lg:ml-8">
+
+          <div className="flex justify-center">
             <Image
-              src={tabContent[activeTab].coverImage}
+              src={content.coverImage}
               alt={
-                activeTab === "vendas"
-                  ? "Sistema de Vendas Matrix"
-                  : "Sistema de Coletas Matrix"
+                activeTab === "vendas" ? "Sistema de Vendas" : "Sistema MOVIX"
               }
-              width={500}
-              height={500}
-              className="w-full h-auto max-w-full max-h-full object-contain"
+              width={620}
+              height={520}
+              className="w-full max-w-[640px] h-auto object-contain drop-shadow-xl"
               priority
             />
           </div>
         </div>
       </section>
 
-      {/* Seção do Produto (FDV ou Coletas) */}
-      <section
-        id="produto"
-        className="bg-[#f9f9f9] py-16 flex flex-col items-center"
-      >
-        <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center lg:items-stretch">
-          <div className="text-center lg:col-span-2 mb-8">
+      <section id="produto" className="bg-[#f9f9f9] py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
             <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
-              {tabContent[activeTab].title}
+              {content.productTitle}
             </h2>
           </div>
 
-          <div className="flex justify-center lg:justify-start w-full h-full">
-            <Image
-              src={tabContent[activeTab].productImage}
-              alt={tabContent[activeTab].title}
-              width={600}
-              height={400}
-              className="w-full h-full object-cover rounded-lg shadow-lg"
-            />
-          </div>
-
-          <div className="text-left">
-            <p className="text-lg lg:text-xl text-[#333333] mb-4">
-              {tabContent[activeTab].description}
-            </p>
-            <ul className="list-disc pl-6 text-lg lg:text-xl text-[#333333] space-y-3">
-              {tabContent[activeTab].features.map((feature, index) => (
-                <li key={index}>
-                  <strong>{feature.title}:</strong> {feature.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Seção "Por que nosso produto" com Carrossel */}
-      <section className="bg-[#f9f9f9] py-16 flex flex-col items-center">
-        <div className="text-center lg:col-span-2 mb-10">
-          <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
-            {tabContent[activeTab].whyTitle}
-          </h2>
-        </div>
-
-        <div className="container mx-auto px-4 flex flex-col lg:flex-row gap-8 items-center lg:items-stretch">
-          <div className="w-full lg:w-1/2 grid grid-cols-1 gap-2">
-            {tabContent[activeTab].whyPoints.map((point, index) => (
-              <div
-                key={index}
-                className={`flex flex-col items-center p-2 text-center ${
-                  index % 2 === 0 ? "lg:items-start" : "lg:items-end"
-                }`}
-              >
-                <div className="flex flex-col items-center max-w-xs">
-                  <div className="mb-2 flex justify-center">{point.icon}</div>
-                  <p className="text-base text-[#333333]">{point.text}</p>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+            <div className="rounded-2xl overflow-hidden shadow-lg bg-white group transition hover:shadow-xl hover:-translate-y-0.5">
+              <div className="relative w-full h-[280px] sm:h-[360px] lg:h-full min-h-[420px]">
+                <Image
+                  src={content.productImage}
+                  alt={content.productTitle}
+                  fill
+                  className="object-cover group-hover:scale-[1.02] transition duration-500"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div className="w-full lg:w-1/2 max-w-lg mx-auto flex flex-col">
-            {/* Container do Swiper com altura responsiva */}
-            <div className="w-full h-80 lg:h-[650px] relative">
-              {" "}
-              {/* Altura maior no web */}
-              <Swiper
-                spaceBetween={30}
-                centeredSlides={true}
-                autoplay={{
-                  delay: 4000,
-                  disableOnInteraction: false,
-                }}
-                pagination={{
-                  clickable: true,
-                }}
-                navigation={true}
-                modules={[Autoplay, Pagination, Navigation]}
-                className="mySwiper w-full h-full"
-                style={{
-                  background: "transparent",
-                  display: "block",
-                  visibility: "visible",
-                  opacity: "1",
-                }}
-              >
-                {(activeTab === "vendas"
-                  ? carouselImages
-                  : carouselImagesColetas
-                ).map((image, index) => (
-                  <SwiperSlide
-                    key={index}
-                    className="h-full"
-                    style={{
-                      background: "transparent",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
+            <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col justify-center transition hover:shadow-xl hover:-translate-y-0.5">
+              <p className="text-lg lg:text-xl text-[#333333] mb-6">
+                {content.productDescription}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {content.features.map((f) => (
+                  <div
+                    key={f.title}
+                    className="border border-gray-100 rounded-xl p-4 bg-gray-50 transition hover:bg-white hover:shadow-md hover:-translate-y-0.5"
                   >
-                    <div className="relative w-full h-full flex justify-center items-center">
-                      <Image
-                        src={image}
-                        alt={`Demonstração ${index + 1}`}
-                        width={600} // Aumentei a largura para web
-                        height={800} // Aumentei a altura para web
-                        className="object-contain rounded-lg"
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: "100%",
-                          background: "transparent",
-                        }}
-                        priority={index === 0}
-                      />
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                        {f.icon}
+                      </div>
+                      <div className="text-[#1769E3] font-bold">{f.title}</div>
                     </div>
-                  </SwiperSlide>
+                    <div className="text-[#555555] text-sm leading-relaxed">
+                      {f.text}
+                    </div>
+                  </div>
                 ))}
-              </Swiper>
+              </div>
+
+              <div className="mt-7">
+                <Link
+                  href="/Contato"
+                  className="inline-flex items-center justify-center w-full sm:w-auto bg-[#1769E3] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#155ab2] transition"
+                >
+                  Solicitar proposta
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* CSS ATUALIZADO - Mantendo bolinhas embaixo e ajustando web */}
-        <style jsx global>{`
-          .mySwiper {
-            background: transparent !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-          .mySwiper .swiper-slide {
-            background: transparent !important;
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
-          }
+      <section id="por-que" className="bg-[#f9f9f9] pb-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
+              {content.whyTitle}
+            </h2>
+            <p className="text-gray-600 text-lg mt-2 max-w-3xl mx-auto">
+              Benefícios do produto e telas reais do app lado a lado.
+            </p>
+          </div>
 
-          /* PAGINATION - BOLINHAS EMBAIXO */
-          .mySwiper .swiper-pagination {
-            bottom: 0px !important;
-            position: relative !important;
-            margin-top: 20px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-          }
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto items-start">
+            <div className="lg:col-span-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {content.whyPoints.slice(0, 6).map((p) => (
+                  <div
+                    key={p.text}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex gap-4 transition hover:shadow-lg hover:-translate-y-0.5"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      {p.icon}
+                    </div>
+                    <p className="text-[#333333] text-sm leading-relaxed">
+                      {p.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-          .mySwiper .swiper-pagination-bullet {
-            background: #1769e3 !important;
-            width: 10px;
-            height: 10px;
-            opacity: 0.5;
-            margin: 0 5px !important;
-          }
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/Contato"
+                  className="inline-flex items-center justify-center bg-[#1769E3] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#155ab2] transition w-full"
+                >
+                  Solicitar proposta
+                </Link>
+                <Link
+                  href="https://wa.me/5565992233566"
+                  target="_blank"
+                  className="inline-flex items-center justify-center border border-gray-200 bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition w-full"
+                >
+                  Falar no WhatsApp
+                </Link>
+              </div>
+            </div>
 
-          .mySwiper .swiper-pagination-bullet-active {
-            opacity: 1;
-            width: 12px;
-            height: 12px;
-          }
+            <div className="lg:col-span-7">
+              <div className="w-full h-[360px] sm:h-[520px] lg:h-[640px] relative">
+                {mounted && (
+                  <Swiper
+                    spaceBetween={30}
+                    centeredSlides
+                    autoplay={{
+                      delay: 4000,
+                      disableOnInteraction: false,
+                    }}
+                    navigation
+                    modules={[Autoplay, Navigation]}
+                    className="mySwiper w-full h-full"
+                  >
+                    {content.carousel.map((image, index) => (
+                      <SwiperSlide
+                        key={index}
+                        className="w-full h-full"
+                        style={{
+                          background: "transparent",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div className="relative w-full h-full flex justify-center items-center">
+                          <Image
+                            src={image}
+                            alt={`Demonstração ${index + 1}`}
+                            width={900}
+                            height={1200}
+                            className="object-contain rounded-lg"
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: "100%",
+                              background: "transparent",
+                            }}
+                            priority={index === 0}
+                          />
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                )}
+              </div>
 
-          .mySwiper .swiper-button-next,
-          .mySwiper .swiper-button-prev {
-            color: #1769e3 !important;
-          }
-
-          /* MOBILE */
-          @media (max-width: 767px) {
-            .mySwiper {
-              min-height: 320px !important;
-            }
-            .mySwiper .swiper-slide {
-              min-height: 300px !important;
-            }
-          }
-
-          /* WEB - Ajustes para telas maiores */
-          @media (min-width: 1024px) {
-            .mySwiper .swiper-slide {
-              min-height: 450px !important;
-            }
-          }
-        `}</style>
+              <style jsx global>{`
+                .mySwiper {
+                  background: transparent !important;
+                }
+                .mySwiper .swiper-slide {
+                  background: transparent !important;
+                }
+                .mySwiper .swiper-button-next,
+                .mySwiper .swiper-button-prev {
+                  color: #1769e3 !important;
+                }
+                .mySwiper .swiper-pagination {
+                  display: none !important;
+                }
+              `}</style>
+            </div>
+          </div>
+        </div>
       </section>
 
       {activeTab === "coletas" && (
-        <section id="resultados-movix" className="bg-[#f9f9f9] pt-8 pb-16">
+        <section id="resultados-movix" className="bg-[#f9f9f9] pb-20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
@@ -747,15 +764,17 @@ export default function SiteMatrix() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-              <div className="flex flex-col items-center text-center p-4">
-                <div className="mb-4">
-                  <FaChartLine className="w-12 h-12 text-[#1769E3]" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 text-center transition hover:shadow-lg hover:-translate-y-0.5">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <FaChartLine className="w-7 h-7 text-[#1769E3]" />
+                  </div>
                 </div>
-                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                <h3 className="text-xl font-bold text-[#333333] mb-2">
                   Mais Controle e Produtividade
                 </h3>
-                <p className="text-base text-[#666666]">
+                <p className="text-sm text-[#666666] leading-relaxed">
                   Monitore cada coleta em tempo real e tenha total visibilidade
                   das operações. Com relatórios no painel administrativo e
                   processos integrados, sua equipe trabalha de forma mais
@@ -763,27 +782,31 @@ export default function SiteMatrix() {
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center p-4">
-                <div className="mb-4">
-                  <FaPiggyBank className="w-12 h-12 text-[#1769E3]" />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 text-center transition hover:shadow-lg hover:-translate-y-0.5">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <FaPiggyBank className="w-7 h-7 text-[#1769E3]" />
+                  </div>
                 </div>
-                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                <h3 className="text-xl font-bold text-[#333333] mb-2">
                   Redução dos Custos
                 </h3>
-                <p className="text-base text-[#666666]">
+                <p className="text-sm text-[#666666] leading-relaxed">
                   Economize tempo e recursos com tarefas automatizadas. Menos
                   papel, menos retrabalho e mais resultado para o seu negócio.
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center p-4">
-                <div className="mb-4">
-                  <FaBarcode className="w-12 h-12 text-[#1769E3]" />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 text-center transition hover:shadow-lg hover:-translate-y-0.5">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <FaBarcode className="w-7 h-7 text-[#1769E3]" />
+                  </div>
                 </div>
-                <h3 className="text-xl lg:text-2xl font-bold text-[#333333] mb-3">
+                <h3 className="text-xl font-bold text-[#333333] mb-2">
                   Flexibilidade e Agilidade
                 </h3>
-                <p className="text-base text-[#666666]">
+                <p className="text-sm text-[#666666] leading-relaxed">
                   Tenha mais autonomia para gerenciar coletas com rapidez e
                   eficiência, de onde estiver.
                 </p>
@@ -793,7 +816,7 @@ export default function SiteMatrix() {
         </section>
       )}
 
-      <section id="metodologia" className="bg-white py-16 lg:py-24">
+      <section id="metodologia" className="bg-white py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-[#1769E3] text-3xl lg:text-4xl font-bold">
@@ -803,250 +826,45 @@ export default function SiteMatrix() {
               Nosso caminho para o seu sucesso em 6 etapas.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-y-12 lg:gap-y-8 gap-x-8 max-w-7xl mx-auto">
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  1
-                </div>
-                <FaSearch className="w-10 h-10 text-[#1769E3] mb-3" />{" "}
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Diagnóstico
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Análise e diagnóstico do seu cenário atual para entender
-                  processos, dores e objetivos.
-                </p>
-              </div>
-              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
-                <FaChevronRight className="w-8 h-8 text-blue-300" />
-              </div>
-            </div>
 
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  2
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-y-10 gap-x-6 max-w-7xl mx-auto">
+            {STEPS.map((s, i) => (
+              <div key={s.n} className="relative">
+                <div className="flex flex-col items-center text-center p-6 rounded-2xl shadow-sm border border-gray-100 bg-gray-50 h-full transition hover:shadow-lg hover:-translate-y-0.5">
+                  <div className="w-14 h-14 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
+                    {s.n}
+                  </div>
+                  <s.Icon className="w-9 h-9 text-[#1769E3] mb-3" />
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    {s.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {s.desc}
+                  </p>
                 </div>
-                <FaPlayCircle className="w-10 h-10 text-[#1769E3] mb-3" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Demonstração
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Mostrar de forma prática as funcionalidades do sistema
-                  resolvendo seus problemas do dia a dia.
-                </p>
-              </div>
-              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
-                <FaChevronRight className="w-8 h-8 text-blue-300" />
-              </div>
-            </div>
 
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  3
-                </div>
-                <FaLink className="w-10 h-10 text-[#1769E3] mb-3" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Integração e Configuração
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Configurar a integração (APIs) do Movix com o sistemas (ERP)
-                  que sua empresa utiliza. e validar as regras de negócio e
-                  Rotinas que a empresa irá utilizar.
-                </p>
+                {i < STEPS.length - 1 && (
+                  <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-0.9rem] z-10">
+                    <FaChevronRight className="w-7 h-7 text-blue-300" />
+                  </div>
+                )}
               </div>
-              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
-                <FaChevronRight className="w-8 h-8 text-blue-300" />
-              </div>
-            </div>
+            ))}
+          </div>
 
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  4
-                </div>
-                <FaUsers className="w-10 h-10 text-[#1769E3] mb-3" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Treinamento
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Treinamento da equipe separado de acordo com a rotina
-                  individual de cada perfil.
-                </p>
-              </div>
-              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
-                <FaChevronRight className="w-8 h-8 text-blue-300" />
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  5
-                </div>
-                <FaRocket className="w-10 h-10 text-[#1769E3] mb-3" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Início das Operações
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Inicio dos processos da Empresa com o Movix, com treinamento e
-                  acompanhamento na prática.
-                </p>
-              </div>
-              <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-[-1rem] z-10">
-                <FaChevronRight className="w-8 h-8 text-blue-300" />
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="flex flex-col items-center text-center p-6 rounded-lg shadow-lg border border-gray-100 bg-gray-50 transition-transform duration-300 hover:scale-105 hover:shadow-xl h-full">
-                <div className="w-16 h-16 bg-[#1769E3] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 flex-shrink-0">
-                  6
-                </div>
-                <FaHeadset className="w-10 h-10 text-[#1769E3] mb-3" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Suporte
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Nossa equipe disponível para solucionar incidentes técnicos,
-                  esclarecer dúvidas e gerenciar atualizações futuras.
-                </p>
-              </div>
-            </div>
+          <div className="mt-12 text-center">
+            <Link
+              href="/Contato"
+              className="inline-flex items-center justify-center bg-[#1769E3] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#155ab2] transition"
+            >
+              Falar com a equipe
+            </Link>
           </div>
         </div>
       </section>
 
-      <section id="contato" className="bg-[#f9f9f9] py-10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="mb-12">
-            <h2 className="text-2xl lg:text-3xl text-[#1769E3] font-bold">
-              Quer crescer ainda mais seu negócio?
-            </h2>
-            <p className="text-lg lg:text-xl text-[#1769E3] font-semibold">
-              Entre em contato conosco!
-            </p>
-          </div>
-
-          <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 lg:gap-16">
-            <div className="w-full lg:w-1/2 max-w-lg text-center lg:text-center">
-              <p className="text-[#666666] font-semibold text-3xl lg:text-[32px] mb-4">
-                Telefone
-              </p>
-              <div className="space-y-2 mb-4 text-xl text-[#666666]">
-                <p>+55 65 99223-3566</p>
-                <p>+55 65 99604-4321</p>
-              </div>
-              <p className="mb-4 text-[#666666]">Ou</p>
-              <div className="flex justify-center lg:justify-center">
-                <Link
-                  href="https://wa.me/5565992233566"
-                  target="_blank"
-                  className="flex items-center justify-center bg-[#04C317] text-white py-3 px-6 rounded-lg hover:bg-[#038c13] transition duration-300"
-                >
-                  <FaWhatsapp className="text-lg mr-2" />
-                  WhatsApp
-                </Link>
-              </div>
-            </div>
-
-            <div className="w-full lg:w-1/2 max-w-lg text-center lg:text-center">
-              <p className="text-[#666666] font-semibold text-3xl lg:text-[32px] mb-4">
-                E-mail
-              </p>
-              <form
-                onSubmit={handleSubmit}
-                className="grid grid-cols-1 gap-4 w-full"
-              >
-                <input
-                  type="text"
-                  name="nome"
-                  placeholder="Nome"
-                  value={formData.nome}
-                  onChange={handleChange}
-                  required
-                  className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
-                  />
-                  <input
-                    type="text"
-                    name="empresa"
-                    placeholder="Empresa"
-                    value={formData.empresa}
-                    onChange={handleChange}
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    name="assunto"
-                    placeholder="Assunto"
-                    value={formData.assunto}
-                    onChange={handleChange}
-                    required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
-                  />
-                  <PhoneInput
-                    name="telefone"
-                    placeholder="Telefone"
-                    value={formData.telefone}
-                    onChange={handleChange}
-                    required
-                    className="p-3 border border-gray-300 rounded-lg w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <textarea
-                  name="mensagem"
-                  placeholder="Mensagem"
-                  rows={4}
-                  value={formData.mensagem}
-                  onChange={handleChange}
-                  required
-                  className="p-3 border border-gray-300 rounded-lg resize-none w-full text-lg bg-white text-gray-900 dark:text-gray-900 placeholder-gray-500"
-                ></textarea>
-
-                {submitStatus === "success" && (
-                  <div className="text-green-600 text-lg">
-                    Mensagem enviada com sucesso!
-                  </div>
-                )}
-                {submitStatus === "error" && (
-                  <div className="text-red-600 text-lg">
-                    Ocorreu um erro ao enviar a mensagem. Por favor, tente
-                    novamente.
-                  </div>
-                )}
-
-                <div className="flex justify-center lg:justify-center">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-[#1769E3] text-white py-3 px-8 text-lg rounded-lg hover:bg-[#155ab2] transition duration-300 w-full md:w-auto"
-                  >
-                    {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="bg-[#1769E3] text-white py-4">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4 gap-4">
+      <footer className="bg-[#1769E3] text-white py-6">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4 gap-6">
           <div className="flex items-center">
             <Image
               src={Logo}
@@ -1056,27 +874,38 @@ export default function SiteMatrix() {
               className="filter invert brightness-0"
             />
           </div>
+
           <div className="text-center">
-            <p className="mb-2 text-base">Nossas redes</p>
+            <p className="text-sm mb-2">Nossas redes</p>
             <div className="flex justify-center space-x-6">
               <Link
                 href="https://www.instagram.com/matrixaplicativos"
                 target="_blank"
+                className="hover:text-gray-200 transition"
+                aria-label="Instagram"
               >
-                <FaInstagram className="text-2xl hover:text-gray-400" />
+                <FaInstagram className="text-2xl" />
               </Link>
               <Link
                 href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
                 target="_blank"
+                className="hover:text-gray-200 transition"
+                aria-label="LinkedIn"
               >
-                <FaLinkedin className="text-2xl hover:text-gray-400" />
+                <FaLinkedin className="text-2xl" />
               </Link>
-              <Link href="https://wa.me/5565992233566" target="_blank">
-                <FaWhatsapp className="text-2xl hover:text-gray-400" />
+              <Link
+                href="https://wa.me/5565992233566"
+                target="_blank"
+                className="hover:text-gray-200 transition"
+                aria-label="WhatsApp"
+              >
+                <FaWhatsapp className="text-2xl" />
               </Link>
             </div>
           </div>
-          <div className="text-center md:text-right text-base">
+
+          <div className="text-center md:text-right text-sm">
             <p>© {new Date().getFullYear()} Todos os direitos reservados</p>
           </div>
         </div>

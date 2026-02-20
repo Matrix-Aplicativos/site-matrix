@@ -1,11 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { FaWhatsapp, FaInstagram, FaLinkedin } from "react-icons/fa";
 import Image from "next/image";
-import Logo from "../img/Logo.svg";
+import Link from "next/link";
 import { useState } from "react";
 import { IMaskInput } from "react-imask";
+import {
+  FaWhatsapp,
+  FaInstagram,
+  FaLinkedin,
+  FaEnvelopeOpenText,
+  FaArrowLeft,
+} from "react-icons/fa";
+
+import Logo from "../img/Logo.svg";
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +23,7 @@ export default function ContatoPage() {
     mensagem: "",
     telefone: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
     null,
@@ -34,16 +42,12 @@ export default function ContatoPage() {
     setSubmitStatus(null);
 
     try {
-      const API_URL = (process.env.NEXT_PUBLIC_API_COLETA_URL || "").replace(
-        "/v1",
-        "",
-      );
+      const raw = process.env.NEXT_PUBLIC_API_COLETA_URL ?? "";
+      const apiBase = raw.includes("/v1") ? raw.replace("/v1", "") : raw;
 
-      const response = await fetch(`${API_URL}/contato`, {
+      const response = await fetch(`${apiBase}/contato`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -58,15 +62,9 @@ export default function ContatoPage() {
           telefone: "",
         });
       } else {
-        console.error(
-          "Erro na resposta:",
-          response.status,
-          response.statusText,
-        );
         setSubmitStatus("error");
       }
-    } catch (error) {
-      console.error("Erro na requisição:", error);
+    } catch {
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -75,217 +73,223 @@ export default function ContatoPage() {
 
   return (
     <div className="font-roboto min-h-screen flex flex-col bg-white text-gray-900">
+      <header className="bg-[#1769E3] text-white sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition font-semibold"
+            aria-label="Voltar para o site"
+          >
+            <FaArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Voltar</span>
+          </Link>
+
+          <Link
+            href="/"
+            className="flex items-center"
+            aria-label="Ir para o site"
+          >
+            <Image
+              src={Logo}
+              alt="Logo da Empresa"
+              width={150}
+              height={50}
+              className="filter invert brightness-0"
+              priority
+            />
+          </Link>
+
+          <div className="w-[86px] sm:w-[110px]" />
+        </div>
+      </header>
+
       <main className="flex-grow">
-        <section className="py-16 bg-gray-50">
+        <section className="bg-gradient-to-t from-[#0C48ED] to-[#1769E3] text-white pt-10 pb-12">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl text-[#1769E3] font-bold mb-4">
-                  Entre em contato conosco!
-                </h2>
-                <p className="text-lg text-gray-600">
-                  Prefere falar diretamente? Utilize um dos canais abaixo.
-                </p>
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold mb-5">
+                <FaEnvelopeOpenText className="w-4 h-4" />
+                Atendimento comercial
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* WhatsApp - Lorenzo */}
-                <div className="bg-white p-6 rounded-lg text-center">
-                  <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaWhatsapp className="text-3xl text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800">
-                    WhatsApp - Lorenzo Garcia
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Conversas rápidas e diretas
-                  </p>
-                  <Link
-                    href="https://wa.me/5565992233566"
-                    target="_blank"
-                    className="inline-block bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 transition duration-300"
-                  >
-                    Enviar mensagem
-                  </Link>
-                </div>
-
-                {/* WhatsApp - Juan */}
-                <div className="bg-white p-6 rounded-lg text-center">
-                  <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaWhatsapp className="text-3xl text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800">
-                    WhatsApp - Juan Cassemiro
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Conversas rápidas e diretas
-                  </p>
-                  <Link
-                    href="https://wa.me/5565996044321"
-                    target="_blank"
-                    className="inline-block bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 transition duration-300"
-                  >
-                    Enviar mensagem
-                  </Link>
-                </div>
-              </div>
+              <h1 className="text-3xl lg:text-4xl font-bold">
+                Fale com a Matrix
+              </h1>
+              <p className="text-white/90 mt-3 text-lg">
+                Prefere WhatsApp ou e-mail? Escolha o canal e a gente responde o
+                mais rápido possível.
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="py-16 bg-white">
+        <section className="py-14 bg-[#f9f9f9]">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl text-[#1769E3] font-bold mb-4">
-                  Ou mande uma mensagem por Email
+            <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 className="text-2xl text-[#1769E3] font-bold mb-2 text-center">
+                  WhatsApp
                 </h2>
-                <p className="text-lg text-gray-600">
-                  Preencha o formulário abaixo e nossa equipe entrará em contato
-                  o mais breve possível.
+                <p className="text-gray-600 text-center mb-8">
+                  Conversas rápidas e diretas para demonstração, proposta e
+                  dúvidas.
                 </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center transition hover:shadow-md hover:-translate-y-0.5">
+                    <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-4">
+                      <FaWhatsapp className="text-3xl text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Lorenzo Garcia
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                      Atendimento comercial
+                    </p>
+                    <Link
+                      href="https://wa.me/5565992233566"
+                      target="_blank"
+                      className="inline-flex items-center justify-center w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 transition font-semibold"
+                    >
+                      Enviar mensagem
+                    </Link>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center transition hover:shadow-md hover:-translate-y-0.5">
+                    <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-4">
+                      <FaWhatsapp className="text-3xl text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Juan Cassemiro
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                      Atendimento comercial
+                    </p>
+                    <Link
+                      href="https://wa.me/5565996044321"
+                      target="_blank"
+                      className="inline-flex items-center justify-center w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 transition font-semibold"
+                    >
+                      Enviar mensagem
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mt-8 text-center text-sm text-gray-600">
+                  <p>Horário comercial • Resposta rápida</p>
+                </div>
               </div>
 
-              <div className="bg-gray-50 p-8 rounded-lg ">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label
-                        htmlFor="nome"
-                        className="block text-gray-700 mb-2"
-                      >
-                        Nome *
-                      </label>
-                      <input
-                        type="text"
-                        id="nome"
-                        name="nome"
-                        value={formData.nome}
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                        placeholder="Seu nome completo"
-                      />
-                    </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 className="text-2xl text-[#1769E3] font-bold mb-2 text-center">
+                  E-mail
+                </h2>
+                <p className="text-gray-600 text-center mb-8">
+                  Preencha o formulário e nossa equipe retorna o mais breve
+                  possível.
+                </p>
 
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-gray-700 mb-2"
-                      >
-                        E-mail *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                        placeholder="seu@email.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label
-                        htmlFor="empresa"
-                        className="block text-gray-700 mb-2"
-                      >
-                        Empresa
-                      </label>
-                      <input
-                        type="text"
-                        id="empresa"
-                        name="empresa"
-                        value={formData.empresa}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                        placeholder="Nome da sua empresa"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="telefone"
-                        className="block text-gray-700 mb-2"
-                      >
-                        Telefone *
-                      </label>
-                      <IMaskInput
-                        mask="(00) 00000-0000"
-                        id="telefone"
-                        name="telefone"
-                        value={formData.telefone}
-                        onAccept={(value: any) =>
-                          setFormData((prev) => ({ ...prev, telefone: value }))
-                        }
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                        placeholder="(00) 00000-0000"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="assunto"
-                      className="block text-gray-700 mb-2"
-                    >
-                      Assunto *
-                    </label>
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                       type="text"
-                      id="assunto"
-                      name="assunto"
-                      value={formData.assunto}
+                      name="nome"
+                      placeholder="Nome *"
+                      value={formData.nome}
                       onChange={handleChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                      placeholder="Assunto da mensagem"
+                      className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="E-mail *"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="mensagem"
-                      className="block text-gray-700 mb-2"
-                    >
-                      Mensagem *
-                    </label>
-                    <textarea
-                      id="mensagem"
-                      name="mensagem"
-                      value={formData.mensagem}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      name="empresa"
+                      placeholder="Empresa"
+                      value={formData.empresa}
                       onChange={handleChange}
+                      className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    <IMaskInput
+                      mask="(00) 00000-0000"
+                      name="telefone"
+                      value={formData.telefone}
+                      onAccept={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          telefone: String(value),
+                        }))
+                      }
                       required
-                      rows={5}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white resize-none"
-                      placeholder="Como podemos ajudar você?"
-                    ></textarea>
+                      placeholder="Telefone *"
+                      className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
 
+                  <input
+                    type="text"
+                    name="assunto"
+                    placeholder="Assunto *"
+                    value={formData.assunto}
+                    onChange={handleChange}
+                    required
+                    className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <textarea
+                    name="mensagem"
+                    placeholder="Mensagem *"
+                    rows={5}
+                    value={formData.mensagem}
+                    onChange={handleChange}
+                    required
+                    className="p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  />
+
                   {submitStatus === "success" && (
-                    <div className="bg-green-100 text-green-700 p-3 rounded-lg">
+                    <div className="bg-green-100 text-green-700 p-3 rounded-lg text-sm">
                       Mensagem enviada com sucesso! Retornaremos em breve.
                     </div>
                   )}
+
                   {submitStatus === "error" && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded-lg">
-                      Ocorreu um erro ao enviar a mensagem. Por favor, tente
-                      novamente.
+                    <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+                      Ocorreu um erro ao enviar. Por favor, tente novamente.
                     </div>
                   )}
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#1769E3] text-white py-3 px-6 rounded-lg hover:bg-[#155ab2] transition duration-300 font-medium text-lg disabled:opacity-70"
+                    className="w-full bg-[#1769E3] text-white py-3 px-6 rounded-lg hover:bg-[#155ab2] transition font-semibold disabled:opacity-70"
                   >
                     {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
                   </button>
+
+                  <p className="text-xs text-gray-500 text-center">
+                    Ao enviar, você concorda em ser contatado pela equipe
+                    Matrix.
+                  </p>
+
+                  <div className="pt-2">
+                    <Link
+                      href="/"
+                      className="inline-flex items-center justify-center gap-2 w-full border border-gray-200 bg-white text-gray-900 py-3 px-6 rounded-lg hover:bg-gray-50 transition font-semibold"
+                    >
+                      <FaArrowLeft className="w-4 h-4" />
+                      Voltar ao site
+                    </Link>
+                  </div>
                 </form>
               </div>
             </div>
@@ -293,45 +297,45 @@ export default function ContatoPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#1769E3] text-white py-4">
+      <footer className="bg-[#1769E3] text-white py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center order-2 md:order-1">
               <Image
                 src={Logo}
                 alt="Logo da Empresa"
-                width={120}
-                height={40}
+                width={140}
+                height={44}
                 className="filter invert brightness-0"
               />
             </div>
 
             <div className="text-center order-1 md:order-2">
+              <p className="text-sm mb-2">Nossas redes</p>
               <div className="flex justify-center space-x-6">
                 <Link
                   href="https://www.instagram.com/matrixxapp"
                   target="_blank"
-                  className="hover:text-gray-300 transition-colors flex flex-col items-center"
+                  className="hover:text-gray-200 transition"
+                  aria-label="Instagram"
                 >
-                  <FaInstagram className="text-xl mb-1" />
-                  <span className="text-xs">Instagram</span>
+                  <FaInstagram className="text-2xl" />
                 </Link>
                 <Link
                   href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
                   target="_blank"
-                  className="hover:text-gray-300 transition-colors flex flex-col items-center"
+                  className="hover:text-gray-200 transition"
+                  aria-label="LinkedIn"
                 >
-                  <FaLinkedin className="text-xl mb-1" />
-                  <span className="text-xs">LinkedIn</span>
+                  <FaLinkedin className="text-2xl" />
                 </Link>
                 <Link
                   href="https://wa.me/5565992233566"
                   target="_blank"
-                  className="hover:text-gray-300 transition-colors flex flex-col items-center"
+                  className="hover:text-gray-200 transition"
+                  aria-label="WhatsApp"
                 >
-                  <FaWhatsapp className="text-xl mb-1" />
-                  <span className="text-xs">WhatsApp</span>
+                  <FaWhatsapp className="text-2xl" />
                 </Link>
               </div>
             </div>
