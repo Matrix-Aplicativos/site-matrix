@@ -864,49 +864,56 @@ export default function Page() {
       </section>
 
       <footer className="bg-[#1769E3] text-white py-6">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4 gap-6">
-          <div className="flex items-center">
-            <Image
-              src={Logo}
-              alt="Logo da Empresa"
-              width={150}
-              height={50}
-              className="filter invert brightness-0"
-            />
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm mb-2">Nossas redes</p>
-            <div className="flex justify-center space-x-6">
-              <Link
-                href="https://www.instagram.com/matrixaplicativos"
-                target="_blank"
-                className="hover:text-gray-200 transition"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="text-2xl" />
-              </Link>
-              <Link
-                href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
-                target="_blank"
-                className="hover:text-gray-200 transition"
-                aria-label="LinkedIn"
-              >
-                <FaLinkedin className="text-2xl" />
-              </Link>
-              <Link
-                href="https://wa.me/5565992233566"
-                target="_blank"
-                className="hover:text-gray-200 transition"
-                aria-label="WhatsApp"
-              >
-                <FaWhatsapp className="text-2xl" />
-              </Link>
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-6 text-center md:text-left">
+            <div className="flex justify-center md:justify-start">
+              <Image
+                src={Logo}
+                alt="Logo da Empresa"
+                width={150}
+                height={50}
+                className="filter invert brightness-0"
+              />
             </div>
-          </div>
 
-          <div className="text-center md:text-right text-sm">
-            <p>© {new Date().getFullYear()} Todos os direitos reservados</p>
+            <div className="flex flex-col items-center">
+              <p className="text-sm mb-2">Nossas redes</p>
+
+              <div className="flex items-center gap-6">
+                <Link
+                  href="https://www.instagram.com/matrixaplicativos"
+                  target="_blank"
+                  className="hover:text-gray-200 transition"
+                  aria-label="Instagram"
+                >
+                  <FaInstagram className="text-2xl" />
+                </Link>
+
+                <Link
+                  href="https://www.linkedin.com/company/matrix-aplicativos/?viewAsMember=true"
+                  target="_blank"
+                  className="hover:text-gray-200 transition"
+                  aria-label="LinkedIn"
+                >
+                  <FaLinkedin className="text-2xl" />
+                </Link>
+
+                <Link
+                  href="https://wa.me/5565992233566"
+                  target="_blank"
+                  className="hover:text-gray-200 transition"
+                  aria-label="WhatsApp"
+                >
+                  <FaWhatsapp className="text-2xl" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex justify-center md:justify-end">
+              <p className="text-sm">
+                © {new Date().getFullYear()} Todos os direitos reservados
+              </p>
+            </div>
           </div>
         </div>
       </footer>
