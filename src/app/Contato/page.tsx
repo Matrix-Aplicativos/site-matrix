@@ -74,20 +74,22 @@ export default function ContatoPage() {
   return (
     <div className="font-roboto min-h-screen flex flex-col bg-white text-gray-900">
       <header className="bg-[#1769E3] text-white sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
+          {/* Botão voltar */}
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition font-semibold"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition font-semibold z-10"
             aria-label="Voltar para o site"
           >
             <FaArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Voltar</span>
           </Link>
 
+          {/* Logo centralizada de verdade */}
           <Link
             href="/"
-            className="flex items-center"
             aria-label="Ir para o site"
+            className="absolute left-1/2 -translate-x-1/2"
           >
             <Image
               src={Logo}
@@ -99,6 +101,7 @@ export default function ContatoPage() {
             />
           </Link>
 
+          {/* Espaço para equilibrar o layout */}
           <div className="w-[86px] sm:w-[110px]" />
         </div>
       </header>
