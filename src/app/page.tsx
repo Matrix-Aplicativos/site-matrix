@@ -88,7 +88,7 @@ type TabConfig = {
   carousel: any[];
 };
 
-const HEADER_OFFSET = -90;
+const HEADER_OFFSET = -10;
 
 const CAROUSEL_VENDAS = [
   CapaFDV,
