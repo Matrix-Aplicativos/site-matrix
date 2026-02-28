@@ -44,6 +44,7 @@ export interface Coleta {
   origemCadastro: string;
   integradoErp: boolean;
   dataCadastro: string;
+  obsIntegracao?: string | null;
 }
 
 interface ApiResponse {

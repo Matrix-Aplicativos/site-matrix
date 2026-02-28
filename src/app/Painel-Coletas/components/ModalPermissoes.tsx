@@ -23,6 +23,7 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_VISUALIZAR_PRECO",
   "ROLE_MOVIX_VISUALIZAR_CUSTO",
   "ROLE_MOVIX_EDITAR_COLETA",
+  "ROLE_MOVIX_REABRIR_COLETA",
 ];
 
 interface ModalProps {
@@ -59,6 +60,7 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_VISUALIZAR_PRECO: "Visualizar Preço",
         ROLE_MOVIX_VISUALIZAR_CUSTO: "Visualizar Custo",
         ROLE_MOVIX_EDITAR_COLETA: "Editar Coleta",
+        ROLE_MOVIX_REABRIR_COLETA: "Reabrir Coleta",
       };
       return { key: role, description: descriptions[role] || role };
     }),
