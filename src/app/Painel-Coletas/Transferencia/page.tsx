@@ -275,6 +275,7 @@ const TransferenciasPage: React.FC = () => {
       status: c.status,
       integradoErp: c.integradoErp,
       statusSincronizacao: c.statusSincronizacao, // Mapeado
+      obsIntegracao: c.obsIntegracao,
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
