@@ -134,6 +134,7 @@ interface ColetaExibida {
   status: string;
   integradoErp: boolean;
   statusSincronizacao: number; // Campo Adicionado
+  obsIntegracao?: string | null;
   qtdItens: number;
   qtdItensConferidos: number;
   volumeTotal: number;
@@ -331,6 +332,7 @@ const AjustesEstoquePage: React.FC = () => {
       status: c.status,
       integradoErp: c.integradoErp,
       statusSincronizacao: c.statusSincronizacao, // Mapeado
+      obsIntegracao: c.obsIntegracao,
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
@@ -640,25 +642,23 @@ const AjustesEstoquePage: React.FC = () => {
                         justifyContent: "flex-start",
                       }}
                     >
-                      {!row.dataFim && (
-                        <button
-                          className={styles.deleteButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteColeta(row.id);
-                          }}
-                          title="Excluir ajuste"
-                        >
-                          <IconTrash />
-                        </button>
-                      )}
+                      <button
+                        className={styles.deleteButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteColeta(row.id);
+                        }}
+                        title="Excluir ajuste"
+                      >
+                        <IconTrash />
+                      </button>
 
                       {(row.status === "2" || row.status === "3") && (
                         <>
                           {row.statusSincronizacao === 1 && (
                             <span
                               className={styles.syncIcon}
-                              title="Pendente de Envio"
+                              title={row.obsIntegracao ?? "Pendente de Envio"}
                             >
                               <IconPending />
                             </span>
@@ -666,7 +666,7 @@ const AjustesEstoquePage: React.FC = () => {
                           {row.statusSincronizacao === 2 && (
                             <span
                               className={styles.syncIcon}
-                              title="Sincronizado com ERP"
+                              title={row.obsIntegracao ?? "Sincronizado com ERP"}
                             >
                               <IconSync />
                             </span>
@@ -674,7 +674,7 @@ const AjustesEstoquePage: React.FC = () => {
                           {row.statusSincronizacao === 3 && (
                             <span
                               className={styles.syncIcon}
-                              title="Erro na Integração"
+                              title={row.obsIntegracao ?? "Erro na Integração"}
                             >
                               <IconError />
                             </span>
