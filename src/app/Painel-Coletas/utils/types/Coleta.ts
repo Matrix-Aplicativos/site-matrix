@@ -1,3 +1,12 @@
+/** Payload para PUT /coleta (editar). codEmpresa não deve ser enviado. */
+export interface EditarColetaRequest {
+  codColeta: number;
+  descricao: string;
+  codAlocOrigem: number;
+  codAlocDestino: number;
+  codPlanoConta: number;
+}
+
 interface Coleta {
   codConferencia: number;
   codIntegracao: number;

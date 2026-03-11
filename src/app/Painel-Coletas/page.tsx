@@ -22,8 +22,9 @@ const OPCOES_TIPO = {
   Transferencia: 2,
   "Conf. Venda": 3,
   "Conf. Compra": 4,
-  "Ajuste Entrada": 5, // ADICIONADO
-  "Ajuste Saída": 6, // ADICIONADO
+  "Ajuste Entrada": 5,
+  "Ajuste Saída": 6,
+  "Atualização de Cadastro": 99,
 };
 
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
@@ -70,21 +71,20 @@ export default function HomePage() {
     inventarios,
     transferencias,
     conferencias,
-    ajustes, // NOVO CAMPO
+    ajustes,
+    atualizacaoCadastro,
     variacaoColetas,
   } = useMemo(() => {
     // Inicializa estrutura com o novo tipo 'ajustes'
     const processarDadosAgregados = (dados: any[] | null | undefined) => {
       if (!dados || dados.length === 0)
-        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0 };
+        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0, tipo99: 0 };
 
       return dados.reduce(
         (acc, itemDiario) => {
           acc.total += itemDiario.totalColetas;
           if (itemDiario.contagemPorTipo) {
             itemDiario.contagemPorTipo.forEach((tipoInfo: any) => {
-              // Verifica o texto que o backend retorna.
-              // Assumindo que retorna strings baseadas no enum ou IDs convertidos.
               const tipoUpper = tipoInfo.tipo
                 ? tipoInfo.tipo.toUpperCase()
                 : "";
@@ -105,13 +105,16 @@ export default function HomePage() {
                 case "4":
                   acc.tipo3e4 += tipoInfo.quantidade;
                   break;
-                // NOVOS CASOS PARA AJUSTES
                 case "AJUSTE_ENTRADA":
                 case "AJUSTE_SAIDA":
                 case "AJUSTE":
                 case "5":
                 case "6":
                   acc.tipo5e6 += tipoInfo.quantidade;
+                  break;
+                case "ATUALIZACAO_CADASTRO":
+                case "99":
+                  acc.tipo99 += tipoInfo.quantidade;
                   break;
                 default:
                   break;
@@ -120,7 +123,7 @@ export default function HomePage() {
           }
           return acc;
         },
-        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0 }
+        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0, tipo99: 0 }
       );
     };
 
@@ -142,7 +145,8 @@ export default function HomePage() {
       inventarios: statsMesAtual.tipo1,
       transferencias: statsMesAtual.tipo2,
       conferencias: statsMesAtual.tipo3e4,
-      ajustes: statsMesAtual.tipo5e6, // NOVO RETORNO
+      ajustes: statsMesAtual.tipo5e6,
+      atualizacaoCadastro: statsMesAtual.tipo99,
       variacaoColetas: variacao,
     };
   }, [dadosMesAtual, dadosMesAnterior]);
@@ -293,7 +297,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* NOVO: Card Ajustes */}
+          {/* Card Ajustes */}
           <div className={styles.statWithTable}>
             <div className={styles.stat}>
               <span className={styles.number}>{ajustes}</span>
@@ -301,6 +305,19 @@ export default function HomePage() {
               <span className={styles.comparison}>
                 {totalColetas > 0
                   ? `${((ajustes / totalColetas) * 100).toFixed(1)}% do total`
+                  : "0% do total"}
+              </span>
+            </div>
+          </div>
+
+          {/* Card Atualização de Cadastro (tipo 99) */}
+          <div className={styles.statWithTable}>
+            <div className={styles.stat}>
+              <span className={styles.number}>{atualizacaoCadastro}</span>
+              <span>Atualização de Cadastro</span>
+              <span className={styles.comparison}>
+                {totalColetas > 0
+                  ? `${((atualizacaoCadastro / totalColetas) * 100).toFixed(1)}% do total`
                   : "0% do total"}
               </span>
             </div>
