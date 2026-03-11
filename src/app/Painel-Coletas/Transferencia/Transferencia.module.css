@@ -187,6 +187,20 @@
   color: #cc0000;
 }
 
+.editButton {
+  background: none;
+  border: none;
+  color: #1565c0;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.editButton:hover {
+  color: #0d47a1;
+}
+
 .actionsCell {
   width: 50px;
   padding: 0 5px !important;

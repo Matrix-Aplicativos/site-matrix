@@ -45,6 +45,7 @@ export interface Coleta {
   integradoErp: boolean;
   dataCadastro: string;
   obsIntegracao?: string | null;
+  planoConta?: { codPlanoConta: number; descricao: string } | null;
 }
 
 interface ApiResponse {
