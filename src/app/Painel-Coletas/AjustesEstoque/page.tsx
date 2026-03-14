@@ -508,7 +508,7 @@ const AjustesEstoquePage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>AJUSTES DE ESTOQUE</h1>
+      <h1 className={styles.title}>AJUSTES DE ESTOQUE - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar

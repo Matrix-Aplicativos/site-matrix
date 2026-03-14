@@ -273,7 +273,7 @@ const FuncionariosPage: React.FC = () => {
         />
       )}
 
-      <h1 className={styles.title}>FUNCIONÁRIOS</h1>
+      <h1 className={styles.title}>FUNCIONÁRIOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar

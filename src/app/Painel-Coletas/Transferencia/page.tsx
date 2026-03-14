@@ -411,7 +411,7 @@ const TransferenciasPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>TRANSFERÊNCIAS</h1>
+      <h1 className={styles.title}>TRANSFERÊNCIAS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Buscar por descrição da transferência..."

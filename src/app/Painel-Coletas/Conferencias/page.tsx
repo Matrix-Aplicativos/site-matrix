@@ -502,7 +502,7 @@ const ConferenciasPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>CONFERÊNCIAS</h1>
+      <h1 className={styles.title}>CONFERÊNCIAS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar

@@ -138,7 +138,7 @@ const DispositivosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>DISPOSITIVOS</h1>
+        <h1 className={styles.title}>DISPOSITIVOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
