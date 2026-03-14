@@ -196,7 +196,7 @@ const ProdutosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>PRODUTOS</h1>
+      <h1 className={styles.title}>PRODUTOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Qual produto deseja buscar?"

@@ -404,7 +404,7 @@ const InventariosPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>INVENTÁRIOS</h1>
+      <h1 className={styles.title}>INVENTÁRIOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
       <div className={styles.searchContainer}>
         <SearchBar
           placeholder="Buscar por descrição do inventário..."
