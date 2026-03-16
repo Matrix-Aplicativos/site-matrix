@@ -73,6 +73,8 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     tipoColeta === 6 ? 6 : 5,
   );
 
+  const [permiteColetaExcedente, setPermiteColetaExcedente] = useState(true);
+
   const [productQuery, setProductQuery] = useState("");
   const [selectedProductFilter, setSelectedProductFilter] =
     useState("descricao");
@@ -137,6 +139,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       setQuantidadeParaAdicionar(1);
       setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3);
       setTipoAjusteInterno(tipoColeta === 6 ? 6 : 5);
+      setPermiteColetaExcedente(true);
     }
   }, [isOpen, tipoColeta]);
 
@@ -242,6 +245,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       codAlocEstoqueOrigem: payloadOrigem,
       codAlocEstoqueDestino: payloadDestino,
       codPlanoConta: codPlanoConta ? parseInt(codPlanoConta, 10) : undefined,
+      permiteColetaExcedente,
       itens: itensNaColeta.map((item) => ({
         codItem: item.codItemApi,
         quantidade: item.quantidade,
@@ -287,6 +291,22 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 placeholder="Digite o nome da coleta"
                 required
               />
+
+              <div className={styles.switchRow}>
+                <span className={styles.switchLabel}>
+                  Permite coletar acima da demanda?
+                </span>
+                <label className={styles.switch}>
+                  <input
+                    type="checkbox"
+                    checked={permiteColetaExcedente}
+                    onChange={(e) =>
+                      setPermiteColetaExcedente(e.target.checked)
+                    }
+                  />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
 
               {(tipoColeta === 3 || tipoColeta === 4) && (
                 <div className={styles.radioGroup}>

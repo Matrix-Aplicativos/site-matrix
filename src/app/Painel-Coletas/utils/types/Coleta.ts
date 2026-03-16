@@ -5,6 +5,7 @@ export interface EditarColetaRequest {
   codAlocOrigem: number;
   codAlocDestino: number;
   codPlanoConta: number;
+  permiteColetaExcedente: boolean;
 }
 
 interface Coleta {

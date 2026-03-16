@@ -16,6 +16,7 @@ export interface ColetaParaEdicao {
   alocOrigem?: { codAlocEstoqueApi: number; descricao: string } | null;
   alocDestino?: { codAlocEstoqueApi: number; descricao: string } | null;
   planoConta?: { codPlanoConta: number; descricao: string } | null;
+  permiteColetaExcedente?: boolean;
 }
 
 interface ModalEditarColetaProps {
@@ -46,6 +47,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
   const [codAlocOrigem, setCodAlocOrigem] = useState<string>("");
   const [codAlocDestino, setCodAlocDestino] = useState<string>("");
   const [codPlanoConta, setCodPlanoConta] = useState<string>("");
+  const [permiteColetaExcedente, setPermiteColetaExcedente] = useState(false);
 
   const { editarColeta, loading: putLoading, error: putError } = usePutEditarColeta();
   const { estoques } = useGetEstoques(codEmpresa);
@@ -63,6 +65,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
       setCodAlocOrigem(String(coleta.alocOrigem?.codAlocEstoqueApi ?? "0"));
       setCodAlocDestino(String(coleta.alocDestino?.codAlocEstoqueApi ?? "0"));
       setCodPlanoConta(String(coleta.planoConta?.codPlanoConta ?? "0"));
+      setPermiteColetaExcedente(coleta.permiteColetaExcedente ?? false);
     }
   }, [isOpen, coleta]);
 
@@ -94,6 +97,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
       codAlocOrigem: codOrigem,
       codAlocDestino: codDestino,
       codPlanoConta: isAjuste ? codPlano : 0,
+      permiteColetaExcedente,
     };
     try {
       await editarColeta(payload);
@@ -130,6 +134,22 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
                 placeholder="Descrição da coleta"
                 required
               />
+
+              <div className={styles.switchRow}>
+                <span className={styles.switchLabel}>
+                  Permite coletar acima da demanda?
+                </span>
+                <label className={styles.switch}>
+                  <input
+                    type="checkbox"
+                    checked={permiteColetaExcedente}
+                    onChange={(e) =>
+                      setPermiteColetaExcedente(e.target.checked)
+                    }
+                  />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
 
               {isInventario && (
                 <>

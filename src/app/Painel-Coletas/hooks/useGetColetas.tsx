@@ -46,6 +46,7 @@ export interface Coleta {
   dataCadastro: string;
   obsIntegracao?: string | null;
   planoConta?: { codPlanoConta: number; descricao: string } | null;
+  permiteColetaExcedente?: boolean;
 }
 
 interface ApiResponse {

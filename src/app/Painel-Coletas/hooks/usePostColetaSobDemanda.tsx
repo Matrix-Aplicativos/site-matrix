@@ -16,7 +16,8 @@ interface PostColetaPayload {
   codUsuario: number;
   codAlocEstoqueOrigem: number;
   codAlocEstoqueDestino: number;
-  codPlanoConta?: number; 
+  codPlanoConta?: number;
+  permiteColetaExcedente: boolean;
   itens: ItemPost[];
 }
 
