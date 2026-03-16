@@ -725,7 +725,7 @@ const AjustesEstoquePage: React.FC = () => {
                           <IconEdit />
                         </button>
                       )}
-                      {(row.status === "2" || row.status === "3") && (
+                      {(row.status === "2" || row.status === "3") && row.statusSincronizacao !== 2 && (
                         <button
                           type="button"
                           className={styles.editButton}
