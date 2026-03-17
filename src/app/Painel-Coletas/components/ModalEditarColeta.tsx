@@ -137,7 +137,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
 
               <div className={styles.switchRow}>
                 <span className={styles.switchLabel}>
-                  Permite coletar acima da demanda?
+                  Permite coleta excedente?
                 </span>
                 <label className={styles.switch}>
                   <input
