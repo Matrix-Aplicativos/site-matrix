@@ -13,6 +13,8 @@ export interface ColetaParaEdicao {
   codConferencia: number;
   tipo: number;
   descricao: string;
+  /** Origem: "1" = Sob Demanda, "2" = Avulsa */
+  origem?: string;
   alocOrigem?: { codAlocEstoqueApi: number; descricao: string } | null;
   alocDestino?: { codAlocEstoqueApi: number; descricao: string } | null;
   planoConta?: { codPlanoConta: number; descricao: string } | null;
@@ -58,6 +60,8 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
   const isTransferencia = tipo === 2;
   const isConferencia = tipo === 3 || tipo === 4;
   const isAjuste = tipo === 5 || tipo === 6;
+  /** Coleta avulsa (origem "2") não exibe "Permite coleta excedente" */
+  const isAvulsa = coleta?.origem === "2";
 
   useEffect(() => {
     if (isOpen && coleta) {
@@ -135,21 +139,23 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
                 required
               />
 
-              <div className={styles.switchRow}>
-                <span className={styles.switchLabel}>
-                  Permite coleta excedente?
-                </span>
-                <label className={styles.switch}>
-                  <input
-                    type="checkbox"
-                    checked={permiteColetaExcedente}
-                    onChange={(e) =>
-                      setPermiteColetaExcedente(e.target.checked)
-                    }
-                  />
-                  <span className={styles.slider}></span>
-                </label>
-              </div>
+              {!isAvulsa && (
+                <div className={styles.switchRow}>
+                  <span className={styles.switchLabel}>
+                    Permite coleta excedente?
+                  </span>
+                  <label className={styles.switch}>
+                    <input
+                      type="checkbox"
+                      checked={permiteColetaExcedente}
+                      onChange={(e) =>
+                        setPermiteColetaExcedente(e.target.checked)
+                      }
+                    />
+                    <span className={styles.slider}></span>
+                  </label>
+                </div>
+              )}
 
               {isInventario && (
                 <>
