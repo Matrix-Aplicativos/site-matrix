@@ -16,7 +16,7 @@ interface ModalProps {
   onSuccess: () => void;
   codEmpresa: number;
   codUsuario: number;
-  tipoColeta: 1 | 2 | 3 | 4 | 5 | 6;
+  tipoColeta: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   titulo: string;
 }
 
@@ -205,9 +205,13 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     let payloadOrigem = parseInt(codAlocEstoqueOrigem, 10) || 0;
     let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
 
-    if (tipoColeta === 1) {
+    if (tipoColeta === 1 || tipoColeta === 7) {
       if (!codAlocEstoqueDestino) {
-        alert("Para inventário, o estoque de origem é obrigatório.");
+        alert(
+          tipoColeta === 7
+            ? "Para romaneio, o estoque de origem é obrigatório."
+            : "Para inventário, o estoque de origem é obrigatório.",
+        );
         return;
       }
       payloadOrigem = payloadDestino;
@@ -457,7 +461,7 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
                 </div>
               )}
 
-              {tipoColeta === 1 && (
+              {(tipoColeta === 1 || tipoColeta === 7) && (
                 <label>
                   Origem
                   <select

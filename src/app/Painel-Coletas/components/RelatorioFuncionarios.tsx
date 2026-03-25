@@ -47,6 +47,7 @@ const OPCOES_TIPO = {
   "Conf. Compra": 4,
   "Ajuste Entrada": 5,
   "Ajuste Saída": 6,
+  Romaneio: 7,
 };
 const TODOS_OS_TIPOS = Object.values(OPCOES_TIPO);
 

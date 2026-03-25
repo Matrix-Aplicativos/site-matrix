@@ -210,7 +210,7 @@ export default function RelatorioColetas({
       legend: { display: false },
       title: {
         display: true,
-        text: tituloGrafico, // Título simplificado usado aqui
+        text: tituloGrafico,
         font: { size: 16 },
       },
       tooltip: {

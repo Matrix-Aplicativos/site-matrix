@@ -58,6 +58,7 @@ describe("Sidebar", () => {
     expect(screen.getByText("Inventários")).toBeInTheDocument();
     expect(screen.getByText("Transferências")).toBeInTheDocument();
     expect(screen.getByText("Conferências")).toBeInTheDocument();
+    expect(screen.getByText("Romaneios")).toBeInTheDocument();
     expect(screen.getByText("Dispositivos")).toBeInTheDocument();
   });
 
