@@ -159,7 +159,6 @@ const IconReabrir = () => (
 interface ColetaExibida {
   id: number;
   descricao: string;
-  estoqueOrigem: string;
   data: string;
   dataFim: string | null;
   origem: string;
@@ -210,7 +209,6 @@ const columns: ColumnConfig[] = [
   { key: "volumeConferido", label: "Qtd. Volume Conf.", sortable: true },
   { key: "data", label: "Data", sortable: true },
   { key: "descricao", label: "Descrição", sortable: true },
-  { key: "estoqueOrigem", label: "Estoque Origem", sortable: false },
   { key: "origem", label: "Origem", sortable: true },
   { key: "tipoMovimento", label: "Tipo", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
@@ -301,7 +299,6 @@ const RomaneiosPage: React.FC = () => {
     return coletas.map((c) => ({
       id: c.codConferencia,
       descricao: c.descricao,
-      estoqueOrigem: c.alocOrigem?.descricao || "",
       data: c.dataCadastro,
       dataFim: c.dataFim,
       origem: String(c.origem),
@@ -414,14 +411,7 @@ const RomaneiosPage: React.FC = () => {
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
-          <button
-            className={styles.actionButton}
-            onClick={() => setIsModalOpen(true)}
-            title="Cadastrar novo romaneio"
-          >
-            <span>Cadastrar Romaneio</span>
-            <FiTruck />
-          </button>
+          
           <button
             className={styles.actionButton}
             onClick={() => refetch()}
@@ -554,7 +544,6 @@ const RomaneiosPage: React.FC = () => {
                   <td>{row.volumeConferido}</td>
                   <td>{new Date(row.data).toLocaleDateString("pt-BR")}</td>
                   <td>{row.descricao}</td>
-                  <td>{row.estoqueOrigem}</td>
                   <td>{getOrigemText(row.origem)}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
