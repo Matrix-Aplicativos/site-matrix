@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, ReactNode, Dispatch, SetStateAction } from "react";
+import {
+  useMemo,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -80,6 +87,20 @@ export default function RelatorioFuncionarios({
   setMetricaSelecionada,
   handlePesquisar,
 }: RelatorioFuncionariosProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = (event: MediaQueryListEvent | MediaQueryList) =>
+      setIsMobile(event.matches);
+
+    update(mediaQuery);
+    const listener = (event: MediaQueryListEvent) => update(event);
+    mediaQuery.addEventListener("change", listener);
+
+    return () => mediaQuery.removeEventListener("change", listener);
+  }, []);
+
   const handleTipoChange = (tipoValor: number) => {
     setTiposSelecionados((prev) => {
       const estaTentandoDesmarcar = prev.includes(tipoValor);
@@ -210,7 +231,7 @@ export default function RelatorioFuncionarios({
   };
 
   return (
-    <div style={{ padding: "20px", width: "100%" }}>
+    <div style={{ padding: isMobile ? "12px" : "20px", width: "100%" }}>
       <div
         style={{
           display: "flex",
@@ -224,7 +245,7 @@ export default function RelatorioFuncionarios({
         <h2
           style={{
             color: "var(--header-text-color)",
-            fontSize: "1.5rem",
+            fontSize: isMobile ? "1.2rem" : "1.5rem",
             margin: 0,
           }}
         >
@@ -248,6 +269,7 @@ export default function RelatorioFuncionarios({
             display: "flex",
             flexDirection: "column",
             gap: "16px",
+            width: isMobile ? "100%" : "auto",
           }}
         >
           <div
@@ -261,10 +283,10 @@ export default function RelatorioFuncionarios({
             <span
               style={{
                 fontWeight: "bold",
-                fontSize: "16px",
+                fontSize: isMobile ? "14px" : "16px",
                 color: "var(--text-secondary-color)",
-                marginRight: "16px",
-                minWidth: "130px",
+                marginRight: isMobile ? "8px" : "16px",
+                minWidth: isMobile ? "110px" : "130px",
               }}
             >
               Exibir Métrica:
@@ -273,7 +295,7 @@ export default function RelatorioFuncionarios({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "20px",
+                gap: isMobile ? "12px" : "20px",
                 flexWrap: "wrap",
               }}
             >
@@ -285,7 +307,7 @@ export default function RelatorioFuncionarios({
                       display: "flex",
                       alignItems: "center",
                       cursor: "pointer",
-                      fontSize: "16px",
+                      fontSize: isMobile ? "13px" : "16px",
                       color: "var(--text-secondary-color)",
                     }}
                   >
@@ -320,10 +342,10 @@ export default function RelatorioFuncionarios({
             <span
               style={{
                 fontWeight: "bold",
-                fontSize: "16px",
+                fontSize: isMobile ? "14px" : "16px",
                 color: "var(--text-secondary-color)",
-                marginRight: "16px",
-                minWidth: "130px",
+                marginRight: isMobile ? "8px" : "16px",
+                minWidth: isMobile ? "110px" : "130px",
               }}
             >
               Tipos de Coleta:
@@ -332,7 +354,7 @@ export default function RelatorioFuncionarios({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "20px",
+                gap: isMobile ? "12px" : "20px",
                 flexWrap: "wrap",
               }}
             >
@@ -341,7 +363,7 @@ export default function RelatorioFuncionarios({
                   display: "flex",
                   alignItems: "center",
                   cursor: "pointer",
-                  fontSize: "16px",
+                  fontSize: isMobile ? "13px" : "16px",
                   color: "var(--text-secondary-color)",
                 }}
               >
@@ -365,7 +387,7 @@ export default function RelatorioFuncionarios({
                     display: "flex",
                     alignItems: "center",
                     cursor: "pointer",
-                    fontSize: "16px",
+                    fontSize: isMobile ? "13px" : "16px",
                     color: "var(--text-secondary-color)",
                   }}
                 >
@@ -391,11 +413,20 @@ export default function RelatorioFuncionarios({
         <div
           style={{
             display: "flex",
-            gap: "16px",
+            gap: isMobile ? "10px" : "16px",
             alignItems: "flex-end",
+            flexWrap: "wrap",
+            width: isMobile ? "100%" : "auto",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: isMobile ? 1 : "none",
+              minWidth: isMobile ? "140px" : "auto",
+            }}
+          >
             <label
               htmlFor="dataInicioFunc"
               style={{
@@ -415,16 +446,24 @@ export default function RelatorioFuncionarios({
                 padding: "8px",
                 borderRadius: "4px",
                 border: "1px solid var(--input-border-color)",
-                fontSize: "15px",
+                fontSize: isMobile ? "13px" : "15px",
                 backgroundColor: "var(--button-bg-color)",
                 color: "var(--text-secondary-color)",
                 height: "40px",
+                width: isMobile ? "100%" : "auto",
               }}
               disabled={loading}
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: isMobile ? 1 : "none",
+              minWidth: isMobile ? "140px" : "auto",
+            }}
+          >
             <label
               htmlFor="dataFimFunc"
               style={{
@@ -444,10 +483,11 @@ export default function RelatorioFuncionarios({
                 padding: "8px",
                 borderRadius: "4px",
                 border: "1px solid var(--input-border-color)",
-                fontSize: "15px",
+                fontSize: isMobile ? "13px" : "15px",
                 backgroundColor: "var(--button-bg-color)",
                 color: "var(--text-secondary-color)",
                 height: "40px",
+                width: isMobile ? "100%" : "auto",
               }}
               disabled={loading}
             />
@@ -457,7 +497,7 @@ export default function RelatorioFuncionarios({
             onClick={handlePesquisar}
             disabled={loading}
             style={{
-              padding: "10px 18px",
+              padding: isMobile ? "10px 14px" : "10px 18px",
               background: loading
                 ? "var(--button-primary-disabled-bg)"
                 : "var(--button-primary-bg)",
@@ -465,9 +505,10 @@ export default function RelatorioFuncionarios({
               border: "none",
               borderRadius: "6px",
               cursor: loading ? "not-allowed" : "pointer",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               fontWeight: "bold",
               height: "40px",
+              width: isMobile ? "100%" : "auto",
               transition: "background-color 0.2s",
             }}
           >

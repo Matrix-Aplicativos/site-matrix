@@ -1,13 +1,13 @@
 "use client";
 
-// Adicione o 'useState' na importação do React
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar"; // Verifique se o caminho está correto
 import { Roboto } from "next/font/google";
 import "./painel-globals.css"; // Vamos adicionar os novos estilos aqui
 import { usePathname } from "next/navigation";
 import { LoadingProvider } from "../shared/Context/LoadingContext";
 import LoadingOverlay from "../shared/components/LoadingOverlay";
+import { FiMenu } from "react-icons/fi";
 
 const roboto = Roboto({ weight: "300", subsets: ["latin"] });
 
@@ -18,12 +18,30 @@ export default function PainelLayout({
 }) {
   const pathname = usePathname();
 
-  // 1. Adicionando o estado para controlar a sidebar
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1024px)");
+    const handleMediaChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      const mobile = event.matches;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile);
+    };
+
+    handleMediaChange(mediaQuery);
+
+    const listener = (event: MediaQueryListEvent) => handleMediaChange(event);
+    mediaQuery.addEventListener("change", listener);
+
+    return () => {
+      mediaQuery.removeEventListener("change", listener);
+    };
+  }, []);
 
   const hideSidebar =
     pathname === "/Painel-Coletas/Login" ||
@@ -31,7 +49,6 @@ export default function PainelLayout({
     pathname === "/Painel-Coletas/SelecionarEmpresa" ||
     pathname === "/Painel-Coletas/RedefinirSenha";
 
-  // 2. Lógica para determinar a classe do 'main'
   let mainClassName = "";
   if (hideSidebar) {
     mainClassName = "content-no-sidebar";
@@ -45,12 +62,25 @@ export default function PainelLayout({
       style={{ display: "flex" }}
     >
       <LoadingProvider>
-        {/* 3. Passando as props para o Sidebar */}
         {!hideSidebar && (
           <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         )}
 
-        {/* 4. Usando className em vez de style para o 'main' */}
+        {!hideSidebar && isMobile && !isSidebarOpen && (
+          <button
+            type="button"
+            className="mobile-menu-button"
+            onClick={toggleSidebar}
+            aria-label="Abrir menu"
+          >
+            <FiMenu size={22} />
+          </button>
+        )}
+
+        {!hideSidebar && isMobile && isSidebarOpen && (
+          <div className="sidebar-overlay" onClick={toggleSidebar} />
+        )}
+
         <main className={mainClassName}>{children}</main>
 
         <LoadingOverlay />

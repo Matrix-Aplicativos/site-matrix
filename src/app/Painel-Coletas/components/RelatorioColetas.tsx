@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -76,6 +76,19 @@ export default function RelatorioColetas({
   const codEmpresa = empresa?.codEmpresa;
 
   const [dataExibicao, setDataExibicao] = useState(new Date());
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = (event: MediaQueryListEvent | MediaQueryList) =>
+      setIsMobile(event.matches);
+
+    update(mediaQuery);
+    const listener = (event: MediaQueryListEvent) => update(event);
+    mediaQuery.addEventListener("change", listener);
+
+    return () => mediaQuery.removeEventListener("change", listener);
+  }, []);
 
   const { dataInicio, dataFim } = useMemo(() => {
     const baseDate = dataExibicao || new Date();
@@ -280,29 +293,44 @@ export default function RelatorioColetas({
   };
 
   return (
-    <div style={{ padding: "20px 0", width: "100%" }}>
+    <div style={{ padding: isMobile ? "12px 0" : "20px 0", width: "100%" }}>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: isMobile ? "10px" : "16px",
           marginBottom: "20px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobile ? "10px" : "15px",
+            flexWrap: "wrap",
+            width: isMobile ? "100%" : "auto",
+          }}
+        >
           <h2
             style={{
-              marginLeft: 20,
               color: "#000",
-              fontSize: "1.5rem",
+              fontSize: isMobile ? "1.15rem" : "1.5rem",
               margin: 0,
             }}
           >
             Relatório de Coletas
           </h2>
 
-          {/* ########## MUDANÇA 3: Estrutura do cabeçalho alterada ########## */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: isMobile ? "6px" : "10px",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
             <button
               style={buttonStyle}
               onClick={() => handleNavegacao("anterior")}
@@ -312,9 +340,10 @@ export default function RelatorioColetas({
             <span
               style={{
                 fontWeight: "bold",
-                fontSize: "1rem",
+                fontSize: isMobile ? "0.85rem" : "1rem",
                 color: "#333",
-                minWidth: "180px",
+                minWidth: isMobile ? "120px" : "180px",
+                flex: 1,
                 textAlign: "center",
               }}
             >
@@ -330,16 +359,25 @@ export default function RelatorioColetas({
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            width: isMobile ? "100%" : "auto",
+          }}
+        >
           <button
             style={{
-              padding: "8px 16px",
+              padding: isMobile ? "8px 10px" : "8px 16px",
               background: view === "mensal" ? "rgb(54, 162, 235)" : "#f0f0f0",
               color: view === "mensal" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
               fontWeight: "bold",
+              fontSize: isMobile ? "0.8rem" : "0.95rem",
+              flex: isMobile ? 1 : "none",
               transition: "all 0.3s ease",
             }}
             onClick={() => onViewChange("mensal")}
@@ -348,13 +386,15 @@ export default function RelatorioColetas({
           </button>
           <button
             style={{
-              padding: "8px 16px",
+              padding: isMobile ? "8px 10px" : "8px 16px",
               background: view === "anual" ? "rgb(54, 162, 235)" : "#f0f0f0",
               color: view === "anual" ? "white" : "#333",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
               fontWeight: "bold",
+              fontSize: isMobile ? "0.8rem" : "0.95rem",
+              flex: isMobile ? 1 : "none",
               transition: "all 0.3s ease",
             }}
             onClick={() => onViewChange("anual")}
@@ -366,13 +406,13 @@ export default function RelatorioColetas({
 
       <div
         style={{
-          height: "400px",
+          height: isMobile ? "320px" : "400px",
           width: "100%",
           position: "relative",
           backgroundColor: "#fff",
           borderRadius: "8px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          padding: "20px",
+          padding: isMobile ? "10px" : "20px",
         }}
       >
         {renderChartContent()}
