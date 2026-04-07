@@ -11,14 +11,28 @@ interface Alocacao {
   descricao: string;
 }
 
-interface UsuarioNaColeta {
+export interface UsuarioNaColeta {
   codUsuario: number;
+  codFuncionario?: number;
   codUsuarioErp: string;
   nome: string;
   cpf: string;
   email: string;
   ativo: boolean;
   utilizaApp: boolean;
+}
+
+/** Valor exibido na coluna "Responsável Finalização" (API: respFinalizacao — mesmo formato que usuario). */
+export function formatRespFinalizacao(
+  value: UsuarioNaColeta | string | null | undefined
+): string {
+  if (value == null || value === "") return "—";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "nome" in value) {
+    const n = (value as UsuarioNaColeta).nome;
+    if (n != null && n !== "") return n;
+  }
+  return "—";
 }
 
 export interface Coleta {
@@ -33,6 +47,8 @@ export interface Coleta {
   tipo: number;
   descricao: string;
   usuario: UsuarioNaColeta;
+  /** Quem finalizou a coleta (mesma estrutura de `usuario`). Pode ser null se ainda não finalizada. */
+  respFinalizacao?: UsuarioNaColeta | null;
   dataInicio: string;
   dataFim: string;
   alocOrigem: Alocacao;
@@ -46,6 +62,7 @@ export interface Coleta {
   dataCadastro: string;
   obsIntegracao?: string | null;
   planoConta?: { codPlanoConta: number; descricao: string } | null;
+  permiteColetaExcedente?: boolean;
 }
 
 interface ApiResponse {

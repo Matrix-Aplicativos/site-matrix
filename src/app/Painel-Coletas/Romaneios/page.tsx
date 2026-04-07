@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import styles from "./Conferencias.module.css";
+import styles from "./Romaneios.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import useGetColetas from "../hooks/useGetColetas";
 import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
@@ -14,9 +14,7 @@ import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
 import PaginationControls from "../components/PaginationControls";
 import ModalCadastrarColeta from "../components/ModalCadastrarColeta";
-import { FiClipboard } from "react-icons/fi";
-
-// --- ÍCONES ---
+import { FiTruck } from "react-icons/fi";
 
 const IconTrash = () => (
   <svg
@@ -158,8 +156,6 @@ const IconReabrir = () => (
   </svg>
 );
 
-// --- INTERFACES & CONFIG ---
-
 interface ColetaExibida {
   id: number;
   descricao: string;
@@ -171,7 +167,7 @@ interface ColetaExibida {
   respFinalizacao: string;
   status: string;
   integradoErp: boolean;
-  statusSincronizacao: number; // Adicionado
+  statusSincronizacao: number;
   obsIntegracao?: string | null;
   qtdItens: number;
   qtdItensConferidos: number;
@@ -199,17 +195,11 @@ const SORT_COLUMN_MAP: { [key in keyof ColetaExibida]?: string } = {
 
 const OPCOES_STATUS = {
   "Não Iniciada": "1",
+  "Em Andamento": "4",
   "Finalizada Parcialmente": "2",
   "Finalizada Completa": "3",
-  "Em Andamento": "4",
 };
-
 const OPCOES_ORIGEM = { "Sob Demanda": "1", Avulsa: "2" };
-
-const OPCOES_TIPO_MOVIMENTO = {
-  "Conf. Venda": "3",
-  "Conf. Compra": "4",
-};
 
 const columns: ColumnConfig[] = [
   { key: "status", label: "Status", sortable: true },
@@ -228,18 +218,8 @@ const columns: ColumnConfig[] = [
 
 const getOrigemText = (origem: string) =>
   origem === "1" ? "Sob Demanda" : origem === "2" ? "Avulsa" : origem;
-
-const getTipoMovimentoText = (tipo: string) => {
-  switch (tipo) {
-    case "3":
-      return "Conf. Venda";
-    case "4":
-      return "Conf. Compra";
-    default:
-      return tipo;
-  }
-};
-
+const getTipoMovimentoText = (tipo: string) =>
+  tipo === "7" ? "Romaneio" : tipo;
 const getStatusText = (status: string) => {
   switch (status) {
     case "1":
@@ -254,7 +234,6 @@ const getStatusText = (status: string) => {
       return status;
   }
 };
-
 const getStatusClass = (status: string) => {
   switch (status) {
     case "1":
@@ -270,7 +249,10 @@ const getStatusClass = (status: string) => {
   }
 };
 
-const ConferenciasPage: React.FC = () => {
+const RomaneiosPage: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalEditarOpen, setIsModalEditarOpen] = useState(false);
+  const [coletaParaEditar, setColetaParaEditar] = useState<Coleta | null>(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
@@ -283,83 +265,40 @@ const ConferenciasPage: React.FC = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<string>("");
   const [origemFiltro, setOrigemFiltro] = useState<string>("");
-  const [tipoMovimentoFiltro, setTipoMovimentoFiltro] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalEditarOpen, setIsModalEditarOpen] = useState(false);
-  const [coletaParaEditar, setColetaParaEditar] = useState<Coleta | null>(null);
-
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
-  const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
-  const { reabrirColeta, loading: reabrindo } = usePatchReabrirColeta();
-
   const codEmpresa = empresa?.codEmpresa;
   const codUsuario = 1;
 
-  const shouldFetchVenda =
-    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "3");
-
-  const shouldFetchCompra =
-    !!codEmpresa && (!tipoMovimentoFiltro || tipoMovimentoFiltro === "4");
-
-  const tipoColetaVenda = React.useMemo(() => ["3"], []);
-  const tipoColetaCompra = React.useMemo(() => ["4"], []);
-
   const {
-    coletas: coletasVenda,
-    loading: loadingVenda,
-    error: errorVenda,
-    refetch: refetchVenda,
-    totalPaginas: totalPaginasVenda,
-    totalElementos: totalElementosVenda,
+    coletas,
+    loading: coletasLoading,
+    error: coletasError,
+    refetch,
+    totalPaginas,
+    totalElementos,
   } = useGetColetas(
-    shouldFetchVenda ? codEmpresa : 0,
+    codEmpresa || 0,
     paginaAtual,
     porPagina,
     sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
     sortConfig?.direction,
-    tipoColetaVenda,
+    "7",
     statusFiltro || undefined,
     origemFiltro || undefined,
     "descricao",
     query,
     dateRange.startDate,
     dateRange.endDate,
-    shouldFetchVenda,
+    !!codEmpresa,
   );
-
-  const {
-    coletas: coletasCompra,
-    loading: loadingCompra,
-    error: errorCompra,
-    refetch: refetchCompra,
-    totalPaginas: totalPaginasCompra,
-    totalElementos: totalElementosCompra,
-  } = useGetColetas(
-    shouldFetchCompra ? codEmpresa : 0,
-    paginaAtual,
-    porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
-    sortConfig?.direction,
-    tipoColetaCompra,
-    statusFiltro || undefined,
-    origemFiltro || undefined,
-    "descricao",
-    query,
-    dateRange.startDate,
-    dateRange.endDate,
-    shouldFetchCompra,
-  );
-
-  const coletasCombinadas = useMemo(() => {
-    const venda = shouldFetchVenda ? coletasVenda || [] : [];
-    const compra = shouldFetchCompra ? coletasCompra || [] : [];
-    return [...venda, ...compra];
-  }, [coletasVenda, coletasCompra, shouldFetchVenda, shouldFetchCompra]);
+  const { deletarColeta, loading: deleting } = deleteColetaAvulsaHook();
+  const { reabrirColeta, loading: reabrindo } = usePatchReabrirColeta();
+  const isLoading = coletasLoading || deleting || reabrindo;
 
   const filteredData = useMemo(() => {
-    if (!coletasCombinadas) return [];
-    return coletasCombinadas.map((c) => ({
+    if (!coletas) return [];
+    return coletas.map((c) => ({
       id: c.codConferencia,
       descricao: c.descricao,
       data: c.dataCadastro,
@@ -370,111 +309,74 @@ const ConferenciasPage: React.FC = () => {
       respFinalizacao: formatRespFinalizacao(c.respFinalizacao),
       status: c.status,
       integradoErp: c.integradoErp,
-      statusSincronizacao: c.statusSincronizacao, // Mapeado aqui
+      statusSincronizacao: c.statusSincronizacao,
       obsIntegracao: c.obsIntegracao,
       qtdItens: c.qtdItens,
       qtdItensConferidos: c.qtdItensConferidos,
       volumeTotal: c.volumeTotal,
       volumeConferido: c.volumeConferido,
     }));
-  }, [coletasCombinadas]);
-
-  const isLoading =
-    companyLoading ||
-    (shouldFetchVenda && loadingVenda) ||
-    (shouldFetchCompra && loadingCompra) ||
-    deleting ||
-    reabrindo;
-
-  const coletasError =
-    (shouldFetchVenda && errorVenda) || (shouldFetchCompra && errorCompra);
-
-  const totalElementos =
-    (shouldFetchVenda ? totalElementosVenda || 0 : 0) +
-    (shouldFetchCompra ? totalElementosCompra || 0 : 0);
-
-  const totalPaginas = Math.max(
-    shouldFetchVenda ? totalPaginasVenda || 1 : 1,
-    shouldFetchCompra ? totalPaginasCompra || 1 : 1,
-  );
-
-  const refetchAll = React.useCallback(() => {
-    if (shouldFetchVenda) refetchVenda();
-    if (shouldFetchCompra) refetchCompra();
-  }, [refetchVenda, refetchCompra, shouldFetchVenda, shouldFetchCompra]);
+  }, [coletas]);
 
   useEffect(() => {
-    if (isLoading) showLoading();
+    if (companyLoading || isLoading) showLoading();
     else hideLoading();
-  }, [isLoading, showLoading, hideLoading]);
+  }, [companyLoading, isLoading, showLoading, hideLoading]);
 
   const handleSuccess = useCallback(() => {
     setIsModalOpen(false);
-    refetchAll();
-  }, [refetchAll]);
+    refetch();
+  }, [refetch]);
 
   const handleDeleteColeta = async (codColeta: number) => {
-    if (window.confirm("Tem certeza que deseja excluir essa conferência?")) {
+    if (window.confirm("Tem certeza que deseja excluir este romaneio?")) {
       try {
         await deletarColeta(codColeta);
-        alert("Conferência excluída com sucesso!");
-        refetchAll();
+        alert("Romaneio excluído com sucesso!");
+        refetch();
       } catch (error) {
-        alert("Erro ao excluir conferência");
+        alert("Erro ao excluir romaneio");
       }
     }
   };
-
   const handleReabrirColeta = async (rowId: number) => {
-    const coleta = coletasCombinadas.find((c) => c.codConferencia === rowId);
+    const coleta = (coletas ?? []).find((c) => c.codConferencia === rowId);
     const codColeta = coleta?.codColeta ?? rowId;
     if (!window.confirm("Deseja reabrir esta coleta?")) return;
     try {
       await reabrirColeta(codColeta);
       alert("Coleta reaberta com sucesso!");
-      refetchAll();
+      refetch();
     } catch {
       alert("Erro ao reabrir coleta.");
     }
   };
-
   const openModalEditar = (rowId: number) => {
-    const c = coletasCombinadas.find((x) => x.codConferencia === rowId) ?? null;
+    const c = (coletas ?? []).find((x) => x.codConferencia === rowId) ?? null;
     setColetaParaEditar(c);
     setIsModalEditarOpen(true);
   };
-
   const handleStatusChange = (statusValue: string) => {
     setStatusFiltro(statusValue);
     setPaginaAtual(1);
   };
-
   const handleOrigemChange = (origemValue: string) => {
     setOrigemFiltro(origemValue);
     setPaginaAtual(1);
   };
-
-  const handleTipoMovimentoChange = (tipoValue: string) => {
-    setTipoMovimentoFiltro(tipoValue);
-    setPaginaAtual(1);
-  };
-
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPaginaAtual(1);
   };
-
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDateRange((prev) => ({ ...prev, [name]: value }));
     setPaginaAtual(1);
   };
-
   const handleItemsPerPageChange = (newSize: number) => {
     setPorPagina(newSize);
     setPaginaAtual(1);
   };
-
   const sortData = (key: keyof ColetaExibida) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig?.key === key && sortConfig.direction === "asc") {
@@ -482,11 +384,9 @@ const ConferenciasPage: React.FC = () => {
     }
     setSortConfig({ key, direction });
   };
-
   const toggleExpandRow = (index: number) => {
     setExpandedRow((prev) => (prev === index ? null : index));
   };
-
   const toggleFilterExpansion = () => {
     setIsFilterExpanded((prev) => !prev);
   };
@@ -494,38 +394,31 @@ const ConferenciasPage: React.FC = () => {
   if (coletasError)
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Conferências</h2>
-        <button onClick={() => refetchAll()}>Tentar novamente</button>
+        <h2>Erro ao Carregar romaneios</h2>
+        <button onClick={() => refetch()}>Tentar novamente</button>
       </div>
     );
-
-  if (companyLoading || (isLoading && !coletasCombinadas.length))
+  if (companyLoading || (!coletas && coletasLoading))
     return <div className={styles.container}>Carregando dados...</div>;
 
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>CONFERÊNCIAS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
-
+      <h1 className={styles.title}>
+        ROMANEIOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}
+      </h1>
       <div className={styles.searchContainer}>
         <SearchBar
-          placeholder="Qual conferência deseja buscar?"
+          placeholder="Buscar por descrição do romaneio..."
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
         />
         <div className={styles.searchActions}>
+          
           <button
             className={styles.actionButton}
-            onClick={() => setIsModalOpen(true)}
-            title="Cadastrar nova conferência"
-          >
-            <span>Cadastrar Conferência</span>
-            <FiClipboard />
-          </button>
-          <button
-            className={styles.actionButton}
-            onClick={() => refetchAll()}
-            title="Atualizar conferências"
+            onClick={() => refetch()}
+            title="Atualizar romaneios"
           >
             <span>Atualizar</span>
             <IconRefresh className={isLoading ? styles.spinning : ""} />
@@ -535,32 +428,6 @@ const ConferenciasPage: React.FC = () => {
 
       {isFilterExpanded && (
         <div className={styles.filterExpansion}>
-          <div className={styles.filterSection}>
-            <label>Tipo Movimento:</label>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="tipo-movimento-filter"
-                  checked={tipoMovimentoFiltro === ""}
-                  onChange={() => handleTipoMovimentoChange("")}
-                />
-                Todos
-              </label>
-              {Object.entries(OPCOES_TIPO_MOVIMENTO).map(([label, value]) => (
-                <label key={value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="tipo-movimento-filter"
-                    checked={tipoMovimentoFiltro === value}
-                    onChange={() => handleTipoMovimentoChange(value)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-
           <div className={styles.filterSection}>
             <label>Status:</label>
             <div className={styles.radioGroup}>
@@ -586,7 +453,6 @@ const ConferenciasPage: React.FC = () => {
               ))}
             </div>
           </div>
-
           <div className={styles.filterSection}>
             <label>Origem:</label>
             <div className={styles.radioGroup}>
@@ -612,7 +478,6 @@ const ConferenciasPage: React.FC = () => {
               ))}
             </div>
           </div>
-
           <div className={styles.filterSection}>
             <label>Período:</label>
             <div className={styles.dateRange}>
@@ -638,6 +503,7 @@ const ConferenciasPage: React.FC = () => {
           <thead>
             <tr>
               <th style={{ width: "40px" }}></th>
+
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -664,6 +530,7 @@ const ConferenciasPage: React.FC = () => {
                       {expandedRow === rowIndex ? "▲" : "▼"}
                     </button>
                   </td>
+
                   <td>
                     <span
                       className={`${styles.statusBadge} ${getStatusClass(
@@ -702,7 +569,7 @@ const ConferenciasPage: React.FC = () => {
                           e.stopPropagation();
                           handleDeleteColeta(row.id);
                         }}
-                        title="Excluir conferência"
+                        title="Excluir romaneio"
                       >
                         <IconTrash />
                       </button>
@@ -714,24 +581,25 @@ const ConferenciasPage: React.FC = () => {
                             e.stopPropagation();
                             openModalEditar(row.id);
                           }}
-                          title="Editar conferência"
+                          title="Editar coleta"
                         >
                           <IconEdit />
                         </button>
                       )}
-                      {(row.status === "2" || row.status === "3") && row.statusSincronizacao !== 2 && (
-                        <button
-                          type="button"
-                          className={styles.editButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReabrirColeta(row.id);
-                          }}
-                          title="Reabrir coleta"
-                        >
-                          <IconReabrir />
-                        </button>
-                      )}
+                      {(row.status === "2" || row.status === "3") &&
+                        row.statusSincronizacao !== 2 && (
+                          <button
+                            type="button"
+                            className={styles.editButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReabrirColeta(row.id);
+                            }}
+                            title="Reabrir coleta"
+                          >
+                            <IconReabrir />
+                          </button>
+                        )}
                       {(row.status === "2" || row.status === "3") && (
                         <>
                           {row.statusSincronizacao === 1 && (
@@ -754,7 +622,12 @@ const ConferenciasPage: React.FC = () => {
                             <button
                               type="button"
                               className={styles.syncIcon}
-                              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 alert(row.obsIntegracao ?? "Erro na Integração");
@@ -781,16 +654,14 @@ const ConferenciasPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-
       <PaginationControls
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
-        onPageChange={setPaginaAtual}
         totalElementos={totalElementos}
         porPagina={porPagina}
+        onPageChange={setPaginaAtual}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
-
       {codEmpresa && (
         <ModalCadastrarColeta
           isOpen={isModalOpen}
@@ -798,8 +669,8 @@ const ConferenciasPage: React.FC = () => {
           onSuccess={handleSuccess}
           codEmpresa={codEmpresa}
           codUsuario={codUsuario}
-          tipoColeta={3}
-          titulo="Cadastrar Nova Conferência"
+          tipoColeta={7}
+          titulo="Cadastrar Novo Romaneio"
         />
       )}
       {codEmpresa && (
@@ -810,7 +681,7 @@ const ConferenciasPage: React.FC = () => {
             setColetaParaEditar(null);
           }}
           onSuccess={() => {
-            refetchAll();
+            refetch();
             setIsModalEditarOpen(false);
             setColetaParaEditar(null);
           }}
@@ -821,5 +692,4 @@ const ConferenciasPage: React.FC = () => {
     </div>
   );
 };
-
-export default ConferenciasPage;
+export default RomaneiosPage;

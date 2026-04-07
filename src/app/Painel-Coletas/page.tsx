@@ -24,6 +24,7 @@ const OPCOES_TIPO = {
   "Conf. Compra": 4,
   "Ajuste Entrada": 5,
   "Ajuste Saída": 6,
+  Romaneio: 7,
   "Atualização de Cadastro": 99,
 };
 
@@ -72,13 +73,22 @@ export default function HomePage() {
     transferencias,
     conferencias,
     ajustes,
+    romaneios,
     atualizacaoCadastro,
     variacaoColetas,
   } = useMemo(() => {
     // Inicializa estrutura com o novo tipo 'ajustes'
     const processarDadosAgregados = (dados: any[] | null | undefined) => {
       if (!dados || dados.length === 0)
-        return { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0, tipo99: 0 };
+        return {
+          total: 0,
+          tipo1: 0,
+          tipo2: 0,
+          tipo3e4: 0,
+          tipo5e6: 0,
+          tipo7: 0,
+          tipo99: 0,
+        };
 
       return dados.reduce(
         (acc, itemDiario) => {
@@ -112,6 +122,10 @@ export default function HomePage() {
                 case "6":
                   acc.tipo5e6 += tipoInfo.quantidade;
                   break;
+                case "ROMANEIO":
+                case "7":
+                  acc.tipo7 += tipoInfo.quantidade;
+                  break;
                 case "ATUALIZACAO_CADASTRO":
                 case "99":
                   acc.tipo99 += tipoInfo.quantidade;
@@ -123,7 +137,7 @@ export default function HomePage() {
           }
           return acc;
         },
-        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0, tipo99: 0 }
+        { total: 0, tipo1: 0, tipo2: 0, tipo3e4: 0, tipo5e6: 0, tipo7: 0, tipo99: 0 }
       );
     };
 
@@ -146,6 +160,7 @@ export default function HomePage() {
       transferencias: statsMesAtual.tipo2,
       conferencias: statsMesAtual.tipo3e4,
       ajustes: statsMesAtual.tipo5e6,
+      romaneios: statsMesAtual.tipo7,
       atualizacaoCadastro: statsMesAtual.tipo99,
       variacaoColetas: variacao,
     };
@@ -292,6 +307,19 @@ export default function HomePage() {
                   ? `${((conferencias / totalColetas) * 100).toFixed(
                       1
                     )}% do total`
+                  : "0% do total"}
+              </span>
+            </div>
+          </div>
+
+          {/* Card Romaneios (tipo 7) */}
+          <div className={styles.statWithTable}>
+            <div className={styles.stat}>
+              <span className={styles.number}>{romaneios}</span>
+              <span>Romaneios</span>
+              <span className={styles.comparison}>
+                {totalColetas > 0
+                  ? `${((romaneios / totalColetas) * 100).toFixed(1)}% do total`
                   : "0% do total"}
               </span>
             </div>

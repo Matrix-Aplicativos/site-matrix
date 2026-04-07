@@ -13,9 +13,12 @@ export interface ColetaParaEdicao {
   codConferencia: number;
   tipo: number;
   descricao: string;
+  /** Origem: "1" = Sob Demanda, "2" = Avulsa */
+  origem?: string;
   alocOrigem?: { codAlocEstoqueApi: number; descricao: string } | null;
   alocDestino?: { codAlocEstoqueApi: number; descricao: string } | null;
   planoConta?: { codPlanoConta: number; descricao: string } | null;
+  permiteColetaExcedente?: boolean;
 }
 
 interface ModalEditarColetaProps {
@@ -46,6 +49,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
   const [codAlocOrigem, setCodAlocOrigem] = useState<string>("");
   const [codAlocDestino, setCodAlocDestino] = useState<string>("");
   const [codPlanoConta, setCodPlanoConta] = useState<string>("");
+  const [permiteColetaExcedente, setPermiteColetaExcedente] = useState(false);
 
   const { editarColeta, loading: putLoading, error: putError } = usePutEditarColeta();
   const { estoques } = useGetEstoques(codEmpresa);
@@ -56,6 +60,8 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
   const isTransferencia = tipo === 2;
   const isConferencia = tipo === 3 || tipo === 4;
   const isAjuste = tipo === 5 || tipo === 6;
+  /** Coleta avulsa (origem "2") não exibe "Permite coleta excedente" */
+  const isAvulsa = coleta?.origem === "2";
 
   useEffect(() => {
     if (isOpen && coleta) {
@@ -63,6 +69,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
       setCodAlocOrigem(String(coleta.alocOrigem?.codAlocEstoqueApi ?? "0"));
       setCodAlocDestino(String(coleta.alocDestino?.codAlocEstoqueApi ?? "0"));
       setCodPlanoConta(String(coleta.planoConta?.codPlanoConta ?? "0"));
+      setPermiteColetaExcedente(coleta.permiteColetaExcedente ?? false);
     }
   }, [isOpen, coleta]);
 
@@ -94,6 +101,7 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
       codAlocOrigem: codOrigem,
       codAlocDestino: codDestino,
       codPlanoConta: isAjuste ? codPlano : 0,
+      permiteColetaExcedente,
     };
     try {
       await editarColeta(payload);
@@ -130,6 +138,24 @@ const ModalEditarColeta: React.FC<ModalEditarColetaProps> = ({
                 placeholder="Descrição da coleta"
                 required
               />
+
+              {!isAvulsa && (
+                <div className={styles.switchRow}>
+                  <span className={styles.switchLabel}>
+                    Permite coleta excedente?
+                  </span>
+                  <label className={styles.switch}>
+                    <input
+                      type="checkbox"
+                      checked={permiteColetaExcedente}
+                      onChange={(e) =>
+                        setPermiteColetaExcedente(e.target.checked)
+                      }
+                    />
+                    <span className={styles.slider}></span>
+                  </label>
+                </div>
+              )}
 
               {isInventario && (
                 <>

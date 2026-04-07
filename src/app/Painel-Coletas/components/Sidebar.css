@@ -194,3 +194,33 @@
   background-color: #e9ecef;
   color: #1769e3;
 }
+
+@media (max-width: 1024px) {
+  .sidebar {
+    z-index: 1100;
+    width: 260px;
+    max-width: 85vw;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.14);
+  }
+
+  .sidebar.closed {
+    width: 260px;
+    max-width: 85vw;
+    padding: 20px;
+    transform: translateX(-105%);
+  }
+
+  .sidebar.closed .menu-item {
+    justify-content: flex-start;
+  }
+
+  .sidebar.closed .menu-item svg {
+    margin-right: 10px;
+  }
+
+  .sidebar.closed .menu-text,
+  .sidebar.closed .logout-text {
+    opacity: 1;
+    width: auto;
+  }
+}

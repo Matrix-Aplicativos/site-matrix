@@ -8,7 +8,7 @@ import deleteColetaAvulsaHook from "../hooks/useDeleteColetaAvulsa";
 import usePatchReabrirColeta from "../hooks/usePatchReabrirColeta";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import ModalEditarColeta from "../components/ModalEditarColeta";
-import type { Coleta } from "../hooks/useGetColetas";
+import { formatRespFinalizacao, type Coleta } from "../hooks/useGetColetas";
 import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import ExpandedRowContent from "../components/ExpandedRow";
@@ -178,6 +178,7 @@ interface ColetaExibida {
   volumeConferido: number;
   estoqueOrigem: string;
   planoConta: string;
+  respFinalizacao: string;
 }
 
 interface ColumnConfig {
@@ -226,6 +227,7 @@ const columns: ColumnConfig[] = [
   { key: "planoConta", label: "Plano Contas", sortable: false },
   { key: "tipoMovimento", label: "Tipo Mov.", sortable: true },
   { key: "usuario", label: "Responsável", sortable: true },
+  { key: "respFinalizacao", label: "Responsável Finalização", sortable: false },
 ];
 
 const getOrigemText = (origem: string) =>
@@ -369,6 +371,7 @@ const AjustesEstoquePage: React.FC = () => {
       origem: String(c.origem),
       tipoMovimento: String(c.tipo),
       usuario: c.usuario?.nome || "Usuário não informado",
+      respFinalizacao: formatRespFinalizacao(c.respFinalizacao),
       status: c.status,
       integradoErp: c.integradoErp,
       statusSincronizacao: c.statusSincronizacao, // Mapeado
@@ -690,6 +693,7 @@ const AjustesEstoquePage: React.FC = () => {
                   <td>{row.planoConta}</td>
                   <td>{getTipoMovimentoText(row.tipoMovimento)}</td>
                   <td>{row.usuario}</td>
+                  <td>{row.respFinalizacao}</td>
                   <td
                     className={styles.actionsCell}
                     style={{ verticalAlign: "middle" }}

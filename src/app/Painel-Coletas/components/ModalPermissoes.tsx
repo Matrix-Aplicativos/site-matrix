@@ -16,14 +16,18 @@ const MOVIX_ROLES = [
   "ROLE_MOVIX_CONF_VENDA",
   "ROLE_MOVIX_AJUSTE_ENTRADA",
   "ROLE_MOVIX_AJUSTE_SAIDA",
+  "ROLE_MOVIX_VISUALIZAR_ROMANEIO",
   "ROLE_MOVIX_CADASTRAR_AVULSA",
   "ROLE_MOVIX_CADASTRAR_DEMANDA",
+  "ROLE_MOVIX_VISUALIZAR_QTD_DEMANDA",
   "ROLE_MOVIX_FINALIZAR_COLETA",
   "ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS",
   "ROLE_MOVIX_VISUALIZAR_PRECO",
   "ROLE_MOVIX_VISUALIZAR_CUSTO",
+  "ROLE_MOVIX_VISUALIZAR_ESTOQUE",
   "ROLE_MOVIX_EDITAR_COLETA",
   "ROLE_MOVIX_REABRIR_COLETA",
+
 ];
 
 interface ModalProps {
@@ -53,14 +57,18 @@ const PERMISSION_DISPLAY_MAP = [
         ROLE_MOVIX_CONF_VENDA: "Visualizar Conferências de Venda",
         ROLE_MOVIX_AJUSTE_ENTRADA: "Visualizar Ajuste de Entrada",
         ROLE_MOVIX_AJUSTE_SAIDA: "Visualizar Ajuste de Saída",
+        ROLE_MOVIX_VISUALIZAR_ROMANEIO: "Visualizar Romaneios",
         ROLE_MOVIX_CADASTRAR_AVULSA: "Cadastrar Coleta Avulsa",
         ROLE_MOVIX_CADASTRAR_DEMANDA: "Cadastrar Coleta Sob Demanda",
+        ROLE_MOVIX_VISUALIZAR_QTD_DEMANDA: "Visualizar Quantidade da Demanda",
         ROLE_MOVIX_FINALIZAR_COLETA: "Finalizar Coletas no App",
         ROLE_MOVIX_ATUALIZAR_CADASTRO_ITENS: "Atualizar Cadastro de Itens",
         ROLE_MOVIX_VISUALIZAR_PRECO: "Visualizar Preço",
         ROLE_MOVIX_VISUALIZAR_CUSTO: "Visualizar Custo",
+        ROLE_MOVIX_VISUALIZAR_ESTOQUE: "Visualizar Saldo",
         ROLE_MOVIX_EDITAR_COLETA: "Editar Coleta",
         ROLE_MOVIX_REABRIR_COLETA: "Reabrir Coleta",
+
       };
       return { key: role, description: descriptions[role] || role };
     }),
