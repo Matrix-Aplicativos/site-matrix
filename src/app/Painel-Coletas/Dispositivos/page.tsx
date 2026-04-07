@@ -4,12 +4,19 @@ import { useEffect, useState } from "react";
 import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
-import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
-import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
+import ColetaTable from "../components/table/ColetaTable";
+import useTable from "../hooks/core/useTable";
+import useAxiosRequest from "../hooks/core/useAxiosRequest";
+import ColetaPageShell from "../components/coleta/ColetaPageShell";
+import {
+  DispositivoExibido,
+  DISPOSITIVO_COLUMNS,
+  DISPOSITIVO_SORT_COLUMN_MAP,
+} from "../domain/dispositivoTableConfig";
 
 const IconSort = () => (
   <svg
@@ -28,30 +35,8 @@ const IconSort = () => (
   </svg>
 );
 
-interface DispositivoExibido {
-  nome: string;
-  codigo: string;
-  tipoLicenca: string;
-  status: boolean;
-}
-
-const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
-  nome: "nome",
-  codigo: "id.codDispositivo",
-  tipoLicenca: "tipoLicenca",
-  status: "ativo",
-};
-
-const columns: { key: keyof DispositivoExibido; label: string }[] = [
-  { key: "nome", label: "Nome" },
-  { key: "codigo", label: "Código" },
-  { key: "tipoLicenca", label: "Tipo de Licença" },
-  { key: "status", label: "Status" },
-];
 
 const DispositivosPage: React.FC = () => {
-  const [paginaAtual, setPaginaAtual] = useState(1);
-  const [porPagina, setPorPagina] = useState(20);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof DispositivoExibido;
     direction: "asc" | "desc";
@@ -61,32 +46,43 @@ const DispositivosPage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
-  const {
-    dispositivos,
-    loading: dispositivosLoading,
-    error: dispositivosError,
-    refetch,
-    totalPaginas,
-    totalElementos,
-  } = useGetDispositivos(
-    codEmpresa || 0,
-    paginaAtual,
-    porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
-    sortConfig?.direction,
-    !!codEmpresa
-  );
+  const table = useTable<any>({
+    codEmpresa,
+    enabled: !!codEmpresa,
+    endpoint: ({ codEmpresa: company }) => `/dispositivo/${company}`,
+    queryParamsBuilder: ({ page, pageSize, sort }) => {
+      const params = new URLSearchParams({
+        pagina: String(page),
+        porPagina: String(pageSize),
+      });
+      if (sort) {
+        params.append("orderBy", sort.key);
+        params.append("direction", sort.direction);
+      }
+      return params;
+    },
+    responseAdapter: (data) => ({
+      rows: data?.conteudo || [],
+      totalPages: data?.qtdPaginas || 0,
+      totalItems: data?.qtdElementos || 0,
+    }),
+  });
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
 
   const {
-    dados: dadosDispositivo,
+    data: dadosDispositivo,
     loading: loadingDados,
-    refetch: refetchDados,
-  } = useGetDadosDispositivo(codEmpresa || 0);
+    execute: executeDados,
+  } = useAxiosRequest<any>(null);
 
-  const isLoading = companyLoading || dispositivosLoading || loadingDados;
+  useEffect(() => {
+    if (!codEmpresa) return;
+    executeDados({ method: "GET", url: `/dispositivo/${codEmpresa}/dados` });
+  }, [codEmpresa, executeDados]);
+
+  const isLoading = companyLoading || table.loading || loadingDados;
 
   useEffect(() => {
     if (isLoading) {
@@ -97,7 +93,10 @@ const DispositivosPage: React.FC = () => {
   }, [isLoading, showLoading, hideLoading]);
 
   const handleRefresh = async () => {
-    await Promise.all([refetch(), refetchDados()]);
+    await Promise.all([
+      table.reload(),
+      codEmpresa ? executeDados({ method: "GET", url: `/dispositivo/${codEmpresa}/dados` }) : Promise.resolve(),
+    ]);
   };
 
   const handleSort = (key: keyof DispositivoExibido) => {
@@ -106,7 +105,7 @@ const DispositivosPage: React.FC = () => {
         ? "desc"
         : "asc";
     setSortConfig({ key, direction });
-    setPaginaAtual(1);
+    table.setSort(DISPOSITIVO_SORT_COLUMN_MAP[key] || key);
   };
 
   const handleDeleteDevice = async (codDispositivo: string) => {
@@ -131,105 +130,75 @@ const DispositivosPage: React.FC = () => {
   };
 
   const handleItemsPerPageChange = (newSize: number) => {
-    setPorPagina(newSize);
-    setPaginaAtual(1);
+    table.setPage(1);
+    table.setPageSize(newSize);
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>DISPOSITIVOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
-      </div>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <button
-          className={styles.refreshButton}
-          onClick={handleRefresh}
-          title="Atualizar dispositivos"
-        >
-          <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
-          <FiRefreshCw className={isLoading ? styles.spinning : ""} />
-        </button>
-      </div>
+      <ColetaPageShell
+        title={`DISPOSITIVOS - ${empresa?.nomeFantasia?.toUpperCase() ?? ""}`}
+        titleClassName={styles.title}
+        searchPlaceholder=""
+        onSearch={() => {}}
+        onFilterToggle={() => {}}
+        showSearch={false}
+        actions={
+          <button className={styles.refreshButton} onClick={handleRefresh} title="Atualizar dispositivos">
+            <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+            <FiRefreshCw className={isLoading ? styles.spinning : ""} />
+          </button>
+        }
+        table={<div className={styles.mainContent}>
+          <div className={styles.tableContainer}>
+            {isLoading && !table.rows && <p>Carregando dispositivos...</p>}
+            {table.error && <p>Erro ao carregar dispositivos: {table.error}</p>}
 
-      <div className={styles.mainContent}>
-        <div className={styles.tableContainer}>
-          {isLoading && !dispositivos && <p>Carregando dispositivos...</p>}
-          {dispositivosError && (
-            <p>Erro ao carregar dispositivos: {dispositivosError}</p>
-          )}
-
-          {!isLoading && dispositivos && (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={col.key}
-                      onClick={() => handleSort(col.key)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <span>{col.label}</span>
-                        <IconSort />
-                      </div>
-                    </th>
-                  ))}
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dispositivos.map((dispositivo) => (
-                  <tr key={dispositivo.codDispositivo}>
-                    <td>{dispositivo.nomeDispositivo}</td>
-                    <td>{dispositivo.codDispositivo}</td>
-                    <td>
-                      {dispositivo.tipoLicenca === "2"
-                        ? "Multiempresa"
-                        : "Padrão"}
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.statusBadge} ${
-                          dispositivo.ativo ? styles.active : styles.inactive
-                        }`}
-                      >
-                        {dispositivo.ativo ? "Ativo" : "Inativo"}
-                      </span>
-                    </td>
-                    <td className={styles.actionsCell}>
-                      {!dispositivo.ativo && (
-                        <button
-                          onClick={() =>
-                            toggleStatus(
-                              dispositivo.codDispositivo,
-                              dispositivo.nomeDispositivo,
-                              dispositivo.ativo
-                            )
-                          }
-                          className={`${styles.actionButton} ${styles.activateButton}`}
-                          title="Ativar dispositivo"
-                        >
-                          <FiPower />
-                        </button>
-                      )}
-                      <button
-                        onClick={() =>
-                          handleDeleteDevice(dispositivo.codDispositivo)
-                        }
-                        className={`${styles.actionButton} ${styles.deleteButton}`}
-                        title="Excluir dispositivo"
-                      >
-                        <FiTrash2 />
+            {!isLoading && table.rows && (
+              <ColetaTable
+                tableClassName={styles.table}
+                columns={DISPOSITIVO_COLUMNS.map((col) => {
+                  if (col.key === "tipoLicenca") return { ...col, render: (row: any) => (row.tipoLicenca === "2" ? "Multiempresa" : "Padrão") };
+                  if (col.key === "status") {
+                    return {
+                      ...col,
+                      render: (row: any) => (
+                        <span className={`${styles.statusBadge} ${row.status ? styles.active : styles.inactive}`}>
+                          {row.status ? "Ativo" : "Inativo"}
+                        </span>
+                      ),
+                    };
+                  }
+                  return col;
+                })}
+                rows={table.rows.map((dispositivo: any) => ({
+                  nome: dispositivo.nomeDispositivo,
+                  codigo: dispositivo.codDispositivo,
+                  tipoLicenca: dispositivo.tipoLicenca,
+                  status: dispositivo.ativo,
+                  raw: dispositivo,
+                }))}
+                onSort={handleSort}
+                getRowId={(row: any) => row.codigo}
+                renderSortIcon={() => <IconSort />}
+                actionsCellClassName={styles.actionsCell}
+                renderActions={(row: any) => (
+                  <>
+                    {!row.raw.ativo && (
+                      <button onClick={() => toggleStatus(row.raw.codDispositivo, row.raw.nomeDispositivo, row.raw.ativo)} className={`${styles.actionButton} ${styles.activateButton}`} title="Ativar dispositivo">
+                        <FiPower />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                    )}
+                    <button onClick={() => handleDeleteDevice(row.raw.codDispositivo)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir dispositivo">
+                      <FiTrash2 />
+                    </button>
+                  </>
+                )}
+              />
+            )}
+          </div>
 
-        <div className={styles.situacaoContainer}>
+          <div className={styles.situacaoContainer}>
           <h2>Situação</h2>
           <div className={styles.situacaoItem}>
             <p>Total dispositivos:</p>
@@ -273,21 +242,21 @@ const DispositivosPage: React.FC = () => {
                 : "N/D"}
             </span>
           </div>
-        </div>
-      </div>
-
-      {totalElementos > 0 && (
-        <div className={styles.footerControls}>
-          <PaginationControls
-            paginaAtual={paginaAtual}
-            totalPaginas={totalPaginas}
-            totalElementos={totalElementos}
-            porPagina={porPagina}
-            onPageChange={setPaginaAtual}
+          </div>
+        </div>}
+        pagination={table.totalItems > 0 ? (
+          <div className={styles.footerControls}>
+            <PaginationControls
+            paginaAtual={table.page}
+            totalPaginas={table.totalPages}
+            totalElementos={table.totalItems}
+            porPagina={table.pageSize}
+            onPageChange={table.setPage}
             onItemsPerPageChange={handleItemsPerPageChange}
-          />
-        </div>
-      )}
+            />
+          </div>
+        ) : null}
+      />
     </div>
   );
 };

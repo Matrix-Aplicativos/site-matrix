@@ -8,6 +8,11 @@ import { Produto } from "../utils/types/Produto"; // Garanta que a tipagem tenha
 import { FaTrash } from "react-icons/fa";
 import SearchBar from "./SearchBar";
 import useGetPlanoContas from "../hooks/useGetPlanoConta";
+import {
+  getInitialTipoAjuste,
+  getInitialTipoConferencia,
+  resolveColetaPayloadByStrategy,
+} from "../domain/coletaModalStrategy";
 
 // --- Constantes e Interfaces ---
 interface ModalProps {
@@ -66,11 +71,11 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
     useState<number>(1);
 
   const [tipoConferenciaInterno, setTipoConferenciaInterno] = useState<3 | 4>(
-    tipoColeta === 4 ? 4 : 3,
+    getInitialTipoConferencia(tipoColeta),
   );
 
   const [tipoAjusteInterno, setTipoAjusteInterno] = useState<5 | 6>(
-    tipoColeta === 6 ? 6 : 5,
+    getInitialTipoAjuste(tipoColeta),
   );
 
   const [permiteColetaExcedente, setPermiteColetaExcedente] = useState(true);
@@ -137,8 +142,8 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
 
       setPaginaProdutos(1);
       setQuantidadeParaAdicionar(1);
-      setTipoConferenciaInterno(tipoColeta === 4 ? 4 : 3);
-      setTipoAjusteInterno(tipoColeta === 6 ? 6 : 5);
+      setTipoConferenciaInterno(getInitialTipoConferencia(tipoColeta));
+      setTipoAjusteInterno(getInitialTipoAjuste(tipoColeta));
       setPermiteColetaExcedente(true);
     }
   }, [isOpen, tipoColeta]);
@@ -201,53 +206,28 @@ const ModalCadastrarColeta: React.FC<ModalProps> = ({
       return;
     }
 
-    let payloadTipo = tipoColeta;
-    let payloadOrigem = parseInt(codAlocEstoqueOrigem, 10) || 0;
-    let payloadDestino = parseInt(codAlocEstoqueDestino, 10) || 0;
+    const strategyPayload = resolveColetaPayloadByStrategy({
+      tipoColeta,
+      tipoConferenciaInterno,
+      tipoAjusteInterno,
+      codAlocEstoqueOrigem,
+      codAlocEstoqueDestino,
+      codPlanoConta,
+    });
 
-    if (tipoColeta === 1 || tipoColeta === 7) {
-      if (!codAlocEstoqueDestino) {
-        alert(
-          tipoColeta === 7
-            ? "Para romaneio, o estoque de origem é obrigatório."
-            : "Para inventário, o estoque de origem é obrigatório.",
-        );
-        return;
-      }
-      payloadOrigem = payloadDestino;
-    } else if (tipoColeta === 2) {
-      if (!codAlocEstoqueOrigem || !codAlocEstoqueDestino) {
-        alert("Para transferência, a origem e o destino são obrigatórios.");
-        return;
-      }
-    } else if (tipoColeta === 3 || tipoColeta === 4) {
-      payloadTipo = tipoConferenciaInterno;
-      payloadOrigem = 0;
-      payloadDestino = 0;
-    } else if (tipoColeta === 5 || tipoColeta === 6) {
-      payloadTipo = tipoAjusteInterno;
-
-      if (!codAlocEstoqueOrigem) {
-        alert("Selecione o local de estoque.");
-        return;
-      }
-      if (!codPlanoConta) {
-        alert("Selecione um Plano de Contas para o ajuste.");
-        return;
-      }
-
-      payloadOrigem = parseInt(codAlocEstoqueOrigem, 10);
-      payloadDestino = 0;
+    if (strategyPayload.validationError) {
+      alert(strategyPayload.validationError);
+      return;
     }
 
     await postColeta({
       codColeta: null,
       codEmpresa,
       codUsuario,
-      tipo: payloadTipo,
+      tipo: strategyPayload.payloadTipo,
       descricao,
-      codAlocEstoqueOrigem: payloadOrigem,
-      codAlocEstoqueDestino: payloadDestino,
+      codAlocEstoqueOrigem: strategyPayload.payloadOrigem,
+      codAlocEstoqueDestino: strategyPayload.payloadDestino,
       codPlanoConta: codPlanoConta ? parseInt(codPlanoConta, 10) : undefined,
       permiteColetaExcedente,
       itens: itensNaColeta.map((item) => ({

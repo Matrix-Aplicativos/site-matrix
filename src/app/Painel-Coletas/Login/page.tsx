@@ -52,13 +52,6 @@ export default function LoginPage() {
     return () => clearTimeout(timer);
   }, [textoIdentificacao]);
 
-  useEffect(() => {
-    if (!textoIdentificacao) {
-      setTextoIdentificacao("");
-      setTipoMensagem("");
-    }
-  }, [modoEsqueciSenha, definirPrimeiraSenha]);
-
   const verificarForcaSenha = (valor: string) => {
     if (valor.length < 6) return 1;
     let forca = 0;
