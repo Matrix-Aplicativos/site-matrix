@@ -18,6 +18,9 @@ import {
   DISPOSITIVO_SORT_COLUMN_MAP,
 } from "../domain/dispositivoTableConfig";
 
+/** Linha da tabela: colunas exibidas + `raw` para ações (não ordenável). */
+type DispositivoLinha = DispositivoExibido & { raw: Record<string, unknown> };
+
 const IconSort = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +102,8 @@ const DispositivosPage: React.FC = () => {
     ]);
   };
 
-  const handleSort = (key: keyof DispositivoExibido) => {
+  const handleSort = (key: keyof DispositivoLinha) => {
+    if (key === "raw") return;
     const direction =
       sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
@@ -155,7 +159,7 @@ const DispositivosPage: React.FC = () => {
             {table.error && <p>Erro ao carregar dispositivos: {table.error}</p>}
 
             {!isLoading && table.rows && (
-              <ColetaTable
+              <ColetaTable<DispositivoLinha>
                 tableClassName={styles.table}
                 columns={DISPOSITIVO_COLUMNS.map((col) => {
                   if (col.key === "tipoLicenca") return { ...col, render: (row: any) => (row.tipoLicenca === "2" ? "Multiempresa" : "Padrão") };
@@ -171,13 +175,15 @@ const DispositivosPage: React.FC = () => {
                   }
                   return col;
                 })}
-                rows={table.rows.map((dispositivo: any) => ({
-                  nome: dispositivo.nomeDispositivo,
-                  codigo: dispositivo.codDispositivo,
-                  tipoLicenca: dispositivo.tipoLicenca,
-                  status: dispositivo.ativo,
-                  raw: dispositivo,
-                }))}
+                rows={table.rows.map(
+                  (dispositivo: Record<string, unknown>): DispositivoLinha => ({
+                    nome: String(dispositivo.nomeDispositivo ?? ""),
+                    codigo: String(dispositivo.codDispositivo ?? ""),
+                    tipoLicenca: String(dispositivo.tipoLicenca ?? ""),
+                    status: Boolean(dispositivo.ativo),
+                    raw: dispositivo,
+                  }),
+                )}
                 onSort={handleSort}
                 getRowId={(row: any) => row.codigo}
                 renderSortIcon={() => <IconSort />}

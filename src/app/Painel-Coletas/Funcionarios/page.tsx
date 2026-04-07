@@ -9,7 +9,7 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 import ModalPermissoes from "../components/ModalPermissoes";
-import ColetaTable from "../components/table/ColetaTable";
+import ColetaTable, { type ColetaTableColumn } from "../components/table/ColetaTable";
 import ColetaPageShell from "../components/coleta/ColetaPageShell";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
@@ -72,7 +72,7 @@ const FuncionariosPage: React.FC = () => {
   const [selectedFilter, setSelectedFilter] =
     useState<keyof FuncionarioExibido>("nome");
   const [sortConfig, setSortConfig] = useState<{
-    key: SortableColumn;
+    key: FuncionarioSortableColumn;
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
@@ -313,19 +313,21 @@ const FuncionariosPage: React.FC = () => {
         table={<ColetaTable
         className={styles.tableContainer}
         tableClassName={styles.table}
-        columns={FUNCIONARIO_COLUMNS.filter((col) => col.key !== "acoes").map((col) => {
-          if (col.key === "status") {
-            return {
-              ...col,
-              render: (row: FuncionarioExibido) => (
-                <span className={`${styles.statusBadge} ${getStatusClass(row.status)}`}>
-                  {getFuncionarioStatusText(row.status)}
-                </span>
-              ),
-            };
-          }
-          return col;
-        })}
+        columns={
+          FUNCIONARIO_COLUMNS.filter((col) => col.key !== "acoes").map((col) => {
+            if (col.key === "status") {
+              return {
+                ...col,
+                render: (row: FuncionarioExibido) => (
+                  <span className={`${styles.statusBadge} ${getStatusClass(row.status)}`}>
+                    {getFuncionarioStatusText(row.status)}
+                  </span>
+                ),
+              };
+            }
+            return col;
+          }) as ColetaTableColumn<FuncionarioExibido>[]
+        }
         rows={displayedData}
         onSort={(key) => sortData(key as FuncionarioSortableColumn)}
         getRowId={(row) => row.originalUser.codFuncionario}

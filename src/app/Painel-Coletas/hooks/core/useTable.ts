@@ -19,7 +19,7 @@ interface ColetaFilters {
 
 interface UseTableParams<TItem> {
   codEmpresa?: number;
-  tipo?: string | string[];
+  tipo?: string | string[] | null;
   enabled?: boolean;
   endpoint?: string | ((ctx: { codEmpresa?: number }) => string);
   responseAdapter?: (data: any) => { rows: TItem[]; totalPages: number; totalItems: number };
