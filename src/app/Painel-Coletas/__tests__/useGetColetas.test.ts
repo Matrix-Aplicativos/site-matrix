@@ -93,7 +93,21 @@ describe("useGetColetas", () => {
 
   it("não chama API quando enabled=false", () => {
     renderHook(() =>
-      useGetColetas(codEmpresa, 1, 5, undefined, undefined, undefined, false)
+      useGetColetas(
+        codEmpresa,
+        1,
+        5,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        false,
+      )
     );
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });

@@ -9,7 +9,7 @@ import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
 import ColetaTable from "../components/table/ColetaTable";
-import useTable from "../hooks/core/useTable";
+import useTable, { normalizePagedResponse } from "../hooks/core/useTable";
 import useAxiosRequest from "../hooks/core/useAxiosRequest";
 import ColetaPageShell from "../components/coleta/ColetaPageShell";
 import {
@@ -49,7 +49,7 @@ const DispositivosPage: React.FC = () => {
   const codEmpresa = empresa?.codEmpresa;
   const { showLoading, hideLoading } = useLoading();
 
-  const table = useTable<any>({
+  const table = useTable<Record<string, unknown>>({
     codEmpresa,
     enabled: !!codEmpresa,
     endpoint: ({ codEmpresa: company }) => `/dispositivo/${company}`,
@@ -64,11 +64,7 @@ const DispositivosPage: React.FC = () => {
       }
       return params;
     },
-    responseAdapter: (data) => ({
-      rows: data?.conteudo || [],
-      totalPages: data?.qtdPaginas || 0,
-      totalItems: data?.qtdElementos || 0,
-    }),
+    responseAdapter: normalizePagedResponse,
   });
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);

@@ -1,21 +1,15 @@
 "use client";
 
 import React from "react";
+import type { ColetaFilters } from "../../hooks/core/useTable";
 
 interface OptionMap {
   [label: string]: string;
 }
 
-interface ColetaCommonFilterState {
-  situacao?: string;
-  origem?: string;
-  dataCadastroIni?: string;
-  dataCadastroFim?: string;
-}
-
 interface ColetaCommonFiltersProps {
   styles: Record<string, string>;
-  filters: ColetaCommonFilterState;
+  filters: ColetaFilters;
   statusOptions: OptionMap;
   origemOptions: OptionMap;
   onStatusChange: (value: string) => void;

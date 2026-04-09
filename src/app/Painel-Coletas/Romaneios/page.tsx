@@ -20,6 +20,7 @@ import buildColetaTableColumns from "../components/coleta/buildColetaTableColumn
 import { ColetaExibida, mapColetaToExibida } from "../domain/coletaMappers";
 import { OPCOES_ORIGEM, OPCOES_STATUS, SORT_COLUMN_MAP } from "../domain/coletaEnums";
 import { ROMANEIO_TEMPLATE } from "../domain/coletaPageTemplate";
+import useTableUiState from "../hooks/core/useTableUiState";
 
 
 const IconRefresh = ({ className }: { className?: string }) => (
@@ -64,8 +65,7 @@ const RomaneiosPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalEditarOpen, setIsModalEditarOpen] = useState(false);
   const [coletaParaEditar, setColetaParaEditar] = useState<Coleta | null>(null);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const tableUi = useTableUiState<number>();
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
   const codEmpresa = empresa?.codEmpresa;
@@ -149,13 +149,6 @@ const RomaneiosPage: React.FC = () => {
     const mapped = SORT_COLUMN_MAP[key];
     if (mapped) table.setSort(mapped);
   };
-  const toggleExpandRow = (index: number) => {
-    setExpandedRow((prev) => (prev === index ? null : index));
-  };
-  const toggleFilterExpansion = () => {
-    setIsFilterExpanded((prev) => !prev);
-  };
-
   if (table.error)
     return (
       <div className={styles.container}>
@@ -174,7 +167,7 @@ const RomaneiosPage: React.FC = () => {
         titleClassName={styles.title}
         searchPlaceholder={ROMANEIO_TEMPLATE.searchPlaceholder}
         onSearch={handleSearch}
-        onFilterToggle={toggleFilterExpansion}
+        onFilterToggle={tableUi.toggleFilterExpansion}
         actions={
           <div className={styles.searchActions}>
             <button className={styles.actionButton} onClick={() => table.reload()} title="Atualizar romaneios">
@@ -183,10 +176,10 @@ const RomaneiosPage: React.FC = () => {
             </button>
           </div>
         }
-        filterPanel={isFilterExpanded && (
+        filterPanel={tableUi.isFilterExpanded && (
           <ColetaCommonFilters
             styles={styles}
-            filters={table.filters as any}
+            filters={table.filters}
             statusOptions={OPCOES_STATUS}
             origemOptions={OPCOES_ORIGEM}
             onStatusChange={handleStatusChange}
@@ -200,9 +193,9 @@ const RomaneiosPage: React.FC = () => {
         columns={tableColumns}
         rows={filteredData}
         onSort={sortData}
-        getRowId={(_, index) => index}
-        expandedRowId={expandedRow}
-        onToggleExpandRow={(id) => toggleExpandRow(Number(id))}
+        getRowId={(row) => row.id}
+        expandedRowId={tableUi.expandedRowId}
+        onToggleExpandRow={(id) => tableUi.toggleExpandRow(Number(id))}
         expandButtonClassName={styles.expandButton}
         renderSortIcon={() => <IconSort />}
         actionsCellClassName={styles.actionsCell}

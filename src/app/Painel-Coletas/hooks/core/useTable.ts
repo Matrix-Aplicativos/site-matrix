@@ -9,7 +9,7 @@ interface ColetaApiResponse<TItem> {
   qtdElementos: number;
 }
 
-interface ColetaFilters {
+export interface ColetaFilters {
   situacao?: string;
   origem?: string;
   descricao?: string;
@@ -17,12 +17,27 @@ interface ColetaFilters {
   dataCadastroFim?: string;
 }
 
+export interface TableRowsPayload<TItem> {
+  rows: TItem[];
+  totalPages: number;
+  totalItems: number;
+}
+
+export const normalizePagedResponse = <TItem,>(data: unknown): TableRowsPayload<TItem> => {
+  const source = (data ?? {}) as Partial<ColetaApiResponse<TItem>>;
+  return {
+    rows: source.conteudo || [],
+    totalPages: source.qtdPaginas || 0,
+    totalItems: source.qtdElementos || 0,
+  };
+};
+
 interface UseTableParams<TItem> {
   codEmpresa?: number;
   tipo?: string | string[] | null;
   enabled?: boolean;
   endpoint?: string | ((ctx: { codEmpresa?: number }) => string);
-  responseAdapter?: (data: any) => { rows: TItem[]; totalPages: number; totalItems: number };
+  responseAdapter?: (data: unknown) => TableRowsPayload<TItem>;
   queryParamsBuilder?: (ctx: {
     page: number;
     pageSize: number;
@@ -159,10 +174,10 @@ export default function useTable<TItem>({
       return;
     }
 
-    const defaultData = response.data as ColetaApiResponse<TItem>;
-    setRows(defaultData?.conteudo || []);
-    setTotalPages(defaultData?.qtdPaginas || 0);
-    setTotalItems(defaultData?.qtdElementos || 0);
+    const mapped = normalizePagedResponse<TItem>(response.data);
+    setRows(mapped.rows);
+    setTotalPages(mapped.totalPages);
+    setTotalItems(mapped.totalItems);
   }, [
     shouldLoad,
     codEmpresa,

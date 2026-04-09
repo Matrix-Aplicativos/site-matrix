@@ -190,7 +190,7 @@ const InventariosPage: React.FC = () => {
         filterPanel={tableUi.isFilterExpanded && (
           <ColetaCommonFilters
             styles={styles}
-            filters={table.filters as any}
+            filters={table.filters}
             statusOptions={OPCOES_STATUS}
             origemOptions={OPCOES_ORIGEM}
             onStatusChange={handleStatusChange}

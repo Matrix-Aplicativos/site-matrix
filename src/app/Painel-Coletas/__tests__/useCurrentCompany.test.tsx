@@ -1,69 +1,31 @@
 import { renderHook } from "@testing-library/react";
 import useCurrentCompany from "../hooks/useCurrentCompany";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
-import { getCookie } from "cookies-next";
-import { getUserFromToken } from "../utils/functions/getUserFromToken";
-
-jest.mock("../hooks/useGetLoggedUser");
-jest.mock("cookies-next");
-jest.mock("../utils/functions/getUserFromToken");
 
 describe("useCurrentCompany", () => {
-  const mockUseGetLoggedUser = useGetLoggedUser as jest.Mock;
-  const mockGetCookie = getCookie as jest.Mock;
-  const mockGetUserFromToken = getUserFromToken as jest.Mock;
-
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockGetCookie.mockReturnValue("fakeToken");
-    mockGetUserFromToken.mockReturnValue(123);
+    localStorage.clear();
   });
 
-  it("deve retornar codEmpresa quando usuário possui empresas", async () => {
-    const fakeUser = {
-      empresas: [{ codEmpresa: 42 }],
-    };
-
-    mockUseGetLoggedUser.mockReturnValue({
-      usuario: fakeUser,
-      loading: false,
-    });
-
-    const { result, rerender } = renderHook(() => useCurrentCompany());
-
-    rerender();
-
-    expect(result.current.codEmpresa).toBe(42);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it("deve retornar null quando usuário não possui empresas", async () => {
-    const fakeUser = {
-      empresas: [],
-    };
-
-    mockUseGetLoggedUser.mockReturnValue({
-      usuario: fakeUser,
-      loading: false,
-    });
-
-    const { result, rerender } = renderHook(() => useCurrentCompany());
-
-    rerender();
-
-    expect(result.current.codEmpresa).toBeNull();
-    expect(result.current.loading).toBe(false);
-  });
-
-  it("deve retornar loading enquanto usuário ainda está carregando", () => {
-    mockUseGetLoggedUser.mockReturnValue({
-      usuario: null,
-      loading: true,
-    });
-
+  it("deve retornar empresa quando existir empresaSelecionada no localStorage", () => {
+    localStorage.setItem(
+      "empresaSelecionada",
+      JSON.stringify({ codEmpresa: 42, nomeFantasia: "Empresa Teste" }),
+    );
     const { result } = renderHook(() => useCurrentCompany());
+    expect(result.current.empresa?.codEmpresa).toBe(42);
+    expect(result.current.loading).toBe(false);
+  });
 
-    expect(result.current.codEmpresa).toBeNull();
-    expect(result.current.loading).toBe(true);
+  it("deve retornar empresa null quando localStorage não possuir empresaSelecionada", () => {
+    const { result } = renderHook(() => useCurrentCompany());
+    expect(result.current.empresa).toBeNull();
+    expect(result.current.loading).toBe(false);
+  });
+
+  it("deve retornar empresa null quando JSON estiver inválido", () => {
+    localStorage.setItem("empresaSelecionada", "{invalido");
+    const { result } = renderHook(() => useCurrentCompany());
+    expect(result.current.empresa).toBeNull();
+    expect(result.current.loading).toBe(false);
   });
 });

@@ -135,7 +135,6 @@ export default function LoginPage() {
         );
         setTipoMensagem("");
       } else {
-        localStorage.setItem("authToken", token);
         try {
           const userId = getUserFromToken(token);
           const response = await axiosInstance.get("/usuario/" + userId);
@@ -239,12 +238,14 @@ export default function LoginPage() {
               <label htmlFor="senha">
                 {definirPrimeiraSenha ? "Nova Senha" : "Senha"}
               </label>
-              <span
+              <button
+                type="button"
                 className="eye-icon"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
+                aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
                 {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              </button>
             </div>
           )}
 
@@ -306,26 +307,32 @@ export default function LoginPage() {
                 onChange={(e) => setConfirmacaoSenha(e.target.value)}
               />
               <label htmlFor="confirmacaoSenha">Confirmar Senha</label>
-              <span
+              <button
+                type="button"
                 className="eye-icon"
                 onClick={() => setMostrarConfirmacao(!mostrarConfirmacao)}
+                aria-label={mostrarConfirmacao ? "Ocultar confirmacao de senha" : "Mostrar confirmacao de senha"}
               >
                 {mostrarConfirmacao ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              </button>
             </div>
           )}
 
           {!definirPrimeiraSenha && !modoEsqueciSenha && (
-            <p
+            <button
+              type="button"
               style={{
                 color: "#007bff",
                 cursor: "pointer",
                 textAlign: "center",
+                background: "transparent",
+                border: "none",
+                width: "100%",
               }}
               onClick={() => setModoEsqueciSenha(true)}
             >
               Esqueceu sua senha?
-            </p>
+            </button>
           )}
 
           {(textoIdentificacao || errorLogin || errorCargos) && (
@@ -340,6 +347,8 @@ export default function LoginPage() {
                     : "red",
                 fontWeight: "bold",
               }}
+              role="status"
+              aria-live="polite"
             >
               {textoIdentificacao || errorLogin || errorCargos}
             </p>

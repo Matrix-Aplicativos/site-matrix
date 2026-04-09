@@ -23,6 +23,10 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 
 describe("Sidebar", () => {
   const mockPush = jest.fn();
+  const defaultProps = {
+    isOpen: true,
+    toggleSidebar: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,7 +38,7 @@ describe("Sidebar", () => {
       usuario: { nome: "Loren User" },
     });
 
-    render(<Sidebar />);
+    render(<Sidebar {...defaultProps} />);
 
     expect(screen.getByText("Loren User")).toBeInTheDocument();
   });
@@ -42,7 +46,7 @@ describe("Sidebar", () => {
   it("renderiza fallback quando não há usuário", () => {
     (useGetLoggedUser as jest.Mock).mockReturnValue({ usuario: null });
 
-    render(<Sidebar />);
+    render(<Sidebar {...defaultProps} />);
 
     expect(screen.getByText("USUARIO GENERICO")).toBeInTheDocument();
   });
@@ -52,7 +56,7 @@ describe("Sidebar", () => {
       usuario: { nome: "Teste" },
     });
 
-    render(<Sidebar />);
+    render(<Sidebar {...defaultProps} />);
 
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Inventários")).toBeInTheDocument();
@@ -67,7 +71,7 @@ describe("Sidebar", () => {
       usuario: { nome: "Teste" },
     });
 
-    render(<Sidebar />);
+    render(<Sidebar {...defaultProps} />);
 
     fireEvent.click(screen.getByText("Sair"));
 

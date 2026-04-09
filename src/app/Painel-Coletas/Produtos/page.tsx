@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import useTable from "../hooks/core/useTable";
+import useTable, { normalizePagedResponse } from "../hooks/core/useTable";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { Produto } from "../utils/types/Produto";
 
@@ -98,11 +98,7 @@ const ProdutosPage: React.FC = () => {
       });
       return params;
     },
-    responseAdapter: (data) => ({
-      rows: data?.conteudo || [],
-      totalPages: data?.qtdPaginas || 0,
-      totalItems: data?.qtdElementos || 0,
-    }),
+    responseAdapter: normalizePagedResponse,
   });
 
   const isLoading = companyLoading || table.loading;

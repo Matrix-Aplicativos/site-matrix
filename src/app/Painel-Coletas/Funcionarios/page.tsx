@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import useTable from "../hooks/core/useTable";
+import useTable, { normalizePagedResponse } from "../hooks/core/useTable";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
@@ -123,11 +123,7 @@ const FuncionariosPage: React.FC = () => {
       });
       return params;
     },
-    responseAdapter: (data) => ({
-      rows: data?.conteudo || [],
-      totalPages: data?.qtdPaginas || 0,
-      totalItems: data?.qtdElementos || 0,
-    }),
+    responseAdapter: normalizePagedResponse,
   });
 
   useEffect(() => {

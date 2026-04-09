@@ -20,6 +20,7 @@ import buildColetaTableColumns from "../components/coleta/buildColetaTableColumn
 import { ColetaExibida, mapColetaToExibida } from "../domain/coletaMappers";
 import { OPCOES_ORIGEM, OPCOES_STATUS, SORT_COLUMN_MAP } from "../domain/coletaEnums";
 import { CONFERENCIA_TEMPLATE } from "../domain/coletaPageTemplate";
+import useTableUiState from "../hooks/core/useTableUiState";
 
 // --- ÍCONES ---
 
@@ -64,12 +65,11 @@ const IconSort = () => (
 const columns = CONFERENCIA_TEMPLATE.columns;
 
 const ConferenciasPage: React.FC = () => {
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [tipoMovimentoFiltro, setTipoMovimentoFiltro] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalEditarOpen, setIsModalEditarOpen] = useState(false);
   const [coletaParaEditar, setColetaParaEditar] = useState<Coleta | null>(null);
+  const tableUi = useTableUiState<number>();
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: companyLoading } = useCurrentCompany();
@@ -169,14 +169,6 @@ const ConferenciasPage: React.FC = () => {
     if (mapped) table.setSort(mapped);
   };
 
-  const toggleExpandRow = (index: number) => {
-    setExpandedRow((prev) => (prev === index ? null : index));
-  };
-
-  const toggleFilterExpansion = () => {
-    setIsFilterExpanded((prev) => !prev);
-  };
-
   if (table.error)
     return (
       <div className={styles.container}>
@@ -196,7 +188,7 @@ const ConferenciasPage: React.FC = () => {
         titleClassName={styles.title}
         searchPlaceholder={CONFERENCIA_TEMPLATE.searchPlaceholder}
         onSearch={handleSearch}
-        onFilterToggle={toggleFilterExpansion}
+        onFilterToggle={tableUi.toggleFilterExpansion}
         actions={
           <div className={styles.searchActions}>
             <button className={styles.actionButton} onClick={() => setIsModalOpen(true)} title="Cadastrar nova conferência">
@@ -209,7 +201,7 @@ const ConferenciasPage: React.FC = () => {
             </button>
           </div>
         }
-        filterPanel={isFilterExpanded && (
+        filterPanel={tableUi.isFilterExpanded && (
           <ColetaCommonFilters
             styles={styles}
             filters={table.filters}
@@ -229,9 +221,9 @@ const ConferenciasPage: React.FC = () => {
         columns={tableColumns}
         rows={filteredData}
         onSort={sortData}
-        getRowId={(_, index) => index}
-        expandedRowId={expandedRow}
-        onToggleExpandRow={(id) => toggleExpandRow(Number(id))}
+        getRowId={(row) => row.id}
+        expandedRowId={tableUi.expandedRowId}
+        onToggleExpandRow={(id) => tableUi.toggleExpandRow(Number(id))}
         expandButtonClassName={styles.expandButton}
         renderSortIcon={() => <IconSort />}
         actionsCellClassName={styles.actionsCell}
