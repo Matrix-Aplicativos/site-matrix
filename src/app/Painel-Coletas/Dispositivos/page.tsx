@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
+import { FiTrash2, FiPower, FiRefreshCw, FiEdit2 } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
+import useEditarNomeDispositivo from "../hooks/useEditarNomeDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
 import ColetaTable from "../components/table/ColetaTable";
@@ -69,6 +70,13 @@ const DispositivosPage: React.FC = () => {
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa || 0);
   const { ativarDispositivo } = useAtivarDispositivo();
+  const { editarNomeDispositivo, loading: loadingEdicao } = useEditarNomeDispositivo();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deviceBeingEdited, setDeviceBeingEdited] = useState<{
+    codDispositivo: string;
+    nomeAtual: string;
+  } | null>(null);
+  const [novoNomeDispositivo, setNovoNomeDispositivo] = useState("");
 
   const {
     data: dadosDispositivo,
@@ -113,6 +121,37 @@ const DispositivosPage: React.FC = () => {
       await deleteDispositivo(codDispositivo);
       await handleRefresh();
     }
+  };
+
+  const openEditModal = (codDispositivo: string, nomeAtual: string) => {
+    setDeviceBeingEdited({ codDispositivo, nomeAtual });
+    setNovoNomeDispositivo(nomeAtual);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    if (loadingEdicao) return;
+    setIsEditModalOpen(false);
+    setDeviceBeingEdited(null);
+    setNovoNomeDispositivo("");
+  };
+
+  const handleConfirmEditDeviceName = async () => {
+    if (!codEmpresa || !deviceBeingEdited) return;
+
+    const nomeNormalizado = novoNomeDispositivo.trim();
+    if (!nomeNormalizado || nomeNormalizado === deviceBeingEdited.nomeAtual) {
+      closeEditModal();
+      return;
+    }
+
+    await editarNomeDispositivo({
+      codEmpresa,
+      codDispositivo: deviceBeingEdited.codDispositivo,
+      nomeDispositivo: nomeNormalizado,
+    });
+    closeEditModal();
+    await handleRefresh();
   };
 
   const toggleStatus = async (
@@ -191,9 +230,19 @@ const DispositivosPage: React.FC = () => {
                         <FiPower />
                       </button>
                     )}
-                    <button onClick={() => handleDeleteDevice(row.raw.codDispositivo)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir dispositivo">
-                      <FiTrash2 />
-                    </button>
+                    <div className={styles.dangerActionsGroup}>
+                      <button
+                        onClick={() => openEditModal(row.raw.codDispositivo, row.raw.nomeDispositivo)}
+                        className={`${styles.actionButton} ${styles.editButton}`}
+                        title="Editar nome do dispositivo"
+                        disabled={loadingEdicao}
+                      >
+                        <FiEdit2 />
+                      </button>
+                      <button onClick={() => handleDeleteDevice(row.raw.codDispositivo)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir dispositivo">
+                        <FiTrash2 />
+                      </button>
+                    </div>
                   </>
                 )}
               />
@@ -259,6 +308,38 @@ const DispositivosPage: React.FC = () => {
           </div>
         ) : null}
       />
+
+      {isEditModalOpen && deviceBeingEdited && (
+        <div className={styles.modalOverlay} onClick={closeEditModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Editar dispositivo</h2>
+            </div>
+            <div className={styles.modalBody}>
+              <label htmlFor="novo-nome-dispositivo" className={styles.modalLabel}>
+                Novo nome do dispositivo
+              </label>
+              <input
+                id="novo-nome-dispositivo"
+                type="text"
+                value={novoNomeDispositivo}
+                onChange={(e) => setNovoNomeDispositivo(e.target.value)}
+                className={styles.modalInput}
+                placeholder="Digite o novo nome"
+                autoFocus
+              />
+            </div>
+            <div className={styles.modalFooter}>
+              <button onClick={closeEditModal} className={styles.cancelButton} disabled={loadingEdicao}>
+                Cancelar
+              </button>
+              <button onClick={handleConfirmEditDeviceName} className={styles.saveButton} disabled={loadingEdicao}>
+                {loadingEdicao ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -89,6 +89,11 @@
   gap: 8px;
 }
 
+.dangerActionsGroup {
+  display: flex;
+  gap: 4px;
+}
+
 .actionButton {
   display: flex;
   align-items: center;
@@ -116,6 +121,110 @@
   color: #ff4444;
   cursor: pointer;
   transition: color 0.2s;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  color: #1769e3;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.modalContent {
+  background-color: #fff;
+  color: #333;
+  border-radius: 10px;
+  width: 92%;
+  max-width: 520px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #1769e3;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.modalLabel {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #4b5563;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.modalInput:focus {
+  border-color: #1769e3;
+  box-shadow: 0 0 0 3px rgba(23, 105, 227, 0.15);
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.saveButton {
+  background-color: #1769e3;
+  color: #fff;
+}
+
+.cancelButton {
+  background-color: #6b7280;
+  color: #fff;
+}
+
+.saveButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .situacaoContainer {
@@ -322,6 +431,24 @@
 
   .deleteButton {
     color: #ff0000;
+  }
+
+  .editButton {
+    color: #1769e3;
+  }
+
+  .modalContent {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .modalLabel {
+    color: #111827;
+  }
+
+  .modalInput {
+    background-color: #ffffff;
+    color: #000000;
   }
 
   .situacaoContainer {
