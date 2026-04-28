@@ -1,0 +1,18 @@
+.topScrollbar {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.topScrollbarContent {
+  height: 1px;
+}
+
+.bottomScrollArea {
+  overflow-x: auto;
+}
+
+.hidden {
+  display: none;
+}
