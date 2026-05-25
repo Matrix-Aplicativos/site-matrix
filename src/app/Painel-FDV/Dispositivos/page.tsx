@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FiTrash2, FiPower, FiRefreshCw } from "react-icons/fi";
+import { FiTrash2, FiPower, FiRefreshCw, FiEdit2 } from "react-icons/fi";
 import styles from "./Dispositivos.module.css";
 import { useLoading } from "@/app/shared/Context/LoadingContext";
 import useGetDispositivos from "../hooks/useGetDispositivos";
 import useDeleteDispositivo from "../hooks/useDeleteDispositivo";
 import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
+import useEditarNomeDispositivo from "../hooks/useEditarNomeDispositivo";
 import useGetDadosDispositivo from "../hooks/useGetDadosDispositivo";
-import useConfiguracao from "../hooks/useConfiguracao";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import useCurrentCompany from "../hooks/useCurrentCompany";
+import { formatPainelTitle } from "../utils/formatPainelTitle";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
 const IconSort = () => (
@@ -63,8 +65,10 @@ export default function DispositivosPage() {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const { empresa } = useCurrentCompany();
 
-  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa;
+  const codEmpresa = empresa?.codEmpresa ?? usuario?.empresas?.[0]?.codEmpresa;
+  const pageTitle = formatPainelTitle("DISPOSITIVOS", empresa?.nomeFantasia);
   const { showLoading, hideLoading } = useLoading();
 
   const {
@@ -85,26 +89,22 @@ export default function DispositivosPage() {
 
   const { deleteDispositivo } = useDeleteDispositivo(codEmpresa);
   const { ativarDispositivo } = useAtivarDispositivo();
+  const { editarNomeDispositivo, loading: loadingEdicao } = useEditarNomeDispositivo();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deviceBeingEdited, setDeviceBeingEdited] = useState<{
+    codDispositivo: string;
+    nomeAtual: string;
+  } | null>(null);
+  const [novoNomeDispositivo, setNovoNomeDispositivo] = useState("");
 
   const {
     dados: dadosDispositivo,
     loading: loadingDados,
+    error: errorDados,
     refetch: refetchDados,
   } = useGetDadosDispositivo(codEmpresa);
 
-  const {
-    validadeLicenca,
-    loading: loadingLicencaGeral,
-    error: errorLicencaGeral,
-    loadingLicenca,
-    errorLicenca,
-  } = useConfiguracao(codEmpresa);
-
-  const isLoading =
-    dispositivosLoading ||
-    loadingDados ||
-    loadingLicenca ||
-    loadingLicencaGeral;
+  const isLoading = dispositivosLoading || loadingDados;
 
   useEffect(() => {
     if (isLoading) {
@@ -136,6 +136,37 @@ export default function DispositivosPage() {
     }
   };
 
+  const openEditModal = (codDispositivo: string, nomeAtual: string) => {
+    setDeviceBeingEdited({ codDispositivo, nomeAtual });
+    setNovoNomeDispositivo(nomeAtual);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    if (loadingEdicao) return;
+    setIsEditModalOpen(false);
+    setDeviceBeingEdited(null);
+    setNovoNomeDispositivo("");
+  };
+
+  const handleConfirmEditDeviceName = async () => {
+    if (!codEmpresa || !deviceBeingEdited) return;
+
+    const nomeNormalizado = novoNomeDispositivo.trim();
+    if (!nomeNormalizado || nomeNormalizado === deviceBeingEdited.nomeAtual) {
+      closeEditModal();
+      return;
+    }
+
+    await editarNomeDispositivo({
+      codEmpresa,
+      codDispositivo: deviceBeingEdited.codDispositivo,
+      nomeDispositivo: nomeNormalizado,
+    });
+    closeEditModal();
+    await handleRefresh();
+  };
+
   const toggleStatus = async (
     codDispositivo: string,
     nomeDispositivo: string,
@@ -160,17 +191,18 @@ export default function DispositivosPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>DISPOSITIVOS</h1>
+        <h1 className={styles.title}>{pageTitle}</h1>
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
+          type="button"
           className={styles.refreshButton}
           onClick={handleRefresh}
           title="Atualizar dispositivos"
           disabled={isLoading || !codEmpresa}
         >
-          <span style={{ marginRight: 5, color: "#1769e3" }}>Atualizar</span>
+          Atualizar
           <FiRefreshCw className={isLoading ? styles.spinning : ""} />
         </button>
       </div>
@@ -182,12 +214,8 @@ export default function DispositivosPage() {
             <p>Erro ao carregar dispositivos: {dispositivosError}</p>
           )}
 
-          {errorLicenca && (
-            <p>Erro ao carregar validade da licença: {errorLicenca.message}</p>
-          )}
-
-          {errorLicencaGeral && (
-            <p>Erro ao carregar configurações: {errorLicencaGeral.message}</p>
+          {errorDados && (
+            <p>Erro ao carregar dados dos dispositivos: {errorDados}</p>
           )}
           {!isLoading && dispositivos && (
             <table className={styles.table}>
@@ -248,15 +276,30 @@ export default function DispositivosPage() {
                         </button>
                       )}
 
-                      <button
-                        onClick={() =>
-                          handleDeleteDevice(dispositivo.codDispositivo)
-                        }
-                        className={`${styles.actionButton} ${styles.deleteButton}`}
-                        title="Excluir dispositivo"
-                      >
-                        <FiTrash2 />
-                      </button>
+                      <div className={styles.dangerActionsGroup}>
+                        <button
+                          onClick={() =>
+                            openEditModal(
+                              dispositivo.codDispositivo,
+                              dispositivo.nomeDispositivo
+                            )
+                          }
+                          className={`${styles.actionButton} ${styles.editButton}`}
+                          title="Editar nome do dispositivo"
+                          disabled={loadingEdicao}
+                        >
+                          <FiEdit2 />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteDevice(dispositivo.codDispositivo)
+                          }
+                          className={`${styles.actionButton} ${styles.deleteButton}`}
+                          title="Excluir dispositivo"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -315,13 +358,9 @@ export default function DispositivosPage() {
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>
-              {!codEmpresa || loadingLicenca
+              {!codEmpresa || loadingDados
                 ? "..."
-                : errorLicenca
-                ? "Erro"
-                : validadeLicenca
-                ? validadeLicenca.toLocaleDateString("pt-BR")
-                : "N/D"}
+                : dadosDispositivo?.vencimentoLicencas || "N/D"}
             </span>
           </div>
         </div>
@@ -337,6 +376,38 @@ export default function DispositivosPage() {
             onPageChange={setPaginaAtual}
             onItemsPerPageChange={handleItemsPerPageChange}
           />
+        </div>
+      )}
+
+      {isEditModalOpen && deviceBeingEdited && (
+        <div className={styles.modalOverlay} onClick={closeEditModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Editar dispositivo</h2>
+            </div>
+            <div className={styles.modalBody}>
+              <label htmlFor="novo-nome-dispositivo" className={styles.modalLabel}>
+                Novo nome do dispositivo
+              </label>
+              <input
+                id="novo-nome-dispositivo"
+                type="text"
+                value={novoNomeDispositivo}
+                onChange={(e) => setNovoNomeDispositivo(e.target.value)}
+                className={styles.modalInput}
+                placeholder="Digite o novo nome"
+                autoFocus
+              />
+            </div>
+            <div className={styles.modalFooter}>
+              <button onClick={closeEditModal} className={styles.cancelButton} disabled={loadingEdicao}>
+                Cancelar
+              </button>
+              <button onClick={handleConfirmEditDeviceName} className={styles.saveButton} disabled={loadingEdicao}>
+                {loadingEdicao ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

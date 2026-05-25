@@ -8,9 +8,10 @@ import useCurrentCompany from "../hooks/useCurrentCompany";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import {
   ConfiguracaoApi,
-  isValorSimNao,
+  isValorBoolean,
   parseConfiguracoesResponse,
 } from "../utils/types/ConfiguracaoApi";
+import { formatPainelTitle } from "../utils/formatPainelTitle";
 
 const IconSave = () => (
   <svg
@@ -30,7 +31,7 @@ const IconSave = () => (
   </svg>
 );
 
-const IconRefresh = () => (
+const IconRefresh = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="14"
@@ -41,6 +42,7 @@ const IconRefresh = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    className={className}
   >
     <polyline points="23 4 23 10 17 10"></polyline>
     <polyline points="1 20 1 14 7 14"></polyline>
@@ -57,6 +59,7 @@ export default function ConfiguracoesPage() {
 
   const { showLoading, hideLoading } = useLoading();
   const { empresa, loading: loadingEmpresa } = useCurrentCompany();
+  const pageTitle = formatPainelTitle("CONFIGURAÇÕES", empresa?.nomeFantasia);
 
   useEffect(() => {
     const fetchConfiguracoes = async () => {
@@ -126,21 +129,27 @@ export default function ConfiguracoesPage() {
     );
   };
 
-  const handleAtivoChange = (codConfiguracao: number, ativo: boolean) => {
+  const handleBooleanToggle = async (
+    config: ConfiguracaoApi,
+    checked: boolean
+  ) => {
+    const updated: ConfiguracaoApi = {
+      ...config,
+      valor: checked ? "true" : "false",
+    };
     setConfiguracoes((prev) =>
-      prev.map((config) =>
-        config.codConfiguracao === codConfiguracao
-          ? { ...config, ativo }
-          : config
+      prev.map((item) =>
+        item.codConfiguracao === config.codConfiguracao ? updated : item
       )
     );
+    await handleUpdateConfiguracao(updated);
   };
 
   if (loading) {
     return (
       <div className={styles.container}>
         <LoadingOverlay />
-        <h1 className={styles.title}>CONFIGURAÇÕES</h1>
+        <h1 className={styles.title}>{pageTitle}</h1>
       </div>
     );
   }
@@ -148,104 +157,92 @@ export default function ConfiguracoesPage() {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>CONFIGURAÇÕES</h1>
+      <h1 className={styles.title}>{pageTitle}</h1>
 
       {error && <div className={styles.errorMessage}>{error}</div>}
-
       {success && <div className={styles.successMessage}>{success}</div>}
 
-      <div className={styles.configuracoesGrid}>
+      <div className={styles.tableContainer}>
         {configuracoes.length > 0 ? (
-          configuracoes.map((config) => {
-            const isSaving = savingId === config.codConfiguracao;
+          <table className={styles.configTable}>
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {configuracoes.map((config) => {
+                const isSaving = savingId === config.codConfiguracao;
+                const isBoolean = isValorBoolean(config.valor);
 
-            return (
-              <div
-                key={config.codConfiguracao}
-                className={styles.configuracaoCard}
-              >
-                <div className={styles.configHeader}>
-                  <h3 className={styles.configTitle}>{config.descricao}</h3>
-                  <div className={styles.configActions}>
-                    <button
-                      className={styles.saveButton}
-                      onClick={() => handleUpdateConfiguracao(config)}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? <IconRefresh /> : <IconSave />}
-                      {isSaving ? "Salvando..." : "Salvar"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className={styles.configBody}>
-                  <div className={styles.configInputContainer}>
-                    {isValorSimNao(config.valor) ? (
-                      <div className={styles.configBoolean}>
-                        <label className={styles.switch}>
+                return (
+                  <tr key={config.codConfiguracao}>
+                    <td className={styles.descricaoCell}>{config.descricao}</td>
+                    <td className={styles.valorCell}>
+                      {isBoolean ? (
+                        <div className={styles.valorBoolean}>
+                          <label className={styles.switch}>
+                            <input
+                              type="checkbox"
+                              checked={
+                                config.valor.trim().toLowerCase() === "true"
+                              }
+                              disabled={isSaving}
+                              onChange={(e) =>
+                                handleBooleanToggle(config, e.target.checked)
+                              }
+                            />
+                            <span className={styles.slider}></span>
+                          </label>
+                          {isSaving && (
+                            <IconRefresh className={styles.spinning} />
+                          )}
+                        </div>
+                      ) : (
+                        <div className={styles.valorInputRow}>
                           <input
-                            type="checkbox"
-                            checked={config.valor === "S"}
+                            type="text"
+                            className={styles.configInput}
+                            value={config.valor}
+                            disabled={isSaving}
                             onChange={(e) =>
                               handleValorChange(
                                 config.codConfiguracao,
-                                e.target.checked ? "S" : "N"
+                                e.target.value
                               )
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleUpdateConfiguracao(config);
+                              }
+                            }}
                           />
-                          <span className={styles.slider}></span>
-                        </label>
-                        <span className={styles.booleanLabel}>
-                          {config.valor === "S" ? "Sim" : "Não"}
-                        </span>
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        className={styles.configInput}
-                        value={config.valor}
-                        onChange={(e) =>
-                          handleValorChange(
-                            config.codConfiguracao,
-                            e.target.value
-                          )
-                        }
-                      />
-                    )}
-                  </div>
-
-                  <div className={styles.configStatus}>
-                    <label className={styles.statusToggle}>
-                      <input
-                        type="checkbox"
-                        checked={config.ativo}
-                        onChange={(e) =>
-                          handleAtivoChange(
-                            config.codConfiguracao,
-                            e.target.checked
-                          )
-                        }
-                      />
-                      <span className={styles.statusLabel}>
-                        {config.ativo ? "Ativo" : "Inativo"}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className={styles.configFooter}>
-                  <span className={styles.configId}>Código: {config.codigo}</span>
-                  <span className={styles.configDescricao}>
-                    ID: {config.codConfiguracao}
-                  </span>
-                </div>
-              </div>
-            );
-          })
+                          <button
+                            type="button"
+                            className={styles.saveButton}
+                            onClick={() => handleUpdateConfiguracao(config)}
+                            disabled={isSaving}
+                            title="Salvar"
+                          >
+                            {isSaving ? (
+                              <IconRefresh className={styles.spinning} />
+                            ) : (
+                              <IconSave />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         ) : (
-          <div className={styles.noConfiguracoes}>
-            <p>Nenhuma configuração encontrada para esta empresa.</p>
-          </div>
+          <p className={styles.noConfiguracoes}>
+            Nenhuma configuração encontrada para esta empresa.
+          </p>
         )}
       </div>
     </div>

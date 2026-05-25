@@ -15,7 +15,8 @@ export interface DadosDispositivo {
   licencasPadrao: number;
   licencasMulti: number;
   licencasPadraoUtilizadas: number;
-  licencasMultiUtilizadas: number; // Corrigido de "licencasMultiUtilizadas"
+  licencasMultiUtilizadas: number;
+  vencimentoLicencas: string;
 }
 
 /**
@@ -39,6 +40,7 @@ const initialState: DadosDispositivo = {
   licencasMulti: 0,
   licencasPadraoUtilizadas: 0,
   licencasMultiUtilizadas: 0,
+  vencimentoLicencas: "",
 };
 
 /**

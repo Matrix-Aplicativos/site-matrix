@@ -25,6 +25,11 @@ interface ColetaTableProps<TRow> {
   renderExpandedContent?: (row: TRow, index: number) => React.ReactNode;
   expandedRowClassName?: string;
   expandedColSpanOffset?: number;
+  expandColumnIndex?: number;
+  renderExpandButton?: (
+    row: TRow,
+    isExpanded: boolean
+  ) => React.ReactNode;
   renderSortIcon?: () => React.ReactNode;
   className?: string;
 }
@@ -45,8 +50,19 @@ export default function ColetaTable<TRow>({
   renderExpandedContent,
   expandedRowClassName,
   expandedColSpanOffset = 0,
+  expandColumnIndex = 0,
+  renderExpandButton,
   renderSortIcon,
 }: ColetaTableProps<TRow>) {
+  const expandIndex = Math.max(
+    0,
+    Math.min(expandColumnIndex, columns.length)
+  );
+  const columnsBefore = columns.slice(0, expandIndex);
+  const columnsAfter = columns.slice(expandIndex);
+  const hasExpandColumn = !!onToggleExpandRow;
+  const totalColSpan =
+    columns.length + (hasExpandColumn ? 1 : 0) + (renderActions ? 1 : 0);
   const topScrollRef = useRef<HTMLDivElement | null>(null);
   const bottomScrollRef = useRef<HTMLDivElement | null>(null);
   const syncWidthRef = useRef<HTMLDivElement | null>(null);
@@ -131,8 +147,24 @@ export default function ColetaTable<TRow>({
         <table className={tableClassName}>
           <thead>
             <tr>
-              {onToggleExpandRow && <th style={{ width: "40px" }}></th>}
-              {columns.map((col) => (
+              {columnsBefore.map((col) => (
+                <th
+                  key={String(col.key)}
+                  onClick={() => col.sortable && onSort?.(col.key)}
+                  style={{ cursor: col.sortable ? "pointer" : "default" }}
+                >
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>{col.label}</span>
+                    {col.sortable && renderSortIcon?.()}
+                  </div>
+                </th>
+              ))}
+              {hasExpandColumn && (
+                <th style={{ width: "40px" }} aria-label="Expandir linha">
+                  {actionsHeaderLabel}
+                </th>
+              )}
+              {columnsAfter.map((col) => (
                 <th
                   key={String(col.key)}
                   onClick={() => col.sortable && onSort?.(col.key)}
@@ -155,28 +187,61 @@ export default function ColetaTable<TRow>({
               return (
                 <React.Fragment key={rowId}>
                   <tr>
-                    {onToggleExpandRow && (
-                      <td>
-                        <button
-                          className={expandButtonClassName}
-                          onClick={() => onToggleExpandRow(rowId)}
-                        >
-                          {isExpanded ? "▲" : "▼"}
-                        </button>
+                    {columnsBefore.map((col) => (
+                      <td key={String(col.key)}>
+                        {col.render
+                          ? col.render(row)
+                          : String(row[col.key] ?? "")}
+                      </td>
+                    ))}
+                    {hasExpandColumn && (
+                      <td className={actionsCellClassName}>
+                        {renderExpandButton ? (
+                          <button
+                            type="button"
+                            className={expandButtonClassName}
+                            onClick={() => onToggleExpandRow!(rowId)}
+                            aria-expanded={isExpanded}
+                            aria-label={
+                              isExpanded ? "Ocultar detalhes" : "Ver detalhes"
+                            }
+                          >
+                            {renderExpandButton(row, isExpanded)}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className={expandButtonClassName}
+                            onClick={() => onToggleExpandRow!(rowId)}
+                            aria-expanded={isExpanded}
+                          >
+                            {isExpanded ? "▲" : "▼"}
+                          </button>
+                        )}
                       </td>
                     )}
-                    {columns.map((col) => (
+                    {columnsAfter.map((col) => (
                       <td key={String(col.key)}>
-                        {col.render ? col.render(row) : String(row[col.key] ?? "")}
+                        {col.render
+                          ? col.render(row)
+                          : String(row[col.key] ?? "")}
                       </td>
                     ))}
                     {renderActions && (
-                      <td className={actionsCellClassName}>{renderActions(row, index)}</td>
+                      <td className={actionsCellClassName}>
+                        {renderActions(row, index)}
+                      </td>
                     )}
                   </tr>
                   {isExpanded && renderExpandedContent && (
                     <tr className={expandedRowClassName}>
-                      <td colSpan={columns.length + expandedColSpanOffset}>
+                      <td
+                        colSpan={
+                          expandedColSpanOffset > 0
+                            ? columns.length + expandedColSpanOffset
+                            : totalColSpan
+                        }
+                      >
                         {renderExpandedContent(row, index)}
                       </td>
                     </tr>

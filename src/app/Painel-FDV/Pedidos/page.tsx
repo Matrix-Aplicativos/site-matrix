@@ -1,17 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import SearchBar from "../../Painel-Coletas/components/SearchBar";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./Pedidos.module.css";
+import coletaStyles from "../../Painel-Coletas/Conferencias/Conferencias.module.css";
 import useGetPedidos from "../hooks/useGetPedidos";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import useCurrentCompany from "../hooks/useCurrentCompany";
+import { formatPainelTitle } from "../utils/formatPainelTitle";
 import { formatPreco } from "../utils/functions/formatPreco";
-import { Pedido } from "../utils/types/Pedido";
+import { getClienteLabel, PedidoListItem } from "../utils/types/Pedido";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+import ColetaTable, {
+  ColetaTableColumn,
+} from "@/app/Painel-Coletas/components/table/ColetaTable";
+import SearchBar from "../../Painel-Coletas/components/SearchBar";
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -49,17 +55,82 @@ const IconSort = () => (
   </svg>
 );
 
+const azulMatrix = "#1769E3";
+const verdeMatrix = "#29F581";
+const vermelhoMatrix = "#DA072D";
+const amareloMatrix = "#C4A020";
+const laranjaMatrix = "#FF8A00";
+
+const SORT_KEY_TO_API_PARAM: Record<string, string> = {
+  codPedido: "id",
+  dataCadastro: "dataCadastro",
+  valorTotal: "valorTotal",
+  status: "status",
+  qtdItens: "qtdItens",
+  subTotal: "subTotal",
+};
+
+const PEDIDO_STATUS: Record<string, { label: string; color: string }> = {
+  "1": { label: "Em aberto", color: amareloMatrix },
+  "2": { label: "Confirmado", color: verdeMatrix },
+  "3": { label: "Integrado", color: azulMatrix },
+  "4": { label: "Erro na integração", color: vermelhoMatrix },
+  "5": { label: "Orçamento", color: laranjaMatrix },
+};
+
+const STATUS_FILTER_KEYS = ["1", "2", "3", "4", "5"] as const;
+
+function resolveSearchApiParam(
+  filter: string,
+  value: string
+): { campo: string; valor: string } | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (filter === "cliente") {
+    return { campo: "nomeCliente", valor: trimmed };
+  }
+
+  if (filter === "codPedido") {
+    return { campo: "codPedido", valor: trimmed };
+  }
+
+  return { campo: filter, valor: trimmed };
+}
+
+type SortKey =
+  | "codPedido"
+  | "dataCadastro"
+  | "valorTotal"
+  | "status"
+  | "qtdItens"
+  | "subTotal";
+
+interface PedidoRow {
+  id: number;
+  codPedido: number;
+  dataCadastro: string;
+  cliente: string;
+  vendedor: string;
+  qtdItens: number;
+  subTotal: number;
+  valorTotal: number;
+  status: string;
+  item: PedidoListItem;
+}
+
 export default function PedidosPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
-    key: string;
+    key: SortKey;
     direction: "asc" | "desc";
   } | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("codPedido");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState({
     startDate: "",
     endDate: "",
@@ -69,29 +140,126 @@ export default function PedidosPage() {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const { empresa } = useCurrentCompany();
 
   const codEmpresa = usuario?.empresas?.[0]?.codEmpresa;
+  const pageTitle = formatPainelTitle("PEDIDOS", empresa?.nomeFantasia);
+
+  const orderByApi = sortConfig?.key
+    ? SORT_KEY_TO_API_PARAM[sortConfig.key] ?? sortConfig.key
+    : undefined;
+
+  const searchApi = useMemo(
+    () => resolveSearchApiParam(selectedFilter, query),
+    [selectedFilter, query]
+  );
 
   const { pedidos, loading, error, qtdPaginas, qtdElementos, refetch } =
     useGetPedidos(
       codEmpresa,
       paginaAtual,
       porPagina,
-      sortConfig?.key,
+      orderByApi,
       sortConfig?.direction,
-      selectedFilter,
-      query,
-      dateRange.startDate, // O input "date" já fornece o formato YYYY-MM-DD
-      dateRange.endDate // O input "date" já fornece o formato YYYY-MM-DD
+      searchApi?.campo,
+      searchApi?.valor,
+      dateRange.startDate,
+      dateRange.endDate,
+      selectedStatuses.length > 0 ? selectedStatuses : undefined
     );
 
-  const filteredData = pedidos || [];
+  const getStatusLabel = (status: string) =>
+    PEDIDO_STATUS[status]?.label ?? "Outro status";
 
-  const columns = [
-    { key: "codPedido", label: "Código " },
-    { key: "dataCadastro", label: "Data" },
-    { key: "valorTotal", label: "Valor Total" },
-    { key: "status", label: "Status" },
+  const getStatusBadgeStyle = (status: string): React.CSSProperties => {
+    const color = PEDIDO_STATUS[status]?.color ?? "#616161";
+    return {
+      backgroundColor: `${color}22`,
+      color,
+      border: `1px solid ${color}`,
+    };
+  };
+
+  const formatData = (dataCadastro: string) => {
+    const date = new Date(dataCadastro);
+    return date.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const tableRows: PedidoRow[] = (pedidos || []).map((item) => ({
+    id: item.pedido.codPedido,
+    codPedido: item.pedido.codPedido,
+    dataCadastro: formatData(item.dataCadastro),
+    cliente: getClienteLabel(item),
+    vendedor: item.pedido.vendedor?.nome || "—",
+    qtdItens: item.qtdItens,
+    subTotal: item.subTotal,
+    valorTotal: item.pedido.valorTotal,
+    status: item.pedido.status,
+    item,
+  }));
+
+  const columns: ColetaTableColumn<PedidoRow>[] = [
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => (
+        <span
+          className={styles.statusBadge}
+          style={getStatusBadgeStyle(row.status)}
+        >
+          {getStatusLabel(row.status)}
+        </span>
+      ),
+    },
+    {
+      key: "codPedido",
+      label: "Código",
+      sortable: true,
+      render: (row) => row.codPedido,
+    },
+    {
+      key: "dataCadastro",
+      label: "Data",
+      sortable: true,
+      render: (row) => row.dataCadastro,
+    },
+    {
+      key: "cliente",
+      label: "Cliente",
+      sortable: false,
+      render: (row) => row.cliente,
+    },
+    {
+      key: "vendedor",
+      label: "Vendedor",
+      sortable: false,
+      render: (row) => row.vendedor,
+    },
+    {
+      key: "qtdItens",
+      label: "Qtd. Itens",
+      sortable: true,
+      render: (row) => row.qtdItens,
+    },
+    {
+      key: "subTotal",
+      label: "Subtotal",
+      sortable: true,
+      render: (row) => formatPreco(row.subTotal),
+    },
+    {
+      key: "valorTotal",
+      label: "Valor Total",
+      sortable: true,
+      render: (row) => formatPreco(row.valorTotal),
+    },
   ];
 
   useEffect(() => {
@@ -102,8 +270,8 @@ export default function PedidosPage() {
     }
   }, [loading, showLoading, hideLoading]);
 
-  const toggleExpandRow = (index: number) => {
-    setExpandedRow((prevRow) => (prevRow === index ? null : index));
+  const toggleExpandRow = (id: number) => {
+    setExpandedRowId((prev) => (prev === id ? null : id));
   };
 
   const toggleFilterExpansion = () => {
@@ -124,16 +292,36 @@ export default function PedidosPage() {
     setPaginaAtual(1);
   };
 
-  const sortData = (key: string) => {
+  const handleStatusFilterChange = (statusKey: string, checked: boolean) => {
+    setSelectedStatuses((prev) => {
+      if (checked) {
+        return prev.includes(statusKey) ? prev : [...prev, statusKey];
+      }
+      return prev.filter((s) => s !== statusKey);
+    });
+    setPaginaAtual(1);
+  };
+
+  const sortData = (key: keyof PedidoRow) => {
+    const sortKey = key as SortKey;
+    if (
+      sortKey === "cliente" ||
+      sortKey === "vendedor" ||
+      sortKey === "id" ||
+      sortKey === "item"
+    ) {
+      return;
+    }
+
     let direction: "asc" | "desc" = "asc";
     if (
       sortConfig &&
-      sortConfig.key === key &&
+      sortConfig.key === sortKey &&
       sortConfig.direction === "asc"
     ) {
       direction = "desc";
     }
-    setSortConfig({ key, direction });
+    setSortConfig({ key: sortKey, direction });
     setPaginaAtual(1);
   };
 
@@ -142,47 +330,32 @@ export default function PedidosPage() {
     setPaginaAtual(1);
   };
 
-  // --- FUNÇÃO DE LABEL MODIFICADA ---
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "1":
-        return "Em aberto";
-      case "2":
-        return "Confirmado";
-      case "3":
-        return "Integrado";
-      case "4":
-        return "Faturado";
-      case "5":
-        return "Cancelado";
-      default:
-        return "Outro Status";
-    }
-  };
-
-  // --- FUNÇÃO DE COR MODIFICADA ---
-  // (Lembre-se de criar essas classes no seu CSS: status-open, status-confirmed, status-integrated)
-  const getStatusColorClass = (status: string) => {
-    switch (status) {
-      case "1":
-        return styles["status-open"]; // (Cor Verde)
-      case "2":
-        return styles["status-confirmed"]; // (Cor Amarela)
-      case "3":
-        return styles["status-integrated"]; // (Cor Vermelha)
-      case "4":
-        return styles["status-invoiced"];
-      case "5":
-        return styles["status-canceled"];
-      default:
-        return "";
-    }
+  const renderExpandedDetails = (row: PedidoRow) => {
+    const { pedido } = row.item;
+    return (
+      <div className={styles.additionalInfo}>
+        <p>
+          <strong>Condição de pagamento:</strong>{" "}
+          {pedido.condicaoPagamento?.descricao || "—"}
+        </p>
+        <p>
+          <strong>Frete:</strong> {formatPreco(pedido.valorFrete)}
+        </p>
+        <p>
+          <strong>Outros acréscimos:</strong>{" "}
+          {formatPreco(pedido.outrosAcrescimos)}
+        </p>
+        <p>
+          <strong>Observação:</strong> {pedido.observacao || "—"}
+        </p>
+      </div>
+    );
   };
 
   if (error) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>PEDIDOS</h1>
+        <h1 className={styles.title}>{pageTitle}</h1>
         <p>Erro ao carregar pedidos: {error}</p>
       </div>
     );
@@ -190,16 +363,22 @@ export default function PedidosPage() {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay /> <h1 className={styles.title}>PEDIDOS</h1>
+      <LoadingOverlay />
+      <h1 className={styles.title}>{pageTitle}</h1>
       <div className={styles.searchContainer}>
         <SearchBar
-          placeholder="Qual pedido deseja buscar?"
+          placeholder={
+            selectedFilter === "cliente"
+              ? "Buscar por nome do cliente..."
+              : "Buscar por código do pedido..."
+          }
           onSearch={handleSearch}
           onFilterClick={toggleFilterExpansion}
         />
 
         <div className={styles.searchActions}>
           <button
+            type="button"
             className={styles.actionButton}
             onClick={() => refetch()}
             title="Atualizar pedidos"
@@ -219,9 +398,33 @@ export default function PedidosPage() {
               onChange={(e) => setSelectedFilter(e.target.value)}
             >
               <option value="codPedido">Código do Pedido</option>
-              <option value="codCliente">Número do Cliente</option>
-              <option value="status">Status</option>
+              <option value="cliente">Cliente</option>
             </select>
+          </div>
+
+          <div className={styles.filterSection}>
+            <label>Status:</label>
+            <div className={styles.statusCheckboxGroup}>
+              {STATUS_FILTER_KEYS.map((statusKey) => (
+                <label key={statusKey} className={styles.statusCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={selectedStatuses.includes(statusKey)}
+                    onChange={(e) =>
+                      handleStatusFilterChange(statusKey, e.target.checked)
+                    }
+                  />
+                  <span
+                    className={styles.statusCheckboxDot}
+                    style={{
+                      backgroundColor:
+                        PEDIDO_STATUS[statusKey]?.color ?? "#616161",
+                    }}
+                  />
+                  {PEDIDO_STATUS[statusKey]?.label ?? statusKey}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className={styles.filterSection}>
@@ -244,64 +447,39 @@ export default function PedidosPage() {
           </div>
         </div>
       )}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  onClick={() => sortData(col.key as keyof Pedido)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>{col.label}</span>
-                    <IconSort />
-                  </div>
-                </th>
-              ))}
-              {/* <th></th> (Removido pois não há coluna de expandir) */}
-            </tr>
-          </thead>
 
-          <tbody>
-            {filteredData.map((row, rowIndex) => (
-              <React.Fragment key={row.codPedido}>
-                {/* A classe de cor é aplicada na linha <tr> */}
-                <tr className={getStatusColorClass(row.status)}>
-                  <td>{row.codPedido}</td>
-                  <td>
-                    {new Date(row.dataCadastro).toLocaleDateString("pt-BR", {
-                      timeZone: "UTC", // Garante que a data não mude por fuso
-                    })}
-                  </td>
-                  <td>{formatPreco(row.valorTotal)}</td>
-                  {/* O label do status é renderizado na célula <td> */}
-                  <td>{getStatusLabel(row.status)}</td>
-                </tr>
-              </React.Fragment>
-            ))}
-          </tbody>
+      {!loading && tableRows.length === 0 && (
+        <p>Nenhum pedido encontrado.</p>
+      )}
 
-          <tfoot>
-            <tr>
-              <td colSpan={columns.length}>
-                {" "}
-                {/* Ajustado colSpan */}
-                <PaginationControls
-                  paginaAtual={paginaAtual}
-                  totalPaginas={qtdPaginas || 1}
-                  totalElementos={qtdElementos || 0}
-                  porPagina={porPagina}
-                  onPageChange={setPaginaAtual}
-                  onItemsPerPageChange={handleItemsPerPageChange}
-                  isLoading={loading}
-                />
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      <ColetaTable
+        className={styles.tableContainer}
+        tableClassName={styles.table}
+        columns={columns}
+        rows={tableRows}
+        onSort={sortData}
+        getRowId={(row) => row.id}
+        expandedRowId={expandedRowId}
+        onToggleExpandRow={(id) => toggleExpandRow(Number(id))}
+        expandColumnIndex={0}
+        actionsHeaderLabel=""
+        expandButtonClassName={coletaStyles.expandButton}
+        renderSortIcon={() => <IconSort />}
+        expandedRowClassName={coletaStyles.expandedRow}
+        renderExpandedContent={renderExpandedDetails}
+      />
+
+      {(qtdElementos ?? 0) > 0 && (
+        <PaginationControls
+          paginaAtual={paginaAtual}
+          totalPaginas={qtdPaginas || 1}
+          totalElementos={qtdElementos || 0}
+          porPagina={porPagina}
+          onPageChange={setPaginaAtual}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          isLoading={loading}
+        />
+      )}
     </div>
   );
 }

@@ -9,17 +9,14 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  /* --- Adicionada transição de largura --- */
   transition: width 0.3s ease;
 }
 
-/* --- Estado recolhido --- */
 .sidebar.closed {
   width: 80px;
   padding: 20px 10px;
 }
 
-/* --- Header (novo) --- */
 .header-sidebar {
   display: flex;
   align-items: center;
@@ -31,7 +28,6 @@
   justify-content: center;
 }
 
-/* --- Botão de Toggle (novo) --- */
 .toggle-button {
   background: none;
   border: none;
@@ -49,12 +45,24 @@
   padding: 0;
   margin: 0;
   width: 100%;
-  /* --- Para empurrar o 'bottom-section' para baixo --- */
   flex-grow: 1;
   overflow-y: auto;
 }
 
-/* --- Estilo do nome do usuário (adaptado) --- */
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+.menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.menu::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+.menu::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
 .user-info {
   font-size: 20px;
   font-weight: bold;
@@ -71,25 +79,26 @@
 .menu-item {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 14px;
   color: #333;
   text-decoration: none;
   padding: 10px;
-  margin: 10px 0;
+  margin: 12px 0;
   width: 100%;
   border-radius: 4px;
   transition: all 0.3s;
-  /* --- Para transição suave do texto --- */
   overflow: hidden;
   white-space: nowrap;
-  /* --- Para que o <button> se pareça com os <Link> --- */
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
 }
 
-/* --- Centraliza ícones quando recolhido --- */
+.menu-item-wrapper .menu-item {
+  margin: 0;
+}
+
 .sidebar.closed .menu-item {
   justify-content: center;
 }
@@ -101,7 +110,6 @@
 
 .menu-item svg {
   margin-right: 10px;
-  /* --- Impede que o ícone seja espremido --- */
   flex-shrink: 0;
 }
 
@@ -109,7 +117,6 @@
   margin-right: 0;
 }
 
-/* --- Classes para o texto (novo) --- */
 .menu-text,
 .logout-text {
   opacity: 1;
@@ -123,7 +130,6 @@
 }
 
 .bottom-section {
-
   border-top: 1px solid #ddd;
   flex-shrink: 0;
 }
@@ -135,7 +141,7 @@
   color: #ff4d4d;
   text-decoration: none;
   padding: 10px;
-  width: 100%; /* --- Corrigido de 109% --- */
+  width: 100%;
   border-radius: 4px;
   transition: all 0.3s;
   border: none;
@@ -145,20 +151,75 @@
 
 .logout:hover {
   background-color: #ff4d4d;
-  color: white; /* --- Corrigido para consistência --- */
+  color: white;
 }
 
-/* --- Estilos opcionais da barra de rolagem (do primeiro exemplo) --- */
-.menu::-webkit-scrollbar {
-  width: 6px;
+.menu-item-wrapper {
+  display: flex;
+  flex-direction: column;
 }
-.menu::-webkit-scrollbar-track {
-  background: transparent;
+
+.dropdown-toggle {
+  cursor: pointer;
 }
-.menu::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
+
+.dropdown-icon {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
 }
-.menu::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+
+.submenu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.submenu.open {
+  max-height: 200px;
+}
+
+.submenu-item {
+  margin: 2px 0 !important;
+  padding-left: 30px !important;
+  background-color: #f8f9fa;
+}
+
+.submenu-item:hover {
+  background-color: #e9ecef;
+  color: #1769e3;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    z-index: 1100;
+    width: 260px;
+    max-width: 85vw;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.14);
+  }
+
+  .sidebar.closed {
+    width: 260px;
+    max-width: 85vw;
+    padding: 20px;
+    transform: translateX(-105%);
+  }
+
+  .sidebar.closed .menu-item {
+    justify-content: flex-start;
+  }
+
+  .sidebar.closed .menu-item svg {
+    margin-right: 10px;
+  }
+
+  .sidebar.closed .menu-text,
+  .sidebar.closed .logout-text {
+    opacity: 1;
+    width: auto;
+  }
 }

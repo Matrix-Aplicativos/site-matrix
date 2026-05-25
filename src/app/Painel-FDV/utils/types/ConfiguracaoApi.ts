@@ -17,3 +17,8 @@ export function parseConfiguracoesResponse(data: unknown): ConfiguracaoApi[] {
 export function isValorSimNao(valor: string): boolean {
   return valor === "S" || valor === "N";
 }
+
+export function isValorBoolean(valor: string): boolean {
+  const normalized = valor.trim().toLowerCase();
+  return normalized === "true" || normalized === "false";
+}

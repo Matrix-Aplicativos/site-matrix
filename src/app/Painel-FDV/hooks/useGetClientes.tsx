@@ -9,7 +9,8 @@ interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string | null;
+  cnpjCpf?: string | null;
+  cnpjcpf?: string | null;
   fone1: string;
   email: string;
   endereco: string;

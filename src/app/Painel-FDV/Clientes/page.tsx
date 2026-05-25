@@ -7,6 +7,8 @@ import useGetClientes from "../hooks/useGetClientes";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import useCurrentCompany from "../hooks/useCurrentCompany";
+import { formatPainelTitle } from "../utils/formatPainelTitle";
 import { formatCnpjCpf } from "../utils/functions/formatCnpjCpf";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
@@ -53,7 +55,8 @@ interface Cliente {
   codClienteErp: number;
   razaoSocial: string;
   nomeFantasia: string;
-  cnpjcpf: string | null;
+  cnpjCpf?: string | null;
+  cnpjcpf?: string | null;
   fone1: string;
   email: string;
   endereco: string;
@@ -77,8 +80,15 @@ interface ColumnDefinition {
 const FILTER_TO_API_PARAM: Record<string, string> = {
   RazaoSocial: "razaoSocial",
   NomeFantasia: "nomeFantasia",
-  cnpjcpf: "cnpjcpf",
+  cnpjcpf: "cnpjCpf",
   Codigo: "codClienteErp",
+};
+
+const SORT_KEY_TO_API_PARAM: Record<string, string> = {
+  codClienteErp: "codClienteErp",
+  razaoSocial: "razaoSocial",
+  nomeFantasia: "nomeFantasia",
+  cnpjcpf: "cnpjCpf",
 };
 
 export default function ClientesPage() {
@@ -97,6 +107,8 @@ export default function ClientesPage() {
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
   const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const { empresa } = useCurrentCompany();
+  const pageTitle = formatPainelTitle("CLIENTES", empresa?.nomeFantasia);
 
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
@@ -115,12 +127,16 @@ export default function ClientesPage() {
       : 1;
   const isHookEnabled = !!usuario;
 
+  const orderByApi = sortConfig?.key
+    ? SORT_KEY_TO_API_PARAM[sortConfig.key] ?? sortConfig.key
+    : undefined;
+
   const { clientes, loading, error, qtdPaginas, qtdElementos, refetch } =
     useGetClientes(
       codEmpresaParaBusca,
       paginaAtual,
       porPagina,
-      sortConfig?.key,
+      orderByApi,
       sortConfig?.direction,
       filtrosParaApi,
       isHookEnabled
@@ -128,6 +144,10 @@ export default function ClientesPage() {
 
   // FUNÇÃO getCellValue CORRIGIDA
   const getCellValue = (row: Cliente, colKey: string): any => {
+    if (colKey === "cnpjcpf") {
+      const doc = row.cnpjCpf ?? row.cnpjcpf;
+      return doc !== undefined && doc !== null ? doc : "N/A";
+    }
     const value = row[colKey as keyof Cliente];
     return value !== undefined && value !== null ? value : "N/A";
   };
@@ -208,7 +228,7 @@ export default function ClientesPage() {
   if (error) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>CLIENTES</h1>
+        <h1 className={styles.title}>{pageTitle}</h1>
         <div className={styles.errorContainer}>
           <h3>Erro ao carregar clientes</h3>
           <p>{error}</p>
@@ -223,7 +243,7 @@ export default function ClientesPage() {
   return (
     <div className={styles.container}>
       <LoadingOverlay />
-      <h1 className={styles.title}>CLIENTES</h1>
+      <h1 className={styles.title}>{pageTitle}</h1>
 
       <div className={styles.searchContainer}>
         <SearchBar

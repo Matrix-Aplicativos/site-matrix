@@ -9,8 +9,8 @@ import { useTotalPedidos } from "./hooks/useTotalPedidos";
 import { useTotalClientes } from "./hooks/useTotalClientes";
 import { useLoading } from "../shared/Context/LoadingContext";
 import styles from "./Home.module.css";
-import LoadingOverlay from "../shared/components/LoadingOverlay";
-import useCurrentCompany from "../Painel-Coletas/hooks/useCurrentCompany";
+import useCurrentCompany from "./hooks/useCurrentCompany";
+import { formatPainelTitle } from "./utils/formatPainelTitle";
 
 const today = new Date();
 const firstDayCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -132,9 +132,7 @@ export default function HomePage() {
     if (isLoading) {
       showLoading();
     } else {
-      setTimeout(() => {
-        hideLoading();
-      }, 1000);
+      hideLoading();
     }
   }, [isLoading, showLoading, hideLoading]);
 
@@ -159,9 +157,8 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay />
       <h1 className={styles.title}>
-        PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
+        {formatPainelTitle("SEU PAINEL DE CONTROLE", empresa?.nomeFantasia)}
       </h1>
 
       <div className={styles.border}>
@@ -185,7 +182,7 @@ export default function HomePage() {
                       {variacaoPedidos >= 0 ? "▲" : "▼"}
                       {Math.abs(variacaoPedidos).toFixed(1)}%
                     </span>{" "}
-                    em relação a
+                    em relação a{" "}
                     {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
                       month: "long",
                     })}
@@ -219,7 +216,7 @@ export default function HomePage() {
                       {variacaoClientes >= 0 ? "▲" : "▼"}
                       {Math.abs(variacaoClientes).toFixed(1)}%
                     </span>{" "}
-                    em relação a
+                    em relação a{" "}
                     {new Date(lastDayPreviousMonth).toLocaleString("pt-BR", {
                       month: "long",
                     })}
