@@ -4,20 +4,14 @@ import React, { useEffect, useState } from "react";
 import styles from "./Configuracoes.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
-import { getCookie } from "cookies-next";
-import { getUserFromToken } from "../utils/functions/getUserFromToken";
-import useGetLoggedUser from "../hooks/useGetLoggedUser";
+import useCurrentCompany from "../hooks/useCurrentCompany";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
+import {
+  ConfiguracaoApi,
+  isValorSimNao,
+  parseConfiguracoesResponse,
+} from "../utils/types/ConfiguracaoApi";
 
-interface Configuracao {
-  codEmpresa: number;
-  codConfiguracao: number;
-  descricao: string;
-  valor: string;
-  ativo: boolean;
-}
-
-// Ícones
 const IconSave = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -55,32 +49,31 @@ const IconRefresh = () => (
 );
 
 export default function ConfiguracoesPage() {
-  const [configuracoes, setConfiguracoes] = useState<Configuracao[]>([]);
+  const [configuracoes, setConfiguracoes] = useState<ConfiguracaoApi[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingId, setSavingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const { showLoading, hideLoading } = useLoading();
-  const token = getCookie("token");
-  const codUsuario = getUserFromToken(String(token));
-  const { usuario } = useGetLoggedUser(codUsuario || 0);
+  const { empresa, loading: loadingEmpresa } = useCurrentCompany();
 
   useEffect(() => {
     const fetchConfiguracoes = async () => {
-      try {
-        const empresaStorage = localStorage.getItem("empresaSelecionada");
-        if (!empresaStorage) {
-          setError("Nenhuma empresa selecionada");
-          return;
-        }
+      if (loadingEmpresa) return;
 
-        const empresaData = JSON.parse(empresaStorage);
-        const response = await axiosInstance.get<Configuracao[]>(
-          `/configuracao/${empresaData.codEmpresa}`
+      if (!empresa?.codEmpresa) {
+        setError("Nenhuma empresa selecionada");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axiosInstance.get(
+          `/configuracao/${empresa.codEmpresa}`
         );
-        setConfiguracoes(response.data);
-      } catch (err: any) {
+        setConfiguracoes(parseConfiguracoesResponse(response.data));
+      } catch {
         setError("Não foi possível carregar as configurações");
       } finally {
         setLoading(false);
@@ -88,7 +81,7 @@ export default function ConfiguracoesPage() {
     };
 
     fetchConfiguracoes();
-  }, []);
+  }, [empresa?.codEmpresa, loadingEmpresa]);
 
   useEffect(() => {
     if (loading) {
@@ -98,8 +91,8 @@ export default function ConfiguracoesPage() {
     }
   }, [loading, showLoading, hideLoading]);
 
-  const handleUpdateConfiguracao = async (configuracao: Configuracao) => {
-    setSaving(true);
+  const handleUpdateConfiguracao = async (configuracao: ConfiguracaoApi) => {
+    setSavingId(configuracao.codConfiguracao);
     setError(null);
     setSuccess(null);
 
@@ -114,12 +107,12 @@ export default function ConfiguracoesPage() {
         )
       );
 
-      setSuccess("Configuração atualizada com sucesso!");
+      setSuccess(`"${configuracao.descricao}" atualizada com sucesso!`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch {
       setError("Erro ao atualizar configuração");
     } finally {
-      setSaving(false);
+      setSavingId(null);
     }
   };
 
@@ -143,11 +136,6 @@ export default function ConfiguracoesPage() {
     );
   };
 
-  // Filtra apenas a configuração de venda sem estoque
-  const configuracaoVendaSemEstoque = configuracoes.find(
-    (config) => config.descricao === "permite-venda-sem-estoque"
-  );
-
   if (loading) {
     return (
       <div className={styles.container}>
@@ -167,64 +155,99 @@ export default function ConfiguracoesPage() {
       {success && <div className={styles.successMessage}>{success}</div>}
 
       <div className={styles.configuracoesGrid}>
-        {configuracaoVendaSemEstoque ? (
-          <div className={styles.configuracaoCard}>
-            <div className={styles.configHeader}>
-              <h3 className={styles.configTitle}>Permitir Venda Sem Estoque</h3>
-              <div className={styles.configActions}>
-                <button
-                  className={styles.saveButton}
-                  onClick={() =>
-                    handleUpdateConfiguracao(configuracaoVendaSemEstoque)
-                  }
-                  disabled={saving}
-                >
-                  {saving ? <IconRefresh /> : <IconSave />}
-                  {saving ? "Salvando..." : "Salvar"}
-                </button>
-              </div>
-            </div>
+        {configuracoes.length > 0 ? (
+          configuracoes.map((config) => {
+            const isSaving = savingId === config.codConfiguracao;
 
-            <div className={styles.configBody}>
-              <div className={styles.configInputContainer}>
-                <div className={styles.configBoolean}>
-                  <label className={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={configuracaoVendaSemEstoque.valor === "S"}
-                      onChange={(e) =>
-                        handleValorChange(
-                          configuracaoVendaSemEstoque.codConfiguracao,
-                          e.target.checked ? "S" : "N"
-                        )
-                      }
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                  <span className={styles.booleanLabel}>
-                    {configuracaoVendaSemEstoque.valor === "S"
-                      ? "Venda sem estoque permitida"
-                      : "Venda sem estoque bloqueada"}
+            return (
+              <div
+                key={config.codConfiguracao}
+                className={styles.configuracaoCard}
+              >
+                <div className={styles.configHeader}>
+                  <h3 className={styles.configTitle}>{config.descricao}</h3>
+                  <div className={styles.configActions}>
+                    <button
+                      className={styles.saveButton}
+                      onClick={() => handleUpdateConfiguracao(config)}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? <IconRefresh /> : <IconSave />}
+                      {isSaving ? "Salvando..." : "Salvar"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.configBody}>
+                  <div className={styles.configInputContainer}>
+                    {isValorSimNao(config.valor) ? (
+                      <div className={styles.configBoolean}>
+                        <label className={styles.switch}>
+                          <input
+                            type="checkbox"
+                            checked={config.valor === "S"}
+                            onChange={(e) =>
+                              handleValorChange(
+                                config.codConfiguracao,
+                                e.target.checked ? "S" : "N"
+                              )
+                            }
+                          />
+                          <span className={styles.slider}></span>
+                        </label>
+                        <span className={styles.booleanLabel}>
+                          {config.valor === "S" ? "Sim" : "Não"}
+                        </span>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        className={styles.configInput}
+                        value={config.valor}
+                        onChange={(e) =>
+                          handleValorChange(
+                            config.codConfiguracao,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  </div>
+
+                  <div className={styles.configStatus}>
+                    <label className={styles.statusToggle}>
+                      <input
+                        type="checkbox"
+                        checked={config.ativo}
+                        onChange={(e) =>
+                          handleAtivoChange(
+                            config.codConfiguracao,
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <span className={styles.statusLabel}>
+                        {config.ativo ? "Ativo" : "Inativo"}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className={styles.configFooter}>
+                  <span className={styles.configId}>Código: {config.codigo}</span>
+                  <span className={styles.configDescricao}>
+                    ID: {config.codConfiguracao}
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })
         ) : (
           <div className={styles.noConfiguracoes}>
-            <p>Configuração de venda sem estoque não encontrada.</p>
+            <p>Nenhuma configuração encontrada para esta empresa.</p>
           </div>
         )}
       </div>
-
-      {configuracoes.length > 0 && !configuracaoVendaSemEstoque && (
-        <div className={styles.noConfiguracoes}>
-          <p>
-            Configuração de venda sem estoque não está disponível para esta
-            empresa.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

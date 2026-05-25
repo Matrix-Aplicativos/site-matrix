@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
-
-interface Configuracao {
-  codEmpresa: number | undefined;
-  codConfiguracao: number;
-  descricao: string;
-  valor: string;
-  ativo: boolean;
-}
+import {
+  ConfiguracaoApi,
+  parseConfiguracoesResponse,
+} from "../utils/types/ConfiguracaoApi";
 
 const useConfiguracao = (codEmpresa: number | undefined) => {
-  const [configuracoes, setConfiguracoes] = useState<Configuracao[]>([]);
+  const [configuracoes, setConfiguracoes] = useState<ConfiguracaoApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [validadeLicenca, setValidadeLicenca] = useState<Date | null>(null);
@@ -23,7 +19,7 @@ const useConfiguracao = (codEmpresa: number | undefined) => {
       setError(null);
       try {
         const response = await axiosInstance.get(`/configuracao/${codEmpresa}`);
-        setConfiguracoes(response.data);
+        setConfiguracoes(parseConfiguracoesResponse(response.data));
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
@@ -44,7 +40,7 @@ const useConfiguracao = (codEmpresa: number | undefined) => {
       setLoadingLicenca(true);
       setErrorLicenca(null);
       try {
-        const response = await axiosInstance.get<Configuracao>(
+        const response = await axiosInstance.get<ConfiguracaoApi>(
           `/configuracao/${codEmpresa}/validade-licenca`
         );
 
@@ -97,8 +93,11 @@ const useConfiguracao = (codEmpresa: number | undefined) => {
     }
   }, [codEmpresa]);
 
-  const getConfiguracao = (descricao: string) => {
-    return configuracoes.find((config) => config.descricao === descricao);
+  const getConfiguracao = (key: string | number) => {
+    if (typeof key === "number") {
+      return configuracoes.find((config) => config.codigo === key);
+    }
+    return configuracoes.find((config) => config.descricao === key);
   };
 
   const maximoDispositivos = parseInt(

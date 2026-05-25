@@ -14,7 +14,6 @@ import useGetGraficoColetas from "./hooks/useGraficoColetas";
 import RelatorioColetas from "./components/RelatorioColetas";
 import RelatorioFuncionarios from "./components/RelatorioFuncionarios";
 import EstatisticasFuncionarios from "./components/EstatisticasFuncionarios";
-import LoadingOverlay from "../shared/components/LoadingOverlay";
 
 // Tipos e Constantes
 const OPCOES_TIPO = {
@@ -233,7 +232,6 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
-      <LoadingOverlay />
       <h1 className={styles.title}>
         SEU PAINEL DE CONTROLE - {empresa.nomeFantasia?.toUpperCase()}
       </h1>

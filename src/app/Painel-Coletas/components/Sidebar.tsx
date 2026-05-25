@@ -95,7 +95,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           <div className="user-info">
             {isOpen && <span>{usuario?.nome || "USUARIO GENERICO"}</span>}
           </div>
-          <button className="toggle-button" onClick={toggleSidebar}>
+          <button
+            type="button"
+            className="toggle-button"
+            onClick={toggleSidebar}
+            aria-label={isOpen ? "Fechar menu lateral" : "Abrir menu lateral"}
+          >
             <FiMenu size={24} />
           </button>
         </div>
@@ -140,9 +145,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           </li>
 
           <li className="menu-item-wrapper">
-            <div
+            <button
+              type="button"
               className="menu-item dropdown-toggle"
               onClick={handleCadastrosToggle}
+              aria-expanded={isCadastrosOpen && isOpen}
+              aria-controls="cadastros-submenu"
             >
               <FiArchive size={24} />
               {isOpen && <span className="menu-text">Cadastros</span>}
@@ -151,8 +159,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                   {isCadastrosOpen ? <FiChevronDown /> : <FiChevronRight />}
                 </span>
               )}
-            </div>
+            </button>
             <ul
+              id="cadastros-submenu"
               className={`submenu ${isCadastrosOpen && isOpen ? "open" : ""}`}
             >
               <li>
@@ -196,7 +205,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           </li>
 
           <li>
-            <button className="menu-item" onClick={() => setIsModalOpen(true)}>
+            <button type="button" className="menu-item" onClick={() => setIsModalOpen(true)}>
               <FiFileText size={24} />
               {isOpen && <span className="menu-text">Exportar Relatório</span>}
             </button>
@@ -204,7 +213,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         </ul>
 
         <div className="bottom-section">
-          <button className="menu-item logout" onClick={handleLogout}>
+          <button type="button" className="menu-item logout" onClick={handleLogout}>
             <FiLogOut size={24} className="logout-icon" />
             {isOpen && <span className="logout-text">Sair</span>}
           </button>

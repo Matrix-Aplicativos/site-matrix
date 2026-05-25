@@ -1,79 +1,60 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import useGraficoColetas from "../hooks/useGraficoColetas";
+import axiosInstance from "../../shared/axios/axiosInstanceColeta";
+
+jest.mock("../../shared/axios/axiosInstanceColeta");
+const mockedAxios = axiosInstance as jest.Mocked<typeof axiosInstance>;
 
 describe("useGraficoColetas", () => {
-  const anoAtual = new Date().getFullYear();
-  const mesAtual = new Date().getMonth();
-
-  it("retorna vazio quando coletas é null", () => {
-    const { result } = renderHook(() => useGraficoColetas(null, "mensal"));
-
-    expect(result.current.labels).toEqual([]);
-    expect(result.current.datasets).toEqual([]);
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it("retorna labels corretos para view mensal", () => {
-    const { result } = renderHook(() => useGraficoColetas([], "mensal"));
+  it("não chama API quando parâmetros essenciais não são fornecidos", async () => {
+    const { result } = renderHook(() =>
+      useGraficoColetas(undefined, null, null, "DIA"),
+    );
 
-    const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
-    expect(result.current.labels.length).toBe(diasNoMes);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.dados).toBeNull();
+    expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 
-  it("retorna labels corretos para view anual", () => {
-    const { result } = renderHook(() => useGraficoColetas([], "anual"));
-
-    expect(result.current.labels).toEqual([
-      "Jan",
-      "Fev",
-      "Mar",
-      "Abr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Ago",
-      "Set",
-      "Out",
-      "Nov",
-      "Dez",
-    ]);
-  });
-
-  it("contabiliza coletas corretamente no modo mensal", () => {
-    const hoje = new Date();
-    const dia = hoje.getDate();
-
-    const coletas = [
-      { dataCadastro: new Date(anoAtual, mesAtual, dia).toISOString() },
-      { dataCadastro: new Date(anoAtual, mesAtual, dia).toISOString() },
+  it("retorna dados com sucesso", async () => {
+    const dadosMock = [
+      {
+        periodo: "2026-04-01",
+        totalColetas: 7,
+        contagemPorTipo: [{ tipo: "Inventário", quantidade: 7 }],
+      },
     ];
+    mockedAxios.get.mockResolvedValueOnce({ data: dadosMock });
 
-    const { result } = renderHook(() => useGraficoColetas(coletas, "mensal"));
-
-    expect(result.current.datasets[0].data[dia - 1]).toBe(2);
+    const { result } = renderHook(() =>
+      useGraficoColetas(1, "2026-04-01", "2026-04-30", "DIA"),
+    );
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.error).toBeNull();
+    expect(result.current.dados).toEqual(dadosMock);
+    expect(mockedAxios.get).toHaveBeenCalledWith("/coleta/grafico/1", {
+      params: expect.any(URLSearchParams),
+    });
   });
 
-  it("contabiliza coletas corretamente no modo anual", () => {
-    const coletas = [
-      { dataCadastro: new Date(anoAtual, 0, 10).toISOString() }, // Jan
-      { dataCadastro: new Date(anoAtual, 0, 15).toISOString() }, // Jan
-      { dataCadastro: new Date(anoAtual, 5, 5).toISOString() }, // Jun
-    ];
+  it("retorna erro quando a API falha", async () => {
+    mockedAxios.get.mockRejectedValueOnce(new Error("Falha API"));
 
-    const { result } = renderHook(() => useGraficoColetas(coletas, "anual"));
-
-    expect(result.current.datasets[0].data[0]).toBe(2); // Janeiro
-    expect(result.current.datasets[0].data[5]).toBe(1); // Junho
-  });
-
-  it("ignora datas inválidas ou de anos diferentes", () => {
-    const coletas = [
-      { dataCadastro: "data-invalida" },
-      { dataCadastro: new Date(anoAtual - 1, mesAtual, 1).toISOString() },
-    ];
-
-    const { result } = renderHook(() => useGraficoColetas(coletas, "anual"));
-
-    // Nenhum dado deve ter sido contabilizado
-    expect(result.current.datasets[0].data.reduce((a, b) => a + b, 0)).toBe(0);
+    const { result } = renderHook(() =>
+      useGraficoColetas(1, "2026-04-01", "2026-04-30", "MES"),
+    );
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.dados).toBeNull();
+    expect(result.current.error).toMatch(/Falha API/i);
   });
 });

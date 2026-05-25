@@ -3,18 +3,27 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "../Conferencias/Conferencias.module.css";
 import { useLoading } from "../../shared/Context/LoadingContext";
-import useGetUsuarios from "../hooks/useGetUsuarios";
+import useTable, { normalizePagedResponse } from "../hooks/core/useTable";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { UsuarioGet } from "../utils/types/UsuarioGet";
-import SearchBar from "../components/SearchBar";
 import LoadingOverlay from "../../shared/components/LoadingOverlay";
 import PaginationControls from "../components/PaginationControls";
 import ModalPermissoes from "../components/ModalPermissoes";
+import ColetaTable, { type ColetaTableColumn } from "../components/table/ColetaTable";
+import ColetaPageShell from "../components/coleta/ColetaPageShell";
 import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import usePatchUsuarioStatus from "../hooks/usePatchUsuarioStatus";
-import { FiPower, FiSettings } from "react-icons/fi";
+import { FiPower } from "react-icons/fi";
+import {
+  FuncionarioExibido,
+  FuncionarioSortableColumn,
+  FUNCIONARIO_COLUMNS,
+  FUNCIONARIO_FILTER_TO_API_PARAM,
+  FUNCIONARIO_SORT_COLUMN_MAP,
+  getFuncionarioStatusText,
+} from "../domain/funcionarioTableConfig";
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -52,54 +61,10 @@ const IconSort = () => (
   </svg>
 );
 
-interface FuncionarioExibido {
-  codigo: string;
-  nome: string;
-  cpf: string;
-  email: string;
-  status: boolean;
-  originalUser: UsuarioGet;
-}
-
-type SortableColumn = keyof Omit<FuncionarioExibido, "originalUser">;
-
-interface ColumnConfig {
-  key: keyof FuncionarioExibido | "acoes";
-  label: string;
-  sortable: boolean;
-}
-
-const SORT_COLUMN_MAP: { [key in SortableColumn]?: string } = {
-  codigo: "codFuncionarioErp",
-  nome: "nome",
-  cpf: "cpf",
-  email: "email",
-  status: "ativo",
-};
-
-const FILTER_TO_API_PARAM: Record<string, string> = {
-  nome: "nomeUsuario",
-  cpf: "cpfusuario",
-  email: "emailUsuario",
-  codigo: "codUsuarioErp",
-};
-
-const columns: ColumnConfig[] = [
-  { key: "codigo", label: "Código", sortable: true },
-  { key: "nome", label: "Nome", sortable: true },
-  { key: "cpf", label: "CPF", sortable: true },
-  { key: "email", label: "Email", sortable: true },
-  { key: "status", label: "Status", sortable: true },
-  { key: "acoes", label: "Ações", sortable: false },
-];
-
-const getStatusText = (status: boolean) => (status ? "Ativo" : "Inativo");
 const getStatusClass = (status: boolean) =>
   status ? styles.statusCompleted : styles.statusNotStarted;
 
 const FuncionariosPage: React.FC = () => {
-  const [paginaAtual, setPaginaAtual] = useState(1);
-  const [porPagina, setPorPagina] = useState(20);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "todos" | "ativo" | "inativo"
@@ -107,7 +72,7 @@ const FuncionariosPage: React.FC = () => {
   const [selectedFilter, setSelectedFilter] =
     useState<keyof FuncionarioExibido>("nome");
   const [sortConfig, setSortConfig] = useState<{
-    key: SortableColumn;
+    key: FuncionarioSortableColumn;
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
@@ -129,7 +94,7 @@ const FuncionariosPage: React.FC = () => {
   const filtrosParaApi = useMemo(() => {
     const filtros: Record<string, string | boolean> = {};
     if (query) {
-      const apiParamKey = FILTER_TO_API_PARAM[selectedFilter];
+      const apiParamKey = FUNCIONARIO_FILTER_TO_API_PARAM[selectedFilter];
       if (apiParamKey) {
         filtros[apiParamKey] = query;
       }
@@ -140,30 +105,34 @@ const FuncionariosPage: React.FC = () => {
     return filtros;
   }, [query, selectedFilter, statusFilter]);
 
-  const {
-    usuarios,
-    loading: usuariosLoading,
-    error: usuariosError,
-    refetch,
-    totalPaginas,
-    totalElementos,
-  } = useGetUsuarios(
-    codEmpresa || 0,
-    paginaAtual,
-    porPagina,
-    sortConfig ? SORT_COLUMN_MAP[sortConfig.key] : undefined,
-    sortConfig?.direction,
-    filtrosParaApi,
-    !!codEmpresa,
-  );
+  const table = useTable<UsuarioGet>({
+    codEmpresa,
+    enabled: !!codEmpresa,
+    endpoint: ({ codEmpresa: company }) => `/usuario/empresa/${company}`,
+    queryParamsBuilder: ({ page, pageSize, sort }) => {
+      const params = new URLSearchParams({
+        pagina: String(page),
+        porPagina: String(pageSize),
+      });
+      if (sort) {
+        params.append("orderBy", sort.key);
+        params.append("direction", sort.direction);
+      }
+      Object.entries(filtrosParaApi).forEach(([key, value]) => {
+        params.append(key, String(value));
+      });
+      return params;
+    },
+    responseAdapter: normalizePagedResponse,
+  });
 
   useEffect(() => {
-    if (usuarios) {
-      setLocalUsuarios(usuarios);
+    if (table.rows) {
+      setLocalUsuarios(table.rows);
     }
-  }, [usuarios]);
+  }, [table.rows]);
 
-  const isLoading = companyLoading || usuariosLoading || patching;
+  const isLoading = companyLoading || table.loading || patching;
 
   const displayedData: FuncionarioExibido[] = useMemo(() => {
     if (!localUsuarios) return [];
@@ -194,7 +163,7 @@ const FuncionariosPage: React.FC = () => {
 
   const handleSavePermissions = () => {
     handleCloseModal();
-    refetch();
+    table.reload();
   };
 
   const handleStatusToggle = async (
@@ -226,34 +195,34 @@ const FuncionariosPage: React.FC = () => {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
-    setPaginaAtual(1);
+    table.setFilters({});
   };
 
   const handleStatusChange = (newStatus: "todos" | "ativo" | "inativo") => {
     setStatusFilter(newStatus);
-    setPaginaAtual(1);
+    table.setPage(1);
   };
 
   const handleItemsPerPageChange = (newSize: number) => {
-    setPorPagina(newSize);
-    setPaginaAtual(1);
+    table.setPageSize(newSize);
   };
 
-  const sortData = (key: SortableColumn) => {
+  const sortData = (key: FuncionarioSortableColumn) => {
     const direction: "asc" | "desc" =
       sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
         : "asc";
     setSortConfig({ key, direction });
+    table.setSort(FUNCIONARIO_SORT_COLUMN_MAP[key] || key);
   };
 
   const toggleFilterExpansion = () => setIsFilterExpanded((prev) => !prev);
 
-  if (usuariosError) {
+  if (table.error) {
     return (
       <div className={styles.container}>
-        <h2>Erro ao Carregar Funcionários</h2> <p>{usuariosError}</p>
-        <button onClick={() => refetch()}>Tentar novamente</button>
+        <h2>Erro ao Carregar Funcionários</h2> <p>{table.error}</p>
+        <button onClick={() => table.reload()}>Tentar novamente</button>
       </div>
     );
   }
@@ -273,29 +242,22 @@ const FuncionariosPage: React.FC = () => {
         />
       )}
 
-      <h1 className={styles.title}>FUNCIONÁRIOS - {empresa?.nomeFantasia?.toUpperCase() ?? ""}</h1>
-
-      <div className={styles.searchContainer}>
-        <SearchBar
-          placeholder="Qual funcionário deseja buscar?"
-          onSearch={handleSearch}
-          onFilterClick={toggleFilterExpansion}
-        />
-        <div className={styles.searchActions}>
-          <button
-            className={styles.actionButton}
-            onClick={() => refetch()}
-            title="Atualizar funcionários"
-            disabled={isLoading}
-          >
-            <span>Atualizar</span>
-            <IconRefresh className={isLoading ? styles.spinning : ""} />
-          </button>
-        </div>
-      </div>
-
-      {isFilterExpanded && (
-        <div className={styles.filterExpansion}>
+      <ColetaPageShell
+        title={`FUNCIONÁRIOS - ${empresa?.nomeFantasia?.toUpperCase() ?? ""}`}
+        titleClassName={styles.title}
+        searchPlaceholder="Qual funcionário deseja buscar?"
+        onSearch={handleSearch}
+        onFilterToggle={toggleFilterExpansion}
+        actions={
+          <div className={styles.searchActions}>
+            <button className={styles.actionButton} onClick={() => table.reload()} title="Atualizar funcionários" disabled={isLoading}>
+              <span>Atualizar</span>
+              <IconRefresh className={isLoading ? styles.spinning : ""} />
+            </button>
+          </div>
+        }
+        filterPanel={isFilterExpanded && (
+          <div className={styles.filterExpansion}>
           <div className={styles.filterSection}>
             <label>Buscar por:</label>
             <select
@@ -342,111 +304,67 @@ const FuncionariosPage: React.FC = () => {
               </label>
             </div>
           </div>
-        </div>
-      )}
-
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  onClick={() =>
-                    col.sortable && sortData(col.key as SortableColumn)
-                  }
-                  style={{ cursor: col.sortable ? "pointer" : "default" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>{col.label}</span>
-                    {col.sortable && <IconSort />}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((row) => (
-              <tr key={row.originalUser.codFuncionario}>
-                <td>{row.codigo}</td>
-                <td>{row.nome}</td>
-                <td>{row.cpf}</td>
-                <td>{row.email}</td>
-                <td>
-                  <span
-                    className={`${styles.statusBadge} ${getStatusClass(
-                      row.status,
-                    )}`}
-                  >
-                    {getStatusText(row.status)}
+          </div>
+        )}
+        table={<ColetaTable
+        className={styles.tableContainer}
+        tableClassName={styles.table}
+        columns={
+          FUNCIONARIO_COLUMNS.filter((col) => col.key !== "acoes").map((col) => {
+            if (col.key === "status") {
+              return {
+                ...col,
+                render: (row: FuncionarioExibido) => (
+                  <span className={`${styles.statusBadge} ${getStatusClass(row.status)}`}>
+                    {getFuncionarioStatusText(row.status)}
                   </span>
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      alignItems: "center",
-                    }}
+                ),
+              };
+            }
+            return col;
+          }) as ColetaTableColumn<FuncionarioExibido>[]
+        }
+        rows={displayedData}
+        onSort={(key) => sortData(key as FuncionarioSortableColumn)}
+        getRowId={(row) => row.originalUser.codFuncionario}
+        renderSortIcon={() => <IconSort />}
+        renderActions={(row) => (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {row.originalUser.codUsuario && row.originalUser.codUsuario > 0 ? (
+              <>
+                <button className={styles.actionButton} onClick={() => handleOpenModal(row.originalUser)} title="Gerenciar Permissões" style={{ padding: "4px 8px", fontSize: "0.85rem" }}>Permissões</button>
+                {!row.status && (
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => handleStatusToggle(row.originalUser.codUsuario as number, row.status)}
+                    disabled={patching}
+                    style={{ padding: "4px 8px", fontSize: "0.85rem", color: "#2ecc71", borderColor: "#2ecc71" }}
+                    title="Ativar Usuário"
                   >
-                    {row.originalUser.codUsuario &&
-                    row.originalUser.codUsuario > 0 ? (
-                      <>
-                        <button
-                          className={styles.actionButton}
-                          onClick={() => handleOpenModal(row.originalUser)}
-                          title="Gerenciar Permissões"
-                          style={{ padding: "4px 8px", fontSize: "0.85rem" }}
-                        >
-                          Permissões
-                        </button>
-
-                        {!row.status && (
-                          <button
-                            className={styles.actionButton}
-                            onClick={() =>
-                              handleStatusToggle(
-                                row.originalUser.codUsuario as number,
-                                row.status,
-                              )
-                            }
-                            disabled={patching}
-                            style={{
-                              padding: "4px 8px",
-                              fontSize: "0.85rem",
-                              color: "#2ecc71", // Verde (Ativar)
-                              borderColor: "#2ecc71",
-                            }}
-                            title="Ativar Usuário"
-                          >
-                            <FiPower style={{ marginRight: 4 }} />
-                            Ativar
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {totalElementos > 0 && (
-        <div className="footerControls">
-          <PaginationControls
-            paginaAtual={paginaAtual}
-            totalPaginas={totalPaginas}
-            totalElementos={totalElementos}
-            porPagina={porPagina}
-            onPageChange={setPaginaAtual}
+                    <FiPower style={{ marginRight: 4 }} />
+                    Ativar
+                  </button>
+                )}
+              </>
+            ) : (
+              "—"
+            )}
+          </div>
+        )}
+      />}
+        pagination={table.totalItems > 0 ? (
+          <div className="footerControls">
+            <PaginationControls
+            paginaAtual={table.page}
+            totalPaginas={table.totalPages}
+            totalElementos={table.totalItems}
+            porPagina={table.pageSize}
+            onPageChange={table.setPage}
             onItemsPerPageChange={handleItemsPerPageChange}
-          />
-        </div>
-      )}
+            />
+          </div>
+        ) : null}
+      />
     </div>
   );
 };

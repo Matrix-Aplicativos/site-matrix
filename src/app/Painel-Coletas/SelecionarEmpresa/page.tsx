@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { getCookie } from "cookies-next";
 import { getUserFromToken } from "../utils/functions/getUserFromToken";
 import { Usuario, Empresa } from "../utils/types/Usuario";
 import axiosInstance from "../../shared/axios/axiosInstanceColeta";
@@ -17,6 +18,7 @@ export default function SelecionarEmpresaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loadingUserData, setLoadingUserData] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { getCargos, loading: loadingCargos } = useGetCargosPorUsuario();
@@ -26,12 +28,12 @@ export default function SelecionarEmpresaPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("authToken");
+        const token = getCookie("token");
         if (!token) {
           router.push("/Painel-Coletas/Login");
           return;
         }
-        const userId = getUserFromToken(token);
+        const userId = getUserFromToken(String(token));
 
         const response = await axiosInstance.get(
           `/usuario/${userId}?searchByRole=GESTOR`,
@@ -66,7 +68,7 @@ export default function SelecionarEmpresaPage() {
       const listaCargos = await getCargos(
         usuario.codUsuario ||
           Number(
-            getUserFromToken(localStorage.getItem("authToken") || "") || 0,
+            getUserFromToken(String(getCookie("token") || "")) || 0,
           ),
         empresa.codEmpresa,
       );
@@ -79,13 +81,13 @@ export default function SelecionarEmpresaPage() {
         localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
         router.push("/Painel-Coletas");
       } else {
-        alert(
+        setFeedbackMessage(
           "Acesso negado. Você não possui permissão de GESTOR nesta empresa.",
         );
       }
     } catch (err) {
       console.error(err);
-      alert("Erro ao verificar permissões. Tente novamente.");
+      setFeedbackMessage("Erro ao verificar permissões. Tente novamente.");
     }
   };
 
@@ -106,9 +108,14 @@ export default function SelecionarEmpresaPage() {
 
   return (
     <div className="selecao-container-grid">
-      <div className="back-arrow" onClick={() => router.back()}>
+      <button
+        type="button"
+        className="back-arrow"
+        onClick={() => router.back()}
+        aria-label="Voltar"
+      >
         <ArrowLeft size={22} />
-      </div>
+      </button>
 
       <header className="selecao-header">
         <div className="header-left">
@@ -128,6 +135,11 @@ export default function SelecionarEmpresaPage() {
       </header>
 
       <main className="empresas-grid">
+        {feedbackMessage && (
+          <p role="status" aria-live="polite" className="error-container">
+            {feedbackMessage}
+          </p>
+        )}
         {filteredEmpresas.length > 0 ? (
           filteredEmpresas.map((empresa) => (
             <button

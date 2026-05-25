@@ -76,8 +76,6 @@ const useLogin = (): UseLoginHook => {
         secure: process.env.NODE_ENV === "production",
       });
 
-      localStorage.setItem("authToken", token);
-
       return { token, primeiroAcesso };
     } catch (err) {
       console.error(err);

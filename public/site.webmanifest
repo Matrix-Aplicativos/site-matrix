@@ -1,0 +1,9 @@
+{
+  "name": "Site Matrix",
+  "short_name": "Matrix",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1769e3",
+  "icons": []
+}
