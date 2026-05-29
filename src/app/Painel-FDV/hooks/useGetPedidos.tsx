@@ -1,25 +1,23 @@
-import { useState, useEffect, useCallback } from "react"; // [MODIFICADO] Importa useCallback
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
-import { Pedido } from "../utils/types/Pedido";
+import { PedidoListItem } from "../utils/types/Pedido";
 
-// 1. Interface da Resposta da API (baseado no padrão)
 interface ApiResponsePedidos {
-  conteudo: Pedido[];
+  conteudo: PedidoListItem[];
   paginaAtual: number;
   qtdPaginas: number;
   qtdElementos: number;
 }
 
-// 2. [MODIFICADO] Interface do Retorno do Hook (atualizada)
 interface UseGetPedidosHook {
-  pedidos: Pedido[] | null;
-  loading: boolean; // Renomeado de isLoading para 'loading' (padrão dos outros)
+  pedidos: PedidoListItem[] | null;
+  loading: boolean;
   error: string | null;
   paginaAtual: number;
   qtdPaginas: number;
   qtdElementos: number;
-  refetch: () => void; // [NOVO]
+  refetch: () => void;
 }
 
 const useGetPedidos = (
@@ -31,10 +29,11 @@ const useGetPedidos = (
   campoBusca?: string,
   valorBusca?: string,
   dataInicio?: string,
-  dataFim?: string
+  dataFim?: string,
+  statusFiltros?: string[]
 ): UseGetPedidosHook => {
-  const [pedidos, setPedidos] = useState<Pedido[] | null>(null); 
-  const [loading, setLoading] = useState(true); 
+  const [pedidos, setPedidos] = useState<PedidoListItem[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [apiPaginaAtual, setApiPaginaAtual] = useState(1);
@@ -42,6 +41,8 @@ const useGetPedidos = (
   const [apiQtdElementos, setApiQtdElementos] = useState(0);
 
   const fetchPedidos = useCallback(async () => {
+    if (!codEmpresa) return;
+
     try {
       setLoading(true);
 
@@ -55,6 +56,11 @@ const useGetPedidos = (
 
       if (campoBusca && valorBusca) {
         queryParams.append(campoBusca, valorBusca);
+      }
+      if (statusFiltros?.length) {
+        statusFiltros.forEach((status) =>
+          queryParams.append("status", status)
+        );
       }
       if (dataInicio) {
         queryParams.append("dataCadastroIni", dataInicio);
@@ -81,7 +87,7 @@ const useGetPedidos = (
           ? err.response?.data?.message || err.message
           : "Ocorreu um erro ao buscar os pedidos.";
       setError(errorMessage);
-      setPedidos(null); 
+      setPedidos(null);
 
       setApiPaginaAtual(1);
       setApiQtdPaginas(1);
@@ -99,13 +105,14 @@ const useGetPedidos = (
     valorBusca,
     dataInicio,
     dataFim,
+    statusFiltros,
   ]);
 
   useEffect(() => {
     if (codEmpresa) {
       fetchPedidos();
     }
-  }, [codEmpresa, fetchPedidos]); 
+  }, [codEmpresa, fetchPedidos]);
 
   return {
     pedidos,
@@ -114,7 +121,7 @@ const useGetPedidos = (
     paginaAtual: apiPaginaAtual,
     qtdPaginas: apiQtdPaginas,
     qtdElementos: apiQtdElementos,
-    refetch: fetchPedidos, // [NOVO]
+    refetch: fetchPedidos,
   };
 };
 

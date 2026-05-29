@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
-import { Pedido } from "../utils/types/Pedido";
+import { getClienteCodigo, PedidoListItem } from "../utils/types/Pedido";
 
-// Interface para a resposta paginada da API
 interface PedidoResponse {
-  conteudo: Pedido[];
+  conteudo: PedidoListItem[];
   paginaAtual: number;
   qtdPaginas: number;
   qtdElementos: number;
@@ -40,43 +39,13 @@ export const useTotalClientes = (
 
         const pedidos = response.data.conteudo || [];
 
-        // FUNÇÃO CORRIGIDA - tratamento seguro dos tipos
         const clientesIds = pedidos
-          .map((pedido: Pedido) => {
-            // Verifica se codCliente é um número válido
-            if (
-              pedido.codCliente &&
-              typeof pedido.codCliente === "number" &&
-              pedido.codCliente > 0
-            ) {
-              return pedido.codCliente;
-            }
+          .map((item) => getClienteCodigo(item))
+          .filter((id): id is number | string => id !== null && id !== "");
 
-            // Verifica se codCliente é um objeto com propriedade codCliente
-            if (
-              pedido.codCliente &&
-              typeof pedido.codCliente === "object" &&
-              (pedido.codCliente as any).codCliente &&
-              typeof (pedido.codCliente as any).codCliente === "number" &&
-              (pedido.codCliente as any).codCliente > 0
-            ) {
-              return (pedido.codCliente as any).codCliente;
-            }
-
-            // Verifica se há um objeto cliente com codCliente válido
-            if (
-              pedido.cliente?.codCliente &&
-              typeof pedido.cliente.codCliente === "number" &&
-              pedido.cliente.codCliente > 0
-            ) {
-              return pedido.cliente.codCliente;
-            }
-
-            return null;
-          })
-          .filter((id): id is number => id !== null && id > 0);
-
-        const clientesUnicos = new Set(clientesIds);
+        const clientesUnicos = new Set(
+          clientesIds.map((id) => String(id))
+        );
         setTotalClientes(clientesUnicos.size);
       } catch (err) {
         console.error("Erro ao buscar clientes:", err);

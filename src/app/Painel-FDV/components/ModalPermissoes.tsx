@@ -22,6 +22,9 @@ const FDV_PERMISSIONS_KEYS = [
   "PERM_FDV_VISUALIZAR_COND_PAGAMENTO",
   "PERM_FDV_VISUALIZAR_CONFIGURACOES",
   "PERM_FDV_SINCRONIZAR_DADOS_OFFLINE",
+  "ROLE_FDV_VISUALIZAR_CUSTO",
+  "ROLE_FDV_VISUALIZAR_TODOS_CLIENTES",
+  "ROLE_FDV_VISUALIZAR_TODOS_LOTES_ITEM",
 ];
 
 interface ModalProps {
@@ -63,6 +66,9 @@ const PERMISSION_DISPLAY_MAP = [
           "Permite Visualizar Configurações do Aplicativo FDV",
         PERM_FDV_SINCRONIZAR_DADOS_OFFLINE:
           "Permite Sincronizar Dados Offline do Aplicativo FDV",
+        ROLE_FDV_VISUALIZAR_CUSTO: "Visualizar Custo",
+        ROLE_FDV_VISUALIZAR_TODOS_CLIENTES: "Visualizar Todos os Clientes",
+        ROLE_FDV_VISUALIZAR_TODOS_LOTES_ITEM: "Visualizar Todos os Lotes do Item",
       };
       return { key: role, description: descriptions[role] || role };
     }),

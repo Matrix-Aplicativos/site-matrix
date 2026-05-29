@@ -11,6 +11,8 @@ import { UsuarioGet } from "../utils/types/UsuarioGet";
 import { toast } from "react-toastify";
 
 import ModalPermissoes from "../components/ModalPermissoes";
+import useCurrentCompany from "../hooks/useCurrentCompany";
+import { formatPainelTitle } from "../utils/formatPainelTitle";
 import SearchBar from "@/app/Painel-Coletas/components/SearchBar";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
 
@@ -60,6 +62,14 @@ const FILTER_TO_API_PARAM: Record<string, string> = {
   Código: "codUsuarioErp",
 };
 
+const SORT_KEY_TO_API_PARAM: Record<string, string> = {
+  codUsuarioErp: "codFuncionarioErp",
+  nome: "nome",
+  cpf: "cpf",
+  email: "email",
+  ativo: "ativo",
+};
+
 interface ColumnDefinition {
   key: string;
   label: string;
@@ -87,6 +97,11 @@ export default function UsuariosPage() {
 
   // --- Hooks de Contexto e Autenticação ---
   const { showLoading, hideLoading } = useLoading();
+  const { empresa: empresaAtual } = useCurrentCompany();
+  const pageTitle = formatPainelTitle(
+    "FUNCIONÁRIOS FDV",
+    empresaAtual?.nomeFantasia
+  );
   const token = getCookie("token");
   const codUsuario = getUserFromToken(String(token));
 
@@ -124,15 +139,19 @@ export default function UsuariosPage() {
   // O hook só deve ser habilitado se tivermos o ID da empresa
   const isHookEnabled = !!codEmpresaSelecionada;
 
+  const orderByApi = sortConfig?.key
+    ? SORT_KEY_TO_API_PARAM[sortConfig.key] ?? sortConfig.key
+    : undefined;
+
   const { usuarios, loading, error, totalPaginas, totalElementos, refetch } =
     useGetUsuarios(
-      codEmpresaSelecionada || 0, // Passa 0 se nulo para não quebrar, mas isHookEnabled segura a chamada
+      codEmpresaSelecionada || 0,
       paginaAtual,
       itemsPerPage,
-      sortConfig?.key,
+      orderByApi,
       sortConfig?.direction,
       filtrosParaApi,
-      isHookEnabled,
+      isHookEnabled
     );
 
   // --- Handlers do Modal ---
@@ -155,7 +174,7 @@ export default function UsuariosPage() {
 
   // --- Definição das Colunas ---
   const columns: ColumnDefinition[] = [
-    { key: "codFuncionario", label: "Código" },
+    { key: "codUsuarioErp", label: "Código" },
     { key: "nome", label: "Nome" },
     { key: "cpf", label: "CPF" },
     { key: "email", label: "Email" },
@@ -240,7 +259,7 @@ export default function UsuariosPage() {
   if (error) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>FUNCIONÁRIOS FDV</h1>
+        <h1 className={styles.title}>{pageTitle}</h1>
         <div className={styles.errorMessage}>
           <p>Erro ao carregar usuários: {error}</p>
         </div>
@@ -262,7 +281,7 @@ export default function UsuariosPage() {
         />
       )}
 
-      <h1 className={styles.title}>FUNCIONÁRIOS FDV</h1>
+      <h1 className={styles.title}>{pageTitle}</h1>
 
       {/* Barra de Busca e Ações */}
       <div className={styles.searchContainer}>
