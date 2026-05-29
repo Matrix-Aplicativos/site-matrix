@@ -87,6 +87,36 @@ const appendParam = (params: URLSearchParams, key: string, value?: string) => {
   params.append(key, value);
 };
 
+const FETCH_ALL_PAGE_SIZE = 100;
+
+const sortMergedRows = <TItem,>(
+  rows: TItem[],
+  sort: { key: string; direction: "asc" | "desc" },
+): TItem[] => {
+  const { key, direction } = sort;
+  return [...rows].sort((a, b) => {
+    const av = (a as Record<string, unknown>)[key];
+    const bv = (b as Record<string, unknown>)[key];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+
+    let cmp = 0;
+    if (typeof av === "number" && typeof bv === "number") {
+      cmp = av - bv;
+    } else {
+      cmp = String(av).localeCompare(String(bv), "pt-BR");
+    }
+    return direction === "asc" ? cmp : -cmp;
+  });
+};
+
+const mapResponse = <TItem,>(
+  data: unknown,
+  responseAdapter?: (data: unknown) => TableRowsPayload<TItem>,
+): TableRowsPayload<TItem> =>
+  responseAdapter ? responseAdapter(data) : normalizePagedResponse<TItem>(data);
+
 export default function useTable<TItem>({
   codEmpresa,
   tipo = null,
@@ -131,29 +161,6 @@ export default function useTable<TItem>({
     }
 
     const effectiveTipo = currentTipo ?? tipo;
-    const params = queryParamsBuilderRef.current
-      ? queryParamsBuilderRef.current({ page, pageSize, sort, filters, tipo: effectiveTipo })
-      : (() => {
-          const defaultParams = new URLSearchParams({
-            pagina: String(page),
-            porPagina: String(pageSize),
-          });
-          if (Array.isArray(effectiveTipo)) {
-            effectiveTipo.forEach((t) => defaultParams.append("tipo", t));
-          } else {
-            appendParam(defaultParams, "tipo", effectiveTipo ?? undefined);
-          }
-          if (sort) {
-            appendParam(defaultParams, "orderBy", sort.key);
-            appendParam(defaultParams, "direction", sort.direction);
-          }
-          appendParam(defaultParams, "situacao", filters.situacao);
-          appendParam(defaultParams, "origem", filters.origem);
-          appendParam(defaultParams, "descricao", filters.descricao);
-          appendParam(defaultParams, "dataCadastroIni", filters.dataCadastroIni);
-          appendParam(defaultParams, "dataCadastroFim", filters.dataCadastroFim);
-          return defaultParams;
-        })();
 
     const endpointSource = endpointRef.current;
     const endpointPath =
@@ -161,20 +168,98 @@ export default function useTable<TItem>({
         ? endpointSource({ codEmpresa })
         : endpointSource || `/coleta/empresa/${codEmpresa}`;
 
+    const buildParams = (
+      requestPage: number,
+      requestPageSize: number,
+      requestTipo: string | string[] | null,
+    ) => {
+      if (queryParamsBuilderRef.current) {
+        return queryParamsBuilderRef.current({
+          page: requestPage,
+          pageSize: requestPageSize,
+          sort,
+          filters,
+          tipo: requestTipo,
+        });
+      }
+
+      const singleTipo = Array.isArray(requestTipo)
+        ? requestTipo.length === 1
+          ? requestTipo[0]
+          : undefined
+        : (requestTipo ?? undefined);
+
+      const defaultParams = new URLSearchParams({
+        pagina: String(requestPage),
+        porPagina: String(requestPageSize),
+      });
+      appendParam(defaultParams, "tipo", singleTipo);
+      if (sort) {
+        appendParam(defaultParams, "orderBy", sort.key);
+        appendParam(defaultParams, "direction", sort.direction);
+      }
+      appendParam(defaultParams, "situacao", filters.situacao);
+      appendParam(defaultParams, "origem", filters.origem);
+      appendParam(defaultParams, "descricao", filters.descricao);
+      appendParam(defaultParams, "dataCadastroIni", filters.dataCadastroIni);
+      appendParam(defaultParams, "dataCadastroFim", filters.dataCadastroFim);
+      return defaultParams;
+    };
+
+    const fetchAllRowsForTipo = async (singleTipo: string): Promise<TItem[]> => {
+      const allRows: TItem[] = [];
+      let pageNum = 1;
+      let totalPages = 1;
+
+      while (pageNum <= totalPages) {
+        const response = await execute({
+          method: "GET",
+          url: `${endpointPath}?${buildParams(pageNum, FETCH_ALL_PAGE_SIZE, singleTipo).toString()}`,
+        });
+        const mapped = mapResponse<TItem>(
+          response.data,
+          responseAdapterRef.current,
+        );
+        allRows.push(...mapped.rows);
+        totalPages = mapped.totalPages || 1;
+        pageNum += 1;
+      }
+
+      return allRows;
+    };
+
+    if (Array.isArray(effectiveTipo) && effectiveTipo.length > 1) {
+      const results = await Promise.all(
+        effectiveTipo.map((singleTipo) => fetchAllRowsForTipo(singleTipo)),
+      );
+      let merged = results.flat();
+      if (sort) {
+        merged = sortMergedRows(merged, sort);
+      }
+
+      const totalItems = merged.length;
+      const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0;
+      const start = (page - 1) * pageSize;
+      setRows(merged.slice(start, start + pageSize));
+      setTotalPages(totalPages);
+      setTotalItems(totalItems);
+      return;
+    }
+
+    const requestTipo = Array.isArray(effectiveTipo)
+      ? effectiveTipo[0]
+      : effectiveTipo;
+    const params = buildParams(page, pageSize, requestTipo);
+
     const response = await execute({
       method: "GET",
       url: `${endpointPath}?${params.toString()}`,
     });
 
-    if (responseAdapterRef.current) {
-      const mapped = responseAdapterRef.current(response.data);
-      setRows(mapped.rows || []);
-      setTotalPages(mapped.totalPages || 0);
-      setTotalItems(mapped.totalItems || 0);
-      return;
-    }
-
-    const mapped = normalizePagedResponse<TItem>(response.data);
+    const mapped = mapResponse<TItem>(
+      response.data,
+      responseAdapterRef.current,
+    );
     setRows(mapped.rows);
     setTotalPages(mapped.totalPages);
     setTotalItems(mapped.totalItems);
