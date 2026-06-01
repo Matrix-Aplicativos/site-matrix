@@ -303,16 +303,16 @@ export default function PedidosPage() {
   };
 
   const sortData = (key: keyof PedidoRow) => {
-    const sortKey = key as SortKey;
     if (
-      sortKey === "cliente" ||
-      sortKey === "vendedor" ||
-      sortKey === "id" ||
-      sortKey === "item"
+      key === "cliente" ||
+      key === "vendedor" ||
+      key === "id" ||
+      key === "item"
     ) {
       return;
     }
 
+    const sortKey = key as SortKey;
     let direction: "asc" | "desc" = "asc";
     if (
       sortConfig &&
