@@ -19,13 +19,23 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const clearSessionAndRedirectToLogin = () => {
+  deleteCookie("token");
+  deleteCookie("refreshToken");
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("empresaSelecionada");
+    window.location.href = "/Painel-FDV/Login";
+  }
+};
+
 const axiosInstanceFDV = axios.create({
   baseURL: baseUrl,
 });
 
 axiosInstanceFDV.interceptors.request.use(
   (config) => {
-    const token = getCookie("token"); // use cookies separados se necessário
+    const token = getCookie("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.headers["Content-Type"] = "application/json";
@@ -44,8 +54,9 @@ axiosInstanceFDV.interceptors.response.use(
       error.response || error.message
     );
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    if (error.response?.status === 403 && !originalRequest._retry) {
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -61,7 +72,7 @@ axiosInstanceFDV.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const rt = getCookie("refreshToken_fdv");
+        const rt = getCookie("refreshToken");
         if (!rt) throw new Error("Refresh token FDV não encontrado.");
 
         const response = await axios.post(
@@ -86,12 +97,16 @@ axiosInstanceFDV.interceptors.response.use(
           sameSite: "strict",
         });
 
+        if (typeof window !== "undefined") {
+          localStorage.setItem("authToken", token);
+        }
+
         processQueue(null, token);
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstanceFDV(originalRequest);
       } catch (err) {
-        deleteCookie("refreshToken");
         processQueue(err, null);
+        clearSessionAndRedirectToLogin();
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

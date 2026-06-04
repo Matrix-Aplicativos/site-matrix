@@ -36,7 +36,7 @@ interface UseGetClientesHook {
 }
 
 const useGetClientes = (
-  codEmpresa: number,
+  codEmpresa: number | undefined,
   pagina: number,
   porPagina: number,
   orderBy?: string,

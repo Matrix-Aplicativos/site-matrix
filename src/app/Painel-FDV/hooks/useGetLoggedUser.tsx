@@ -79,7 +79,7 @@ const useGetLoggedUser = (codUsuario : Number) => {
 
         } catch (err) {
           setError(err instanceof AxiosError ? err.message : "Ocorreu um erro ao buscar o usuário Atual.");
-          router.push("/Login");
+          router.push("/Painel-FDV/Login");
         } finally {
           setLoading(false); 
         }
