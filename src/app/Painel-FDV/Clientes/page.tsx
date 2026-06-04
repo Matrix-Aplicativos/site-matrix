@@ -122,10 +122,8 @@ export default function ClientesPage() {
   }, [searchQuery, searchTopic]);
 
   const codEmpresaParaBusca =
-    usuario && usuario.empresas[0]?.codEmpresa
-      ? usuario.empresas[0].codEmpresa
-      : 1;
-  const isHookEnabled = !!usuario;
+    empresa?.codEmpresa ?? usuario?.empresas?.[0]?.codEmpresa;
+  const isHookEnabled = !!codEmpresaParaBusca;
 
   const orderByApi = sortConfig?.key
     ? SORT_KEY_TO_API_PARAM[sortConfig.key] ?? sortConfig.key

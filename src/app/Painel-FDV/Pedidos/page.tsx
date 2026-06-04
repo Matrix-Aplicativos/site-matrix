@@ -18,6 +18,7 @@ import ColetaTable, {
   ColetaTableColumn,
 } from "@/app/Painel-Coletas/components/table/ColetaTable";
 import SearchBar from "../../Painel-Coletas/components/SearchBar";
+import ExpandedPedidoRow from "../components/ExpandedPedidoRow";
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -142,7 +143,8 @@ export default function PedidosPage() {
   const { usuario } = useGetLoggedUser(codUsuario || 0);
   const { empresa } = useCurrentCompany();
 
-  const codEmpresa = usuario?.empresas?.[0]?.codEmpresa;
+  const codEmpresa =
+    empresa?.codEmpresa ?? usuario?.empresas?.[0]?.codEmpresa;
   const pageTitle = formatPainelTitle("PEDIDOS", empresa?.nomeFantasia);
 
   const orderByApi = sortConfig?.key
@@ -330,27 +332,9 @@ export default function PedidosPage() {
     setPaginaAtual(1);
   };
 
-  const renderExpandedDetails = (row: PedidoRow) => {
-    const { pedido } = row.item;
-    return (
-      <div className={styles.additionalInfo}>
-        <p>
-          <strong>Condição de pagamento:</strong>{" "}
-          {pedido.condicaoPagamento?.descricao || "—"}
-        </p>
-        <p>
-          <strong>Frete:</strong> {formatPreco(pedido.valorFrete)}
-        </p>
-        <p>
-          <strong>Outros acréscimos:</strong>{" "}
-          {formatPreco(pedido.outrosAcrescimos)}
-        </p>
-        <p>
-          <strong>Observação:</strong> {pedido.observacao || "—"}
-        </p>
-      </div>
-    );
-  };
+  const renderExpandedDetails = (row: PedidoRow) => (
+    <ExpandedPedidoRow pedidoItem={row.item} />
+  );
 
   if (error) {
     return (
