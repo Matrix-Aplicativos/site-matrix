@@ -53,6 +53,9 @@ export interface PedidoDetalhe {
   transportadora: unknown | null;
   numNotaFiscal: string | null;
   identificacaoCliente: string | null;
+  obsIntegracao?: string | null;
+  statusIntegracao?: string | null;
+  hexStatusIntegracao?: string | null;
 }
 
 export interface PedidoListItem {
