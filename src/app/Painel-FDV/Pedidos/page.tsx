@@ -19,6 +19,7 @@ import ColetaTable, {
 } from "@/app/Painel-Coletas/components/table/ColetaTable";
 import SearchBar from "../../Painel-Coletas/components/SearchBar";
 import ExpandedPedidoRow from "../components/ExpandedPedidoRow";
+import ModalErroIntegracao from "../components/ModalErroIntegracao";
 
 const IconRefresh = ({ className }: { className?: string }) => (
   <svg
@@ -36,6 +37,23 @@ const IconRefresh = ({ className }: { className?: string }) => (
     <polyline points="23 4 23 10 17 10"></polyline>
     <polyline points="1 20 1 14 7 14"></polyline>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14l-2.02 4.64A9 9 0 0 0 18.49 15"></path>
+  </svg>
+);
+
+const IconError = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="#d32f2f"
+    style={{ width: 24, height: 24 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+    />
   </svg>
 );
 
@@ -117,6 +135,7 @@ interface PedidoRow {
   subTotal: number;
   valorTotal: number;
   status: string;
+  obsIntegracao?: string | null;
   item: PedidoListItem;
 }
 
@@ -136,6 +155,10 @@ export default function PedidosPage() {
     startDate: "",
     endDate: "",
   });
+  const [erroModal, setErroModal] = useState<{
+    codPedido: number;
+    mensagem: string;
+  } | null>(null);
 
   const { showLoading, hideLoading } = useLoading();
   const token = getCookie("token");
@@ -203,6 +226,7 @@ export default function PedidosPage() {
     subTotal: item.subTotal,
     valorTotal: item.pedido.valorTotal,
     status: item.pedido.status,
+    obsIntegracao: item.pedido.obsIntegracao,
     item,
   }));
 
@@ -212,12 +236,30 @@ export default function PedidosPage() {
       label: "Status",
       sortable: true,
       render: (row) => (
-        <span
-          className={styles.statusBadge}
-          style={getStatusBadgeStyle(row.status)}
-        >
-          {getStatusLabel(row.status)}
-        </span>
+        <div className={styles.statusCell}>
+          <span
+            className={styles.statusBadge}
+            style={getStatusBadgeStyle(row.status)}
+          >
+            {getStatusLabel(row.status)}
+          </span>
+          {row.status === "4" && (
+            <button
+              type="button"
+              className={styles.errorIconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                setErroModal({
+                  codPedido: row.codPedido,
+                  mensagem: row.obsIntegracao ?? "Erro na Integração",
+                });
+              }}
+              title="Ver mensagem de erro"
+            >
+              <IconError />
+            </button>
+          )}
+        </div>
       ),
     },
     {
@@ -464,6 +506,13 @@ export default function PedidosPage() {
           isLoading={loading}
         />
       )}
+
+      <ModalErroIntegracao
+        isOpen={erroModal !== null}
+        onClose={() => setErroModal(null)}
+        mensagem={erroModal?.mensagem ?? ""}
+        codPedido={erroModal?.codPedido}
+      />
     </div>
   );
 }

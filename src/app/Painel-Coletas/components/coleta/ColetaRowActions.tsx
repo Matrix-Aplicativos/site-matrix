@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import ModalErroIntegracao from "../ModalErroIntegracao";
 
 interface RowLike {
   id: number;
@@ -70,7 +71,13 @@ export default function ColetaRowActions<TRow extends RowLike>({
   onEdit,
   onReopen,
 }: ColetaRowActionsProps<TRow>) {
+  const [erroModal, setErroModal] = useState<{
+    codColeta: number;
+    mensagem: string;
+  } | null>(null);
+
   return (
+    <>
     <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-start" }}>
       <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); onDelete(row.id); }} title={labels.delete}>
         <IconTrash />
@@ -90,12 +97,32 @@ export default function ColetaRowActions<TRow extends RowLike>({
           {row.statusSincronizacao === 1 && <span className={styles.syncIcon} title={row.obsIntegracao ?? "Pendente de Envio"}><IconPending /></span>}
           {row.statusSincronizacao === 2 && <span className={styles.syncIcon} title={row.obsIntegracao ?? "Sincronizado com ERP"}><IconSync /></span>}
           {row.statusSincronizacao === 3 && (
-            <button type="button" className={styles.syncIcon} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={(e) => { e.stopPropagation(); alert(row.obsIntegracao ?? "Erro na Integração"); }} title="Ver mensagem de erro">
+            <button
+              type="button"
+              className={styles.syncIcon}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setErroModal({
+                  codColeta: row.id,
+                  mensagem: row.obsIntegracao ?? "Erro na Integração",
+                });
+              }}
+              title="Ver mensagem de erro"
+            >
               <IconError />
             </button>
           )}
         </>
       )}
     </div>
+
+    <ModalErroIntegracao
+      isOpen={erroModal !== null}
+      onClose={() => setErroModal(null)}
+      mensagem={erroModal?.mensagem ?? ""}
+      codColeta={erroModal?.codColeta}
+    />
+    </>
   );
 }
