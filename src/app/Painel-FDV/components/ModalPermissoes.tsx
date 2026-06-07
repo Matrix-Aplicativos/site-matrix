@@ -12,6 +12,7 @@ const FUNCIONARIO_ROLE = "ROLE_FDV_FUNCIONARIO";
 const FDV_PERMISSIONS_KEYS = [
   "PERM_FDV_REALIZAR_PEDIDO",
   "PERM_FDV_VISUALIZAR_PEDIDOS",
+  "ROLE_FDV_VISUALIZAR_TODOS_PEDIDOS",
   "PERM_FDV_CADASTRAR_CLIENTES",
   "PERM_FDV_VISUALIZAR_CLIENTES",
   "PERM_FDV_GERENCIAR_USUARIOS",
@@ -51,6 +52,7 @@ const PERMISSION_DISPLAY_MAP = [
         PERM_FDV_REALIZAR_PEDIDO: "Permite Realizar Pedidos pelo Aplicativo",
         PERM_FDV_VISUALIZAR_PEDIDOS:
           "Permite Visualizar Pedidos no Painel e Aplicativo",
+        ROLE_FDV_VISUALIZAR_TODOS_PEDIDOS: "Visualizar Todos os Pedidos",
         PERM_FDV_CADASTRAR_CLIENTES: "Permite Cadastrar Clientes",
         PERM_FDV_VISUALIZAR_CLIENTES: "Permite Visualizar Clientes",
         PERM_FDV_GERENCIAR_USUARIOS: "Permite Gerenciar Usuarios do FDV",
