@@ -109,3 +109,26 @@
     min-width: 90px;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .paginationWrapper {
+    background-color: #ffffff;
+  }
+
+  .itemCount,
+  .itemsPerPage,
+  .itemsPerPage span {
+    color: #000000;
+  }
+
+  .paginationControls button,
+  .itemsPerPage select {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .paginationControls button.activePage {
+    background-color: #007bff;
+    color: #ffffff;
+  }
+}
