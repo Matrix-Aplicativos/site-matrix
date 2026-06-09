@@ -65,3 +65,26 @@
     min-width: 480px;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .tableContainer,
+  .table th,
+  .tableTitle {
+    background-color: #ffffff;
+  }
+
+  .tableTitle,
+  .table th,
+  .table td,
+  .noDataMessage {
+    color: #000000;
+  }
+
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+
+  .table tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+}

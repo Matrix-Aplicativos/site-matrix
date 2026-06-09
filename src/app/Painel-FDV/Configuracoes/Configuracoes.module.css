@@ -222,3 +222,28 @@
     max-width: none;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .container,
+  .tableContainer,
+  .configTable th,
+  .configInput {
+    background-color: #ffffff;
+  }
+
+  .title,
+  .configTable th,
+  .configTable td,
+  .descricaoCell,
+  .noConfiguracoes {
+    color: #000000;
+  }
+
+  .configTable tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+
+  .configTable tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+}

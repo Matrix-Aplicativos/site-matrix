@@ -73,10 +73,25 @@ const ExpandedPedidoRow: React.FC<ExpandedPedidoRowProps> = ({ pedidoItem }) => 
   return (
     <div>
       <div className={pedidoStyles.additionalInfo}>
-        <p>
-          <strong>Condição de pagamento:</strong>{" "}
-          {pedido.condicaoPagamento?.descricao || "—"}
-        </p>
+        <div className={pedidoStyles.additionalInfoGroup}>
+          <p>
+            <strong>Condição de pagamento:</strong>{" "}
+            {pedido.condicaoPagamento?.descricao || "—"}
+          </p>
+          <p>
+            <strong>Status ERP:</strong>{" "}
+            <span
+              style={{
+                color: pedido.statusIntegracao
+                  ? (pedido.hexStatusIntegracao ?? undefined)
+                  : "#8C8C8C",
+                fontWeight: 600,
+              }}
+            >
+              {pedido.statusIntegracao ?? "NÃO INTEGRADO"}
+            </span>
+          </p>
+        </div>
         <p>
           <strong>Frete:</strong> {formatPreco(pedido.valorFrete)}
         </p>

@@ -223,3 +223,38 @@
   background-color: #ffebee; /* Vermelho (Inativo) */
   color: #c62828;
 }
+
+@media (prefers-color-scheme: dark) {
+  .container,
+  .table th,
+  .filterExpansion,
+  .filterSection select,
+  .paginationControls button,
+  .itemsPerPageSelect {
+    background-color: #ffffff;
+  }
+
+  .title,
+  .table th,
+  .table td,
+  .filterSection label,
+  .filterSection select,
+  .paginationControls button,
+  .paginationControls span,
+  .itemsPerPageSelect {
+    color: #000000;
+  }
+
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+
+  .table tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+
+  .paginationControls button:hover:not(:disabled) {
+    background-color: #1769e3;
+    color: #ffffff;
+  }
+}

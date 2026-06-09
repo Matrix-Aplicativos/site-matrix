@@ -166,3 +166,38 @@
   padding: 0 8px;
   user-select: none;
 }
+
+@media (prefers-color-scheme: dark) {
+  .itemsTableContainer,
+  .itemsTable th,
+  .detailsContainer,
+  .detailsTable thead,
+  .seriesContainer,
+  .itemPagination button {
+    background-color: #ffffff;
+  }
+
+  .itemsTable th,
+  .itemsTable td,
+  .detailsTitle,
+  .detailsTable th,
+  .detailsTable td,
+  .seriesListItem,
+  .itemPagination button,
+  .itemPagination span {
+    color: #000000;
+  }
+
+  .itemsTable tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+  }
+
+  .itemsTable tbody tr:hover {
+    background-color: #e0e0e0;
+  }
+
+  .itemPagination button:hover:not(:disabled) {
+    background-color: #1769e3;
+    color: #ffffff;
+  }
+}
