@@ -79,6 +79,7 @@ const verdeMatrix = "#29F581";
 const vermelhoMatrix = "#DA072D";
 const amareloMatrix = "#C4A020";
 const laranjaMatrix = "#FF8A00";
+const roxoMatrix = "#7B2CBF";
 
 const SORT_KEY_TO_API_PARAM: Record<string, string> = {
   codPedido: "id",
@@ -95,9 +96,10 @@ const PEDIDO_STATUS: Record<string, { label: string; color: string }> = {
   "3": { label: "Integrado", color: azulMatrix },
   "4": { label: "Erro na integração", color: vermelhoMatrix },
   "5": { label: "Orçamento", color: laranjaMatrix },
+  "6": { label: "Cancelado", color: roxoMatrix },
 };
 
-const STATUS_FILTER_KEYS = ["1", "2", "3", "4", "5"] as const;
+const STATUS_FILTER_KEYS = ["1", "2", "3", "4", "5", "6"] as const;
 
 function resolveSearchApiParam(
   filter: string,
