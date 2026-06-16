@@ -91,6 +91,18 @@ const ExpandedPedidoRow: React.FC<ExpandedPedidoRowProps> = ({ pedidoItem }) => 
               {pedido.statusIntegracao ?? "NÃO INTEGRADO"}
             </span>
           </p>
+            {pedido.dataFinalizacao && (
+              <p>
+                <strong>Data finalização:</strong>{" "}
+                {new Date(pedido.dataFinalizacao).toLocaleString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
         </div>
         <p>
           <strong>Frete:</strong> {formatPreco(pedido.valorFrete)}

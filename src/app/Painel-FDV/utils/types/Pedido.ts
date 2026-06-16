@@ -56,6 +56,7 @@ export interface PedidoDetalhe {
   obsIntegracao?: string | null;
   statusIntegracao?: string | null;
   hexStatusIntegracao?: string | null;
+  dataFinalizacao?: string | null;
 }
 
 export interface PedidoListItem {
