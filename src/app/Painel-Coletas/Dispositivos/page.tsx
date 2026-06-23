@@ -9,18 +9,15 @@ import useAtivarDispositivo from "../hooks/useAtivarDispositivo";
 import useEditarNomeDispositivo from "../hooks/useEditarNomeDispositivo";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import PaginationControls from "../components/PaginationControls";
-import ColetaTable from "../components/table/ColetaTable";
 import useTable, { normalizePagedResponse } from "../hooks/core/useTable";
 import useAxiosRequest from "../hooks/core/useAxiosRequest";
 import ColetaPageShell from "../components/coleta/ColetaPageShell";
 import {
-  DispositivoExibido,
   DISPOSITIVO_COLUMNS,
   DISPOSITIVO_SORT_COLUMN_MAP,
+  formatUltimoUtilizador,
+  UltimoUtilizador,
 } from "../domain/dispositivoTableConfig";
-
-/** Linha da tabela: colunas exibidas + `raw` para ações (não ordenável). */
-type DispositivoLinha = DispositivoExibido & { raw: Record<string, unknown> };
 
 const IconSort = () => (
   <svg
@@ -42,7 +39,7 @@ const IconSort = () => (
 
 const DispositivosPage: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof DispositivoExibido;
+    key: (typeof DISPOSITIVO_COLUMNS)[number]["key"];
     direction: "asc" | "desc";
   } | null>({ key: "nome", direction: "asc" });
 
@@ -81,6 +78,7 @@ const DispositivosPage: React.FC = () => {
   const {
     data: dadosDispositivo,
     loading: loadingDados,
+    error: errorDados,
     execute: executeDados,
   } = useAxiosRequest<any>(null);
 
@@ -106,13 +104,13 @@ const DispositivosPage: React.FC = () => {
     ]);
   };
 
-  const handleSort = (key: keyof DispositivoLinha) => {
-    if (key === "raw") return;
+  const handleSort = (key: (typeof DISPOSITIVO_COLUMNS)[number]["key"]) => {
     const direction =
       sortConfig?.key === key && sortConfig.direction === "asc"
         ? "desc"
         : "asc";
     setSortConfig({ key, direction });
+    table.setPage(1);
     table.setSort(DISPOSITIVO_SORT_COLUMN_MAP[key] || key);
   };
 
@@ -193,59 +191,102 @@ const DispositivosPage: React.FC = () => {
             {isLoading && !table.rows && <p>Carregando dispositivos...</p>}
             {table.error && <p>Erro ao carregar dispositivos: {table.error}</p>}
 
+            {errorDados && (
+              <p>Erro ao carregar dados dos dispositivos: {errorDados}</p>
+            )}
             {!isLoading && table.rows && (
-              <ColetaTable<DispositivoLinha>
-                tableClassName={styles.table}
-                columns={DISPOSITIVO_COLUMNS.map((col) => {
-                  if (col.key === "tipoLicenca") return { ...col, render: (row: any) => (row.tipoLicenca === "2" ? "Multiempresa" : "Padrão") };
-                  if (col.key === "status") {
-                    return {
-                      ...col,
-                      render: (row: any) => (
-                        <span className={`${styles.statusBadge} ${row.status ? styles.active : styles.inactive}`}>
-                          {row.status ? "Ativo" : "Inativo"}
-                        </span>
-                      ),
-                    };
-                  }
-                  return col;
-                })}
-                rows={table.rows.map(
-                  (dispositivo: Record<string, unknown>): DispositivoLinha => ({
-                    nome: String(dispositivo.nomeDispositivo ?? ""),
-                    codigo: String(dispositivo.codDispositivo ?? ""),
-                    tipoLicenca: String(dispositivo.tipoLicenca ?? ""),
-                    status: Boolean(dispositivo.ativo),
-                    raw: dispositivo,
-                  }),
-                )}
-                onSort={handleSort}
-                getRowId={(row: any) => row.codigo}
-                renderSortIcon={() => <IconSort />}
-                actionsCellClassName={styles.actionsCell}
-                renderActions={(row: any) => (
-                  <>
-                    {!row.raw.ativo && (
-                      <button onClick={() => toggleStatus(row.raw.codDispositivo, row.raw.nomeDispositivo, row.raw.ativo)} className={`${styles.actionButton} ${styles.activateButton}`} title="Ativar dispositivo">
-                        <FiPower />
-                      </button>
-                    )}
-                    <div className={styles.dangerActionsGroup}>
-                      <button
-                        onClick={() => openEditModal(row.raw.codDispositivo, row.raw.nomeDispositivo)}
-                        className={`${styles.actionButton} ${styles.editButton}`}
-                        title="Editar nome do dispositivo"
-                        disabled={loadingEdicao}
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    {DISPOSITIVO_COLUMNS.map((col) => (
+                      <th
+                        key={col.key}
+                        onClick={() => col.sortable !== false && handleSort(col.key)}
+                        style={{ cursor: col.sortable !== false ? "pointer" : "default" }}
                       >
-                        <FiEdit2 />
-                      </button>
-                      <button onClick={() => handleDeleteDevice(row.raw.codDispositivo)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir dispositivo">
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </>
-                )}
-              />
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <span>{col.label}</span>
+                          {col.sortable !== false && <IconSort />}
+                        </div>
+                      </th>
+                    ))}
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {table.rows.map((dispositivo: Record<string, unknown>) => (
+                    <tr key={String(dispositivo.codDispositivo)}>
+                      <td>
+                        {formatUltimoUtilizador(
+                          dispositivo.ultimoUtilizador as UltimoUtilizador | null | undefined
+                        )}
+                      </td>
+                      <td>{String(dispositivo.nomeDispositivo ?? "")}</td>
+                      <td>{String(dispositivo.codDispositivo ?? "")}</td>
+
+                      <td>
+                        {dispositivo.tipoLicenca === "2"
+                          ? "Multiempresa"
+                          : "Padrão"}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`${styles.statusBadge} ${
+                            dispositivo.ativo ? styles.active : styles.inactive
+                          }`}
+                        >
+                          {dispositivo.ativo ? "Ativo" : "Inativo"}
+                        </span>
+                      </td>
+
+                      <td className={styles.actionsCell}>
+                        {!dispositivo.ativo && (
+                          <button
+                            onClick={() =>
+                              toggleStatus(
+                                String(dispositivo.codDispositivo),
+                                String(dispositivo.nomeDispositivo ?? ""),
+                                Boolean(dispositivo.ativo)
+                              )
+                            }
+                            className={`${styles.actionButton} ${styles.activateButton}`}
+                            title="Ativar dispositivo"
+                          >
+                            <FiPower />
+                          </button>
+                        )}
+
+                        <div className={styles.dangerActionsGroup}>
+                          <button
+                            onClick={() =>
+                              openEditModal(
+                                String(dispositivo.codDispositivo),
+                                String(dispositivo.nomeDispositivo ?? "")
+                              )
+                            }
+                            className={`${styles.actionButton} ${styles.editButton}`}
+                            title="Editar nome do dispositivo"
+                            disabled={loadingEdicao}
+                          >
+                            <FiEdit2 />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteDevice(String(dispositivo.codDispositivo))
+                            }
+                            className={`${styles.actionButton} ${styles.deleteButton}`}
+                            title="Excluir dispositivo"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
 
@@ -254,43 +295,51 @@ const DispositivosPage: React.FC = () => {
           <div className={styles.situacaoItem}>
             <p>Total dispositivos:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.totalDispositivos ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.totalDispositivos ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadrao ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasPadrao ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças Padrão utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasPadraoUtilizadas ?? 0}
             </span>
           </div>
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMulti ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasMulti ?? 0}
             </span>
           </div>
 
           <div className={styles.situacaoItem}>
             <p>Licenças MultiEmpresa utilizadas:</p>
             <span className={styles.situacaoValue}>
-              {dadosDispositivo?.licencasMultiUtilizadas ?? 0}
+              {!codEmpresa || loadingDados
+                ? "..."
+                : dadosDispositivo?.licencasMultiUtilizadas ?? 0}
             </span>
           </div>
 
           <div className={styles.situacaoItem}>
             <p>Licenças válidas até:</p>
             <span className={styles.situacaoValue}>
-              {loadingDados
+              {!codEmpresa || loadingDados
                 ? "..."
-                : dadosDispositivo?.vencimentoLicencas
-                ? dadosDispositivo.vencimentoLicencas
-                : "N/D"}
+                : dadosDispositivo?.vencimentoLicencas || "N/D"}
             </span>
           </div>
           </div>

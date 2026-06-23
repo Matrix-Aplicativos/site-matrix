@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../shared/axios/axiosInstanceFDV";
 import { AxiosError } from "axios";
 
+interface UltimoUtilizador {
+  codUsuario?: number;
+  nome?: string;
+  login?: string;
+}
+
 // Interface que define a estrutura de um Dispositivo
 interface Dispositivo {
   codDispositivo: string;
@@ -9,6 +15,7 @@ interface Dispositivo {
   codEmpresaApi: number;
   tipoLicenca: string; // MODIFICADO: Corrigido de volta para 'string'
   ativo: boolean;
+  ultimoUtilizador?: UltimoUtilizador | null;
 }
 
 // Interface que define a estrutura da resposta da API
