@@ -15,6 +15,7 @@ import useGetLoggedUser from "../hooks/useGetLoggedUser";
 import useCurrentCompany from "../hooks/useCurrentCompany";
 import { formatPainelTitle } from "../utils/formatPainelTitle";
 import PaginationControls from "@/app/Painel-Coletas/components/PaginationControls";
+import { formatUltimoUtilizador } from "@/app/Painel-Coletas/domain/dispositivoTableConfig";
 
 const IconSort = () => (
   <svg
@@ -37,6 +38,7 @@ interface DispositivoExibido {
   nome: string;
   codigo: string;
   tipoLicenca: string;
+  ultimoUtilizador: string;
   status: boolean;
 }
 
@@ -47,7 +49,12 @@ const SORT_COLUMN_MAP: { [key in keyof DispositivoExibido]?: string } = {
   status: "ativo",
 };
 
-const columns: { key: keyof DispositivoExibido; label: string }[] = [
+const columns: {
+  key: keyof DispositivoExibido;
+  label: string;
+  sortable?: boolean;
+}[] = [
+  { key: "ultimoUtilizador", label: "Usuario", sortable: false },
   { key: "nome", label: "Nome" },
   { key: "codigo", label: "Código" },
   { key: "tipoLicenca", label: "Tipo de Licença" },
@@ -224,12 +231,12 @@ export default function DispositivosPage() {
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      onClick={() => handleSort(col.key)}
-                      style={{ cursor: "pointer" }}
+                      onClick={() => col.sortable !== false && handleSort(col.key)}
+                      style={{ cursor: col.sortable !== false ? "pointer" : "default" }}
                     >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <span>{col.label}</span>
-                        <IconSort />
+                        {col.sortable !== false && <IconSort />}
                       </div>
                     </th>
                   ))}
@@ -240,6 +247,7 @@ export default function DispositivosPage() {
               <tbody>
                 {dispositivos.map((dispositivo) => (
                   <tr key={dispositivo.codDispositivo}>
+                    <td>{formatUltimoUtilizador(dispositivo.ultimoUtilizador)}</td>
                     <td>{dispositivo.nomeDispositivo}</td>
                     <td>{dispositivo.codDispositivo}</td>
 
