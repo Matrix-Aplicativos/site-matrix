@@ -1,17 +1,25 @@
+export interface PedidoItemEmpresaApi {
+  codEmpresa: number;
+  codItemEmpresa: number;
+  codItem?: number;
+  codItemErp?: string;
+  descricaoItem?: string;
+  descricaoMarca?: string;
+  codBarra?: string;
+  unidade?: string;
+  item?: {
+    codItem: number;
+    codItemErp: string;
+    descricaoItem: string;
+    descricaoMarca: string;
+    codBarra: string;
+    unidade?: string;
+  };
+}
+
 export interface PedidoItemPainelApi {
   pedidoItem: {
-    itemEmpresa: {
-      codEmpresa: number;
-      codItemEmpresa: number;
-      item: {
-        codItem: number;
-        codItemErp: string;
-        descricaoItem: string;
-        descricaoMarca: string;
-        codBarra: string;
-        unidade?: string;
-      };
-    };
+    itemEmpresa: PedidoItemEmpresaApi;
     ordemInsercao: number;
     qtdItem: number;
     descontoUnitario: number;
@@ -42,14 +50,31 @@ export interface ItemPedidoDetalhado {
   ordemInsercao: number;
 }
 
+function resolveItemEmpresaFields(itemEmpresa: PedidoItemEmpresaApi) {
+  const nested = itemEmpresa.item;
+
+  return {
+    codItemErp: nested?.codItemErp ?? itemEmpresa.codItemErp,
+    descricaoItem: nested?.descricaoItem ?? itemEmpresa.descricaoItem,
+    descricaoMarca: nested?.descricaoMarca ?? itemEmpresa.descricaoMarca,
+    codBarra: nested?.codBarra ?? itemEmpresa.codBarra,
+    unidade: nested?.unidade ?? itemEmpresa.unidade,
+  };
+}
+
 export function mapPedidoItemPainel(
   raw: PedidoItemPainelApi
 ): ItemPedidoDetalhado | null {
   const pedidoItem = raw?.pedidoItem;
   const itemEmpresa = pedidoItem?.itemEmpresa;
-  const item = itemEmpresa?.item;
 
-  if (!pedidoItem || !itemEmpresa || !item) {
+  if (!pedidoItem || !itemEmpresa) {
+    return null;
+  }
+
+  const fields = resolveItemEmpresaFields(itemEmpresa);
+
+  if (!fields.codItemErp && !fields.descricaoItem) {
     return null;
   }
 
@@ -58,11 +83,11 @@ export function mapPedidoItemPainel(
 
   return {
     codItem: itemEmpresa.codItemEmpresa,
-    codItemErp: item.codItemErp ?? "—",
-    descricaoItem: item.descricaoItem ?? "—",
-    descricaoMarca: item.descricaoMarca ?? "—",
-    codBarra: item.codBarra ?? "N/A",
-    unidade: item.unidade ?? "—",
+    codItemErp: fields.codItemErp ?? "—",
+    descricaoItem: fields.descricaoItem ?? "—",
+    descricaoMarca: fields.descricaoMarca ?? "—",
+    codBarra: fields.codBarra ?? "N/A",
+    unidade: fields.unidade ?? "—",
     qtdItem,
     precoUnitario,
     descontoUnitario: Number(pedidoItem.descontoUnitario ?? 0),
